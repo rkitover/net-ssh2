@@ -1,0 +1,12 @@
+.svn/
+.git/
+.swp$
+.so$
+.exists$
+.o$
+blib/
+.bs$
+.c$
+.old$
+.bak$
+pm_to_blib$
