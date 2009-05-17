@@ -1,0 +1,74 @@
+Net::SSH2 - Secure Shell protocol interface
+===========================================
+
+Net::SSH2 is a perl interface to the libssh2 (http://www.libssh2.org)
+library.  It supports the SSH2 protocol (there is no support for SSH1)
+with all of the key exchanges, ciphers, and compression of libssh2.
+At present, libssh2 requires OpenSSL (http://www.openssl.org) and can
+optionally use zlib for compression (http://www.zlib.net).
+
+The Net::SSH::Perl modules are showing signs of age; with the requirement
+to be compatible with SSH versions 1 and 2, support of newer features such
+as channels is difficult; it also has many dependencies, some of which
+are hard to build (e.g. Math::Pari).  (Net::SSH is just a wrapper around the
+ssh binaries, and never should have got the namespace.)  Net::SSH2 is a
+new start, with few dependencies and all the functionality of the SSH
+protocol, version 2, at your disposal.
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+  libSSH2 (http://www.libssh2.org; tested with 0.11 and 0.12)
+  OpenSSL (http://www.openssl.org)
+  zlib (optional; http://www.zlib.net)
+
+BUGS/FEATURE REQUESTS
+
+Please report bugs and request features on the CPAN bug tracking site,
+rt.cpan.org.  If you are able and willing to provide a fix, attach a patch
+and please provide your name to be credited in the changelog and an email
+address for verification/discussion.
+
+The ssh-sftp-perl-users mailing list
+(http://lists.sourceforge.net/lists/listinfo/ssh-sftp-perl-users), while set up
+for Net::SSH::Perl (which I also maintain), is also an appropriate place to
+post questions or comments about Net::SSH2; if volume gets too high, a separate
+list will be created.
+
+HACKING
+
+The module is kept in a Subversion (http://www.subversion.org) repository,
+svn://davidrobins.net/net-ssh2.
+
+If you are interested in making a change/fix, please discuss it first.  If you
+are unfamiliar with XS (perl C bindings), you should review the perlxs,
+perlapi, and perlcall perldoc pages to learn more.  The secure shell protocol
+is managed by the IETF secsh working group at
+http://www.ietf.org/html.charters/secsh-charter.html.  The source code of
+libSSH2 will also be instructive.
+
+TODO
+
+More examples for the example/ directory would be nice.
+
+Add get/put (file) methods to Net::SSH2::SFTP (as a shortcut, rather than 
+requiring open/read/write/close).
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2005-2008 by David B. Robins; all rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.0 or,
+at your option, any later version of Perl 5 you may have available.
+
