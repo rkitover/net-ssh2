@@ -4,7 +4,7 @@
 
 #########################
 
-use Test::More tests => 72;
+use Test::More tests => 74;
 
 use strict;
 use File::Basename;
@@ -46,6 +46,8 @@ is($banner, "SSH-2.0-libssh2_$version", "banner is $banner");
 is($ssh2->poll(0), 0, 'poll indefinite');
 is($ssh2->poll(250), 0, 'poll 1/4 second');
 
+is($ssh2->sock, undef, '->sock is undef before connect');
+
 # (1) connect
 SKIP: { # SKIP-connect
 skip '- non-interactive session', 61 unless $host or -t STDOUT;
@@ -65,6 +67,8 @@ SKIP: { # SKIP-server
 skip '- no server daemon available', 61 unless $host;
 ok($ssh2->connect($host), "connect to $host");
 
+isa_ok($ssh2->sock, 'IO::Socket::INET', '->sock isa IO::Socket::INET');
+
 # (8) server methods
 for my $type(qw(kex hostkey crypt_cs crypt_sc mac_cs mac_sc comp_cs comp_sc)) {
     my $method = $ssh2->method($type);
@@ -79,8 +83,9 @@ is(length $sha1, 20, 'have SHA1 hostkey hash');
 
 # (3) authentication methods
 unless ($user) {
-    my $def_user = getpwuid $<;
-    print "\nEnter username [$def_user]: ";
+    my $def_user;
+    $def_user = getpwuid $< if $^O !~ /mswin/i;
+    print $def_user ? "\nEnter username [$def_user]: " : "\nEnter username: ";
     chomp($user = <STDIN>);
     $user ||= $def_user;
 }
@@ -92,6 +97,9 @@ ok(!$ssh2->auth_ok, 'not authenticated yet');
 
 # (2) authenticate
 @auth = $pass ? (password => $pass) : (interact => 1);
+if($^O =~ /MSWin32/i && !$pass) { # interact probably failed to set $pass on Win32
+  @auth = win32_auth();
+}
 my $type = $ssh2->auth(username => $user, @auth,
   publickey  => "$ENV{HOME}/.ssh/id_dsa.pub",
   privatekey => "$ENV{HOME}/.ssh/id_dsa");
@@ -144,7 +152,12 @@ ok($ssh2->scp_get($remote, $check), "get $remote from remote");
 SKIP: { # SKIP-slurp
 eval { require File::Slurp };
 skip '- File::Slurp required', 1 if $@;
-is(${$check->sref}, File::Slurp::read_file($0), 'files match');
+if($^O =~ /MSWin32/i) {
+  is(${$check->sref}, File::Slurp::read_file($0, binmode => ':raw'), 'files match');
+}
+else {
+  is(${$check->sref}, File::Slurp::read_file($0), 'files match');
+}
 } # SKIP-slurp
 } # SKIP-scalar
 
@@ -189,6 +202,9 @@ isa_ok($fh, 'Net::SSH2::File', 'opened file');
 scalar <$fh> for 1..2;
 my $line = <$fh>;
 chomp $line;
+if($^O =~ /MSWin32/i) {
+  $line =~ s/\r//;
+}
 is($line, '# THIS LINE WILL BE READ BY A TEST BELOW', "read '$line'");
 #undef $fh;  # don't undef it, ensure reference counts work properly
 
@@ -233,3 +249,18 @@ ok($ssh2->disconnect('leaving'), 'sent disconnect message');
 } # SKIP-connect
 
 # vim:filetype=perl
+
+sub win32_auth {
+  eval{require Term::ReadKey;};
+  print "\n  NOTE: The password you are about to enter\n  will be printed to the console." if $@;
+  print "\n  To avoid this, either install Term::ReadKey\n  or assign the correct value to \$pass" if $@;
+  print "\n  at the beginning of this test script." if $@;
+  print "\nEnter password: ";
+  if($@) {$pass = <STDIN>}
+  else {
+    Term::ReadKey::ReadMode('noecho');
+    $pass = Term::ReadKey::ReadLine(0);
+  }
+  chomp($pass);
+  return (password => $pass);
+}

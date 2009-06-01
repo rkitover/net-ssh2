@@ -1,3 +1,4 @@
 Polling sometimes doesn't work.
 Segfaults on exit sometimes.
 sftp is incredibly slow.
+Detect static build on Win32 and not define -DLIBSSH2_WIN32

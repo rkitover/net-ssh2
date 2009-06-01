@@ -12,8 +12,7 @@ use Socket;
 use IO::File;
 use File::Basename;
 
-our @ISA = qw(Exporter);
-
+use base 'Exporter';
 
 # constants
 
@@ -189,8 +188,7 @@ our %EXPORT_TAGS = (
 
 our @EXPORT_OK = @{$EXPORT_TAGS{all}};
 
-our $VERSION = '0.19';
-
+our $VERSION = '0.20';
 
 # methods
 
@@ -213,7 +211,11 @@ sub connect {
     }
     if (@_ == 2) {
         require IO::Socket::INET;
-        $sock = IO::Socket::INET->new(PeerHost => $_[0], PeerPort => $_[1]);
+        $sock = IO::Socket::INET->new(
+	    PeerHost => $_[0],
+	    PeerPort => $_[1],
+	    Timeout  => 30,
+	);
         croak "Net::SSH2::connect: failed to connect to $_[0]:$_[1]: $!"
          unless $sock;
 
@@ -528,6 +530,11 @@ default banner text (e.g. "SSH-2.0-libssh2_0.18.0-20071110").
 
 Returns the last error code; returns false if no error.  In list context,
 returns (code, error name, error string).
+
+=head2 sock
+
+Returns a reference to the underlying L<IO::Socket::INET> object, or C<undef> if
+not yet connected.
 
 =head2 method ( type [, values... ] )
 

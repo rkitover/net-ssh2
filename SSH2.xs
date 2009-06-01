@@ -712,9 +712,21 @@ PREINIT:
 CODE:
     clear_error(ss);
     success = !libssh2_session_startup(ss->session, socket);
-    if (success && store)
+    if (success && store) {
         ss->socket = SvREFCNT_inc(SvRV(store));
+    }
     XSRETURN_IV(success);
+
+SV *
+net_ss_sock(SSH2* ss)
+CODE:
+    if (ss->socket) {
+        RETVAL = newRV_inc((SV *)ss->socket);
+    } else {
+        RETVAL = &PL_sv_undef;
+    }
+OUTPUT:
+    RETVAL
 
 void
 net_ss_disconnect(SSH2* ss, const char* description = "", \

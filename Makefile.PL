@@ -5,6 +5,11 @@ use Config;
 # override library and include directory here if desired
 my $lib = '';
 my $inc = '';
+my $extra_libs = '-lz -lssl -lcrypto';
+
+# Windows, as usual, is a special case
+my $win32 = ($^O eq 'MSWin32');
+my @define = $win32 ? (DEFINE => '-DLIBSSH2_WIN32') : ();
 
 name 'Net-SSH2';
 all_from 'lib/Net/SSH2.pm';
@@ -37,16 +42,12 @@ checklibs
     incpath => [@search_incs, $inc];
 
 if (!$lib && !$inc) {
-    $lib = (join ' ', map "-L$_", @search_libs) . ' -lssh2';
+    $lib = (join ' ', map "-L$_", @search_libs) . " -lssh2 $extra_libs";
     $inc =  join ' ', map "-I$_", @search_incs;
 } else {
-    $lib = "-L$lib -lssh2" if $lib;
+    $lib = "-L$lib -lssh2 $extra_libs" if $lib;
     $inc = "-I$inc" if $inc;
 }
-
-# Windows, as usual, is a special case
-my $win32 = ($^O eq 'MSWin32');
-my @define = $win32 ? (DEFINE => '-DLIBSSH2_WIN32') : ();
 
 auto_provides;
 libs $lib;
