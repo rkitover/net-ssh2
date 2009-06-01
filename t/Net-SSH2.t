@@ -50,7 +50,7 @@ is($ssh2->sock, undef, '->sock is undef before connect');
 
 # (1) connect
 SKIP: { # SKIP-connect
-skip '- non-interactive session', 61 unless $host or -t STDOUT;
+skip '- non-interactive session', 62 unless $host or -t STDOUT;
 $| = 1;
 unless ($host) {
     print <<TEST;
@@ -64,7 +64,7 @@ TEST
     print "\n";
 }
 SKIP: { # SKIP-server
-skip '- no server daemon available', 61 unless $host;
+skip '- no server daemon available', 62 unless $host;
 ok($ssh2->connect($host), "connect to $host");
 
 isa_ok($ssh2->sock, 'IO::Socket::INET', '->sock isa IO::Socket::INET');
