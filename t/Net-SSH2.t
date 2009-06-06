@@ -4,7 +4,7 @@
 
 #########################
 
-use Test::More tests => 74;
+use Test::More tests => 73;
 
 use strict;
 use File::Basename;
@@ -27,17 +27,20 @@ is(LIBSSH2_ERROR_SOCKET_NONE(), -1, 'LIBSSH2_* constants');
 
 # (4) version
 my $version = $ssh2->version();
-ok($version >= 0.16, "libSSH2 version $version > 0.16");
 my ($version2, $vernum, $banner) = $ssh2->version();
 is($version, $version2, 'list version match');
 my $major = int($version);
 
-if ($major > 0) {
-  ok(($vernum >> 8) == ($major << 8) + ($version - $major) * 10,
-   'decimal version matches');
-} else {
-  ok(($vernum >> 8) == ($major << 8) + ($version - $major) * 100,
-   'decimal version matches');
+SKIP: {
+    skip 'old libssh2', 1 if !defined($vernum);
+
+    if ($major > 0) {
+      ok(($vernum >> 8) == ($major << 8) + ($version - $major) * 10,
+       'decimal version matches');
+    } else {
+      ok(($vernum >> 8) == ($major << 8) + ($version - $major) * 100,
+       'decimal version matches');
+    }
 }
 
 is($banner, "SSH-2.0-libssh2_$version", "banner is $banner");

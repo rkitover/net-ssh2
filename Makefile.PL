@@ -20,9 +20,12 @@ my @search_paths = (
   '/usr', '/usr/local', '/opt',
   $ENV{HOME}
 );
+my %uniq;
+@uniq{@search_paths} = ();
+@search_paths = keys %uniq;
 
-my @search_libs = map "$_/lib", @search_paths;
-my @search_incs = map "$_/include", @search_paths;
+my @search_libs = grep -d, map "$_/lib", @search_paths;
+my @search_incs = grep -d, map "$_/include", @search_paths;
 
 print <<'EOF';
 
@@ -35,11 +38,12 @@ sudo aptitude install libssh2-1-dev
 
 EOF
 
-checklibs 
+checklibs
     lib => 'ssh2',
     header => 'libssh2.h',
-    libpath => [@search_libs, $lib],
-    incpath => [@search_incs, $inc];
+    libpath => [@search_libs, $lib ? $lib : ()],
+    incpath => [@search_incs, $inc ? $inc : ()],
+;
 
 if (!$lib && !$inc) {
     $lib = (join ' ', map "-L$_", @search_libs) . " -lssh2 $extra_libs";

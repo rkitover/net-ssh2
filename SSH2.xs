@@ -578,7 +578,11 @@ CODE:
     case G_ARRAY:
         EXTEND(SP, 3);
         ST(0) = sv_2mortal(newSVpv(LIBSSH2_VERSION, 0));
+#ifdef LIBSSH2_VERSION_NUM
         ST(1) = sv_2mortal(newSVuv(LIBSSH2_VERSION_NUM));
+#else
+        ST(1) = &PL_sv_undef;
+#endif
         ST(2) = sv_2mortal(newSVpv(LIBSSH2_SSH_DEFAULT_BANNER, 0));
         XSRETURN(3);
     }
