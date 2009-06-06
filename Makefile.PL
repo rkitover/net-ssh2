@@ -56,6 +56,7 @@ if (!$lib && !$inc) {
 auto_provides;
 libs $lib;
 inc "$inc -I.";
+realclean_files qw/const-c.inc const-xs.inc/;
 makemaker_args @define;
 WriteAll;
 
