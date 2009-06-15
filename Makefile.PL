@@ -58,6 +58,10 @@ libs $lib;
 inc "$inc -I.";
 realclean_files qw/const-c.inc const-xs.inc/;
 makemaker_args @define;
+
+resources repository =>
+    'git://github.com/rkitover/net-ssh2.git';
+
 WriteAll;
 
 if  (eval {require ExtUtils::Constant; 1}) {
