@@ -3,6 +3,10 @@ Revision history for Perl extension Net::SSH2.
 Developer/maintainer: David B. Robins <dbrobins@cpan.org>.
 Project started 2005-10-23 in Redmond, Washington, USA.
 
+0.22  2009-08-15 11:10:03
+        - "or die" semantics for ->connect (in non-void context)
+        - Timeout option for ->connect
+
 0.21  2009-06-06 21:02:34
         - some fixes for Cygwin
 
