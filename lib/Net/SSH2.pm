@@ -188,7 +188,7 @@ our %EXPORT_TAGS = (
 
 our @EXPORT_OK = @{$EXPORT_TAGS{all}};
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 # methods
 
@@ -219,7 +219,7 @@ sub connect {
         $sock = IO::Socket::INET->new(
             PeerHost => $_[0],
             PeerPort => $_[1],
-            $opts{Timeout},
+            Timeout => $opts{Timeout},
         );
 
         if (not $sock) {
