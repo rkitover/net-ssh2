@@ -136,6 +136,12 @@ Request a terminal on a channel.  If provided, C<width> and C<height> are the
 width and height in characters (defaults to 80x24); if negative their absolute
 values specify width and height in pixels.
 
+=head2 pty_size ( width, height )
+
+Request a terminal size change on a channel. C<width> and C<height> are the
+width and height in characters; if negative their absolute values specify
+width and height in pixels.
+
 =head2 process ( request, message )
 
 Start a process on the channel.  See also L<shell>, L<exec>, L<subsystem>.

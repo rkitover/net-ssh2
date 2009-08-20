@@ -1197,6 +1197,28 @@ CODE:
      width, height, width_px, height_px));
 
 void
+net_ch_pty_size(SSH2_CHANNEL* ch, int width = 0, int height = 0)
+PREINIT:
+    int width_px = LIBSSH2_TERM_WIDTH_PX, height_px = LIBSSH2_TERM_HEIGHT_PX;
+CODE:
+    if (!width)
+        croak("%s::pty_size: required parameter width missing", class);
+    else if(width < 0) {
+        width_px = -width;
+        width = 0;
+    }
+
+    if (!height)
+        croak("%s::pty_size: required parameter height missing", class);
+    else if(height < 0) {
+        height_px = -height;
+        height = 0;
+    }
+
+    XSRETURN_IV(!libssh2_channel_request_pty_size_ex(ch->channel,
+     width, height, width_px, height_px));
+
+void
 net_ch_process(SSH2_CHANNEL* ch, SV* request, SV* message = NULL)
 PREINIT:
     const char* pv_request, * pv_message = NULL;
