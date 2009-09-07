@@ -188,7 +188,7 @@ our %EXPORT_TAGS = (
 
 our @EXPORT_OK = @{$EXPORT_TAGS{all}};
 
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 # methods
 
@@ -223,7 +223,7 @@ sub connect {
         );
 
         if (not $sock) {
-            if ($wantarray == undef) {
+            if (not defined $wantarray) {
                 croak "Net::SSH2: failed to connect to $_[0]:$_[1]: $!"
             } else {
                 return; # to support ->connect ... or die
