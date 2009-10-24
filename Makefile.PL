@@ -1,4 +1,4 @@
-use inc::Module::Install;
+use inc::Module::Install 0.91;
 use Cwd;
 use Config;
 
@@ -17,14 +17,14 @@ perl_version '5.006000';
 
 my @search_paths = (
   $Config{siteprefixexp}, $Config{prefixexp},
-  '/usr', '/usr/local', '/opt',
+  '/usr/local/ssl', '/usr', '/usr/local', '/opt', '/',
   $ENV{HOME}
 );
 my %uniq;
 @uniq{@search_paths} = ();
 @search_paths = keys %uniq;
 
-my @search_libs = grep -d, map "$_/lib", @search_paths;
+my @search_libs = grep -d, map {($_.64,$_)} map "$_/lib", @search_paths;
 my @search_incs = grep -d, map "$_/include", @search_paths;
 
 print <<'EOF';
@@ -33,8 +33,8 @@ The libssh2 library is required by this module.  If you don't have it, you can
 download it from http://www.libssh2.org; you may also need OpenSSL, which can be
 obtained from http://www.openssl.org.
 
-On Debian do:
-sudo aptitude install libssh2-1-dev
+Debian:   sudo aptitude install libssh2-1-dev
+OpenSUSE: sudo zypper in libssh2-1 libssh2-devel
 
 EOF
 

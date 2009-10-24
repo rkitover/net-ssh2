@@ -29,10 +29,11 @@ is(LIBSSH2_ERROR_SOCKET_NONE(), -1, 'LIBSSH2_* constants');
 my $version = $ssh2->version();
 my ($version2, $vernum, $banner) = $ssh2->version();
 is($version, $version2, 'list version match');
-my $major = int($version);
+my ($major) = $version =~ /^(\d+)/;
 
 SKIP: {
     skip 'old libssh2', 1 if !defined($vernum);
+    skip 'version not decimal', 1 if ($version =~ y/.//) > 1;
 
     if ($major > 0) {
       ok(($vernum >> 8) == ($major << 8) + ($version - $major) * 10,

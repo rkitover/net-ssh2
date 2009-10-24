@@ -1166,6 +1166,8 @@ CODE:
     clear_error(ch->ss);
     XSRETURN_IV(libssh2_channel_get_exit_status(ch->channel));
 
+#if LIBSSH2_VERSION_MAJOR >= 1
+
 void
 net_ch_pty(SSH2_CHANNEL* ch, SV* terminal, SV* modes = NULL, \
  int width = 0, int height = 0)
@@ -1217,6 +1219,21 @@ CODE:
 
     XSRETURN_IV(!libssh2_channel_request_pty_size_ex(ch->channel,
      width, height, width_px, height_px));
+
+#else
+
+void
+net_ch_pty(SSH2_CHANNEL* ch, SV* terminal, SV* modes = NULL, \
+ int width = 0, int height = 0)
+CODE:
+    croak("libssh2 version 1.0 or higher required for PTY support");
+
+void
+net_ch_pty_size(SSH2_CHANNEL* ch, int width = 0, int height = 0)
+CODE:
+    croak("libssh2 version 1.0 or higher required for PTY support");
+
+#endif
 
 void
 net_ch_process(SSH2_CHANNEL* ch, SV* request, SV* message = NULL)

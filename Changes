@@ -3,6 +3,10 @@ Revision history for Perl extension Net::SSH2.
 Developer/maintainer: David B. Robins <dbrobins@cpan.org>.
 Project started 2005-10-23 in Redmond, Washington, USA.
 
+0.28  2009-10-24 07:27:42
+        - added patch to find 64bit libs from H.Merijn Brand
+        - fix breakage on versions < 1.0 related to the pty functions
+
 0.27  2009-09-10 06:54:58
         - reverting a bad release
 
