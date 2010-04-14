@@ -1,7 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
-Developer/maintainer: David B. Robins <dbrobins@cpan.org>.
-Project started 2005-10-23 in Redmond, Washington, USA.
+0.29  2010-04-14 20:25:37
+        - fix splice warning when connecting with a socket handle (RT#56592)
 
 0.28  2009-10-24 07:27:42
         - added patch to find 64bit libs from H.Merijn Brand
@@ -117,3 +117,5 @@ Project started 2005-10-23 in Redmond, Washington, USA.
         - Original version; created by h2xs 1.23 with options
             -A -n Net::SSH2 -b 5.8.0.
 
+0.00  2005-10-23
+        - Project started in Redmond, Washington, USA.

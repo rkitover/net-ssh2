@@ -188,7 +188,7 @@ our %EXPORT_TAGS = (
 
 our @EXPORT_OK = @{$EXPORT_TAGS{all}};
 
-our $VERSION = '0.28';
+our $VERSION = '0.29';
 $VERSION = eval $VERSION;
 
 # methods
@@ -212,7 +212,7 @@ sub connect {
         }
     }
 
-    my %opts = splice @_, 2;
+    my %opts = splice @_, 2 if @_ >= 4;
     $opts{Timeout} ||= 30;
 
     if (@_ == 2) {
@@ -929,7 +929,7 @@ David B. Robins, E<lt>dbrobins@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2005, 2006 by David B. Robins; all rights reserved.
+Copyright (C) 2005 - 2010 by David B. Robins; all rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.0 or,
