@@ -25,7 +25,7 @@
 #endif  /* LIBSSH2_ERROR_NONE */
 
 /* LIBSSH2_ERROR_* values; from 0 continuing negative */
-const char* libssh2_error[] = {
+const char* xs_libssh2_error[] = {
     "NONE",
     "SOCKET_NONE",
     "BANNER_NONE",
@@ -634,8 +634,8 @@ CODE:
         EXTEND(SP, 3);
         ST(0) = sv_2mortal(newSViv(errcode));
         if (errcode < 0) {
-            code = (-errcode < countof(libssh2_error)) ? 
-             newSVpvf("LIBSSH2_ERROR_%s", libssh2_error[-errcode]) :
+            code = (-errcode < countof(xs_libssh2_error)) ? 
+             newSVpvf("LIBSSH2_ERROR_%s", xs_libssh2_error[-errcode]) :
              newSVpvf("LIBSSH2_ERROR_UNKNOWN(%d)", errcode);
         } else if(errcode > 0)
             code = newSVpv(Strerror(errcode), 0);

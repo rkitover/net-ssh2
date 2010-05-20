@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.30  2010-05-20 10:43:14
+        - rename symbol libssh2_error to xs_libssh2_error to avoid symbol clashes
+
 0.29  2010-04-14 20:25:37
         - fix splice warning when connecting with a socket handle (RT#56592)
 
