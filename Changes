@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.31  2010-06-13 09:35:38
+        - remove eval $VERSION, was confusing some testers
+
 0.30  2010-05-20 10:43:14
         - rename symbol libssh2_error to xs_libssh2_error to avoid symbol
           clashes (sisyphus)
