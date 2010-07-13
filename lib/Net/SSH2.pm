@@ -188,9 +188,16 @@ our %EXPORT_TAGS = (
 
 our @EXPORT_OK = @{$EXPORT_TAGS{all}};
 
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 
 # methods
+
+sub new {
+    my $class = shift;
+    my %opts  = @_;
+
+    $class->_new($opts{trace} ? 1 : 0);
+}
 
 sub connect {
     my $self = shift;
@@ -525,6 +532,10 @@ then create channels on the connection to perform commands.
 =head2 new
 
 Create new SSH2 object.
+
+To turn on tracing with a debug build of libssh2 use:
+
+    my $ssh2 = Net::SSH2->new(trace => 1);
 
 =head2 banner ( text )
 

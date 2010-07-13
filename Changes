@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.32  2010-07-13 07:47:12
+        - add trace => 1 option to ->new (RT#59292)
+
 0.31  2010-06-13 09:35:38
         - remove eval $VERSION, was confusing some testers
 
