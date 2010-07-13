@@ -1311,10 +1311,12 @@ PREINIT:
 CODE:
     clear_error(ch->ss);
     pv_buffer = SvPV(buffer, len_buffer);
-    count = libssh2_channel_write_ex(ch->channel, XLATEXT,
-     pv_buffer, len_buffer);
-    if (count < 0)
-        XSRETURN_EMPTY;
+    do {
+        count = libssh2_channel_write_ex(ch->channel, XLATEXT,
+         pv_buffer, len_buffer);
+        if (count < 0 && LIBSSH2_ERROR_EAGAIN != count)
+            XSRETURN_EMPTY;
+    } while (LIBSSH2_ERROR_EAGAIN == count);
     XSRETURN_IV(count);
 
 void
