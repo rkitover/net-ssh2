@@ -372,8 +372,15 @@ sub scp_put {
       $self->error(0, "want $block, have $count"), return
        unless $count == $block;
       die 'sysread mismatch' unless length $buf == $count;
+      my $wrote = 0;
+      while ($wrote >= 0 && $wrote < $count) {
+        my $wr = $chan->write($buf);
+        last if $wr < 0;
+        $wrote += $wr;
+        $buf = substr $buf, $wr;
+      }
       $self->error(0, "error writing $count bytes to channel"), return
-       unless $chan->write($buf) == $count;
+       unless $wrote == $count;
     }
 
     # send/receive SCP acknowledgement
