@@ -188,7 +188,7 @@ our %EXPORT_TAGS = (
 
 our @EXPORT_OK = @{$EXPORT_TAGS{all}};
 
-our $VERSION = '0.32';
+our $VERSION = '0.33';
 
 # methods
 
@@ -535,7 +535,7 @@ Create new SSH2 object.
 
 To turn on tracing with a debug build of libssh2 use:
 
-    my $ssh2 = Net::SSH2->new(trace => 1);
+    my $ssh2 = Net::SSH2->new(trace => -1);
 
 =head2 banner ( text )
 
@@ -557,6 +557,14 @@ returns (code, error name, error string).
 
 Returns a reference to the underlying L<IO::Socket::INET> object, or C<undef> if
 not yet connected.
+
+=head2 trace
+
+Calls libssh2_trace with supplied bitmask, to enable all tracing use:
+
+    $ssh2->trace(-1);
+
+You need a debug build of libssh2 with tracing support.
 
 =head2 method ( type [, values... ] )
 

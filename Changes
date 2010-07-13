@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.33  2010-07-13 07:59:22
+        - change trace option to use bitmask, so it becomes trace => -1, also
+          added ->trace method
+
 0.32  2010-07-13 07:47:12
         - add trace => 1 option to ->new (RT#59292)
 

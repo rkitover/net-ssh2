@@ -545,11 +545,16 @@ CODE:
     clear_error(RETVAL);
 
     if (SvTRUE(tracing))
-      libssh2_trace(RETVAL->session, -1);
+      libssh2_trace(RETVAL->session, SvIV(tracing));
 
     debug("Net::SSH2: created new object 0x%x\n", RETVAL);
 OUTPUT:
     RETVAL
+
+void
+net_ss_trace(SSH2* ss, SV* bitmask)
+CODE:
+    libssh2_trace(ss->session, SvIV(bitmask));
 
 void
 net_ss_blocking(SSH2* ss, SV* blocking)
