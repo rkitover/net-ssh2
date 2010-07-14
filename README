@@ -47,8 +47,8 @@ list will be created.
 
 HACKING
 
-The module is kept in a Subversion (http://www.subversion.org) repository,
-svn://davidrobins.net/net-ssh2.
+The module is kept in a GitHub (http://github.com/rkitover/net-ssh2/)
+repository, git@github.com:rkitover/net-ssh2.git.
 
 If you are interested in making a change/fix, please discuss it first.  If you
 are unfamiliar with XS (perl C bindings), you should review the perlxs,
