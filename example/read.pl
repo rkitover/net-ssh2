@@ -1,4 +1,7 @@
-#!perl -w
+#!perl
+
+use strict;
+use warnings;
 
 # Sample Net::SSH2 code illustrating several ways to read the remote
 # /etc/passwd file.
@@ -35,7 +38,7 @@ my $file = $sftp->open('/etc/passwd') or die;
 _read($file);
 
 # (c) type it over a channel
-$chan = $ssh2->channel;
+my $chan = $ssh2->channel;
 $chan->exec('cat /etc/passwd') or die;
 _read($chan);
 
