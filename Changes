@@ -1,8 +1,11 @@
 Revision history for Perl extension Net::SSH2.
 
+0.34  2011-05-07 08:34:35
         - fix trace option to ->new
         - handle partial writes for scp_put
         - add $chan->exit_signal (patch from tommy.lindgren@gmail.com)
+        - add $ssh->block_directions
+        - add new constants (socket, trace and ERROR_EAGAIN)
 
 0.33  2010-07-13 07:59:22
         - change trace option to use bitmask, so it becomes trace => -1, also
