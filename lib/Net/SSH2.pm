@@ -196,7 +196,11 @@ sub new {
     my $class = shift;
     my %opts  = @_;
 
-    $class->_new($opts{trace} ? 1 : 0);
+    my $self = $class->_new;
+
+    $self->trace($opts{trace}) if exists $opts{trace};
+
+    return $self;
 }
 
 sub connect {

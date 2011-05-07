@@ -531,7 +531,7 @@ INCLUDE: const-xs.inc
 #define class "Net::SSH2"
 
 SSH2*
-net_ss__new(SV* proto, SV* tracing)
+net_ss__new(SV* proto)
 CODE:
     Newz(0/*id*/, RETVAL, 1, SSH2);
     if (RETVAL) {
@@ -543,9 +543,6 @@ CODE:
         XSRETURN_EMPTY;
     }
     clear_error(RETVAL);
-
-    if (SvTRUE(tracing))
-      libssh2_trace(RETVAL->session, SvIV(tracing));
 
     debug("Net::SSH2: created new object 0x%x\n", RETVAL);
 OUTPUT:
