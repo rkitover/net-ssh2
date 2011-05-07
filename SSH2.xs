@@ -1134,6 +1134,32 @@ CODE:
     }
     XSRETURN_IV(success);
 
+#if (LIBSSH2_VERSION_MAJOR == 1 && ((LIBSSH2_VERSION_MINOR == 2 && LIBSSH2_VERSION_PATCH >= 8) || LIBSSH2_VERSION_MINOR >= 2) || LIBSSH2_VERSION_MAJOR > 1)
+
+SV*
+net_ch_exit_signal(SSH2_CHANNEL* ch)
+CODE:
+    clear_error(ch->ss);
+    RETVAL = NULL;
+    char *exitsignal = NULL;  
+    libssh2_channel_get_exit_signal(ch->channel, &exitsignal,
+        NULL, NULL, NULL, NULL, NULL);
+    if (exitsignal) {
+        RETVAL = newSVpv(exitsignal, 0);
+        libssh2_free(ch->ss->session, exitsignal);
+    }
+OUTPUT:
+    RETVAL
+
+#else
+
+void
+net_ch_exit_signal(SSH2_CHANNEL* ch)
+CODE:
+    croak("libssh2 version 1.2.8 or higher required for exit_signal support");
+
+#endif
+
 void
 net_ch_blocking(SSH2_CHANNEL* ch, SV* blocking)
 CODE:
@@ -1314,7 +1340,7 @@ CODE:
         if (count < 0 && LIBSSH2_ERROR_EAGAIN != count)
             XSRETURN_EMPTY;
         if (LIBSSH2_ERROR_EAGAIN == count
-                && libssh2_session_get_blocking(ch->session) == 0)
+                && libssh2_session_get_blocking(ch->ss->session) == 0)
             XSRETURN_IV(LIBSSH2_ERROR_EAGAIN);
     } while (LIBSSH2_ERROR_EAGAIN == count);
     XSRETURN_IV(count);
