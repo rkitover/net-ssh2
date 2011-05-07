@@ -24,7 +24,8 @@ static int
 constant_17 (pTHX_ const char *name, IV *iv_return) {
   /* When generated this function returned values for the list of names given
      here.  However, subsequent manual editing may have added or removed some.
-     LIBSSH2_FXF_CREAT LIBSSH2_FXF_TRUNC LIBSSH2_FXF_WRITE LIBSSH2_SFTP_STAT */
+     LIBSSH2_FXF_CREAT LIBSSH2_FXF_TRUNC LIBSSH2_FXF_WRITE LIBSSH2_SFTP_STAT
+     LIBSSH2_TRACE_KEX LIBSSH2_TRACE_SCP */
   /* Offset 14 gives the best switch position.  */
   switch (name[14]) {
   case 'E':
@@ -43,6 +44,28 @@ constant_17 (pTHX_ const char *name, IV *iv_return) {
     /*                             ^         */
 #ifdef LIBSSH2_FXF_WRITE
       *iv_return = LIBSSH2_FXF_WRITE;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'K':
+    if (memEQ(name, "LIBSSH2_TRACE_KEX", 17)) {
+    /*                             ^         */
+#ifdef LIBSSH2_TRACE_KEX
+      *iv_return = LIBSSH2_TRACE_KEX;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'S':
+    if (memEQ(name, "LIBSSH2_TRACE_SCP", 17)) {
+    /*                             ^         */
+#ifdef LIBSSH2_TRACE_SCP
+      *iv_return = LIBSSH2_TRACE_SCP;
       return PERL_constant_ISIV;
 #else
       return PERL_constant_NOTDEF;
@@ -81,7 +104,8 @@ constant_18 (pTHX_ const char *name, IV *iv_return) {
      here.  However, subsequent manual editing may have added or removed some.
      LIBSSH2_ERROR_FILE LIBSSH2_ERROR_ZLIB LIBSSH2_FXF_APPEND
      LIBSSH2_FX_FAILURE LIBSSH2_METHOD_KEX LIBSSH2_SFTP_LSTAT
-     LIBSSH2_TERM_WIDTH */
+     LIBSSH2_TERM_WIDTH LIBSSH2_TRACE_AUTH LIBSSH2_TRACE_CONN
+     LIBSSH2_TRACE_SFTP */
   /* Offset 15 gives the best switch position.  */
   switch (name[15]) {
   case 'D':
@@ -100,6 +124,17 @@ constant_18 (pTHX_ const char *name, IV *iv_return) {
     /*                              ^         */
 #ifdef LIBSSH2_FXF_APPEND
       *iv_return = LIBSSH2_FXF_APPEND;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'F':
+    if (memEQ(name, "LIBSSH2_TRACE_SFTP", 18)) {
+    /*                              ^         */
+#ifdef LIBSSH2_TRACE_SFTP
+      *iv_return = LIBSSH2_TRACE_SFTP;
       return PERL_constant_ISIV;
 #else
       return PERL_constant_NOTDEF;
@@ -139,6 +174,17 @@ constant_18 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
+  case 'O':
+    if (memEQ(name, "LIBSSH2_TRACE_CONN", 18)) {
+    /*                              ^         */
+#ifdef LIBSSH2_TRACE_CONN
+      *iv_return = LIBSSH2_TRACE_CONN;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
   case 'T':
     if (memEQ(name, "LIBSSH2_SFTP_LSTAT", 18)) {
     /*                              ^         */
@@ -160,6 +206,15 @@ constant_18 (pTHX_ const char *name, IV *iv_return) {
       return PERL_constant_NOTDEF;
 #endif
     }
+    if (memEQ(name, "LIBSSH2_TRACE_AUTH", 18)) {
+    /*                              ^         */
+#ifdef LIBSSH2_TRACE_AUTH
+      *iv_return = LIBSSH2_TRACE_AUTH;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
     break;
   }
   return PERL_constant_NOTFOUND;
@@ -170,12 +225,13 @@ constant_19 (pTHX_ const char *name, IV *iv_return) {
   /* When generated this function returned values for the list of names given
      here.  However, subsequent manual editing may have added or removed some.
      LIBSSH2_ERROR_ALLOC LIBSSH2_ERROR_INVAL LIBSSH2_ERROR_PROTO
-     LIBSSH2_FX_NO_MEDIA LIBSSH2_TERM_HEIGHT */
-  /* Offset 15 gives the best switch position.  */
-  switch (name[15]) {
-  case 'E':
-    if (memEQ(name, "LIBSSH2_FX_NO_MEDIA", 19)) {
-    /*                              ^          */
+     LIBSSH2_FX_NO_MEDIA LIBSSH2_TERM_HEIGHT LIBSSH2_TRACE_ERROR
+     LIBSSH2_TRACE_TRANS */
+  /* Offset 18 gives the best switch position.  */
+  switch (name[18]) {
+  case 'A':
+    if (memEQ(name, "LIBSSH2_FX_NO_MEDI", 18)) {
+    /*                                 A      */
 #ifdef LIBSSH2_FX_NO_MEDIA
       *iv_return = LIBSSH2_FX_NO_MEDIA;
       return PERL_constant_ISIV;
@@ -184,20 +240,9 @@ constant_19 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
-  case 'I':
-    if (memEQ(name, "LIBSSH2_TERM_HEIGHT", 19)) {
-    /*                              ^          */
-#ifdef LIBSSH2_TERM_HEIGHT
-      *iv_return = LIBSSH2_TERM_HEIGHT;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    break;
-  case 'L':
-    if (memEQ(name, "LIBSSH2_ERROR_ALLOC", 19)) {
-    /*                              ^          */
+  case 'C':
+    if (memEQ(name, "LIBSSH2_ERROR_ALLO", 18)) {
+    /*                                 C      */
 #ifdef LIBSSH2_ERROR_ALLOC
       *iv_return = LIBSSH2_ERROR_ALLOC;
       return PERL_constant_ISIV;
@@ -206,9 +251,9 @@ constant_19 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
-  case 'N':
-    if (memEQ(name, "LIBSSH2_ERROR_INVAL", 19)) {
-    /*                              ^          */
+  case 'L':
+    if (memEQ(name, "LIBSSH2_ERROR_INVA", 18)) {
+    /*                                 L      */
 #ifdef LIBSSH2_ERROR_INVAL
       *iv_return = LIBSSH2_ERROR_INVAL;
       return PERL_constant_ISIV;
@@ -217,11 +262,44 @@ constant_19 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
-  case 'R':
-    if (memEQ(name, "LIBSSH2_ERROR_PROTO", 19)) {
-    /*                              ^          */
+  case 'O':
+    if (memEQ(name, "LIBSSH2_ERROR_PROT", 18)) {
+    /*                                 O      */
 #ifdef LIBSSH2_ERROR_PROTO
       *iv_return = LIBSSH2_ERROR_PROTO;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'R':
+    if (memEQ(name, "LIBSSH2_TRACE_ERRO", 18)) {
+    /*                                 R      */
+#ifdef LIBSSH2_TRACE_ERROR
+      *iv_return = LIBSSH2_TRACE_ERROR;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'S':
+    if (memEQ(name, "LIBSSH2_TRACE_TRAN", 18)) {
+    /*                                 S      */
+#ifdef LIBSSH2_TRACE_TRANS
+      *iv_return = LIBSSH2_TRACE_TRANS;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'T':
+    if (memEQ(name, "LIBSSH2_TERM_HEIGH", 18)) {
+    /*                                 T      */
+#ifdef LIBSSH2_TERM_HEIGHT
+      *iv_return = LIBSSH2_TERM_HEIGHT;
       return PERL_constant_ISIV;
 #else
       return PERL_constant_NOTDEF;
@@ -236,11 +314,22 @@ static int
 constant_20 (pTHX_ const char *name, IV *iv_return) {
   /* When generated this function returned values for the list of names given
      here.  However, subsequent manual editing may have added or removed some.
-     LIBSSH2_CALLBACK_X11 LIBSSH2_FLAG_SIGPIPE LIBSSH2_FX_LINK_LOOP
-     LIBSSH2_SFTP_OPENDIR LIBSSH2_SFTP_SETSTAT LIBSSH2_SFTP_SYMLINK
-     LIBSSH2_SFTP_VERSION */
+     LIBSSH2_CALLBACK_X11 LIBSSH2_ERROR_EAGAIN LIBSSH2_FLAG_SIGPIPE
+     LIBSSH2_FX_LINK_LOOP LIBSSH2_SFTP_OPENDIR LIBSSH2_SFTP_SETSTAT
+     LIBSSH2_SFTP_SYMLINK LIBSSH2_SFTP_VERSION LIBSSH2_TRACE_SOCKET */
   /* Offset 15 gives the best switch position.  */
   switch (name[15]) {
+  case 'A':
+    if (memEQ(name, "LIBSSH2_ERROR_EAGAIN", 20)) {
+    /*                              ^           */
+#ifdef LIBSSH2_ERROR_EAGAIN
+      *iv_return = LIBSSH2_ERROR_EAGAIN;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
   case 'E':
     if (memEQ(name, "LIBSSH2_SFTP_OPENDIR", 20)) {
     /*                              ^           */
@@ -279,6 +368,17 @@ constant_20 (pTHX_ const char *name, IV *iv_return) {
     /*                              ^           */
 #ifdef LIBSSH2_SFTP_SYMLINK
       *iv_return = LIBSSH2_SFTP_SYMLINK;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'O':
+    if (memEQ(name, "LIBSSH2_TRACE_SOCKET", 20)) {
+    /*                              ^           */
+#ifdef LIBSSH2_TRACE_SOCKET
+      *iv_return = LIBSSH2_TRACE_SOCKET;
       return PERL_constant_ISIV;
 #else
       return PERL_constant_NOTDEF;
@@ -653,7 +753,7 @@ constant_23 (pTHX_ const char *name, IV *iv_return) {
      LIBSSH2_CALLBACK_IGNORE LIBSSH2_DH_GEX_MAXGROUP LIBSSH2_DH_GEX_MINGROUP
      LIBSSH2_DH_GEX_OPTGROUP LIBSSH2_FX_NO_SUCH_FILE LIBSSH2_FX_NO_SUCH_PATH
      LIBSSH2_METHOD_CRYPT_CS LIBSSH2_METHOD_CRYPT_SC LIBSSH2_POLLFD_LISTENER
-     LIBSSH2_POLLFD_POLLNVAL */
+     LIBSSH2_POLLFD_POLLNVAL LIBSSH2_TRACE_PUBLICKEY */
   /* Offset 17 gives the best switch position.  */
   switch (name[17]) {
   case 'H':
@@ -692,6 +792,15 @@ constant_23 (pTHX_ const char *name, IV *iv_return) {
     /*                                ^            */
 #ifdef LIBSSH2_POLLFD_POLLNVAL
       *iv_return = LIBSSH2_POLLFD_POLLNVAL;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    if (memEQ(name, "LIBSSH2_TRACE_PUBLICKEY", 23)) {
+    /*                                ^            */
+#ifdef LIBSSH2_TRACE_PUBLICKEY
+      *iv_return = LIBSSH2_TRACE_PUBLICKEY;
       return PERL_constant_ISIV;
 #else
       return PERL_constant_NOTDEF;
@@ -1279,12 +1388,13 @@ constant_28 (pTHX_ const char *name, IV *iv_return) {
      here.  However, subsequent manual editing may have added or removed some.
      LIBSSH2_ERROR_CHANNEL_CLOSED LIBSSH2_ERROR_REQUEST_DENIED
      LIBSSH2_ERROR_SOCKET_TIMEOUT LIBSSH2_FX_PERMISSION_DENIED
-     LIBSSH2_FX_UNKNOWN_PRINCIPLE LIBSSH2_SOCKET_POLL_MAXLOOPS */
-  /* Offset 20 gives the best switch position.  */
-  switch (name[20]) {
-  case 'L':
+     LIBSSH2_FX_UNKNOWN_PRINCIPLE LIBSSH2_SOCKET_BLOCK_INBOUND
+     LIBSSH2_SOCKET_POLL_MAXLOOPS */
+  /* Offset 16 gives the best switch position.  */
+  switch (name[16]) {
+  case 'A':
     if (memEQ(name, "LIBSSH2_ERROR_CHANNEL_CLOSED", 28)) {
-    /*                                   ^              */
+    /*                               ^                  */
 #ifdef LIBSSH2_ERROR_CHANNEL_CLOSED
       *iv_return = LIBSSH2_ERROR_CHANNEL_CLOSED;
       return PERL_constant_ISIV;
@@ -1293,9 +1403,31 @@ constant_28 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
-  case 'M':
+  case 'C':
+    if (memEQ(name, "LIBSSH2_ERROR_SOCKET_TIMEOUT", 28)) {
+    /*                               ^                  */
+#ifdef LIBSSH2_ERROR_SOCKET_TIMEOUT
+      *iv_return = LIBSSH2_ERROR_SOCKET_TIMEOUT;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'L':
+    if (memEQ(name, "LIBSSH2_SOCKET_BLOCK_INBOUND", 28)) {
+    /*                               ^                  */
+#ifdef LIBSSH2_SOCKET_BLOCK_INBOUND
+      *iv_return = LIBSSH2_SOCKET_BLOCK_INBOUND;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'O':
     if (memEQ(name, "LIBSSH2_SOCKET_POLL_MAXLOOPS", 28)) {
-    /*                                   ^              */
+    /*                               ^                  */
 #ifdef LIBSSH2_SOCKET_POLL_MAXLOOPS
       *iv_return = LIBSSH2_SOCKET_POLL_MAXLOOPS;
       return PERL_constant_ISIV;
@@ -1304,31 +1436,9 @@ constant_28 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
-  case 'N':
-    if (memEQ(name, "LIBSSH2_FX_PERMISSION_DENIED", 28)) {
-    /*                                   ^              */
-#ifdef LIBSSH2_FX_PERMISSION_DENIED
-      *iv_return = LIBSSH2_FX_PERMISSION_DENIED;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    break;
-  case 'R':
-    if (memEQ(name, "LIBSSH2_FX_UNKNOWN_PRINCIPLE", 28)) {
-    /*                                   ^              */
-#ifdef LIBSSH2_FX_UNKNOWN_PRINCIPLE
-      *iv_return = LIBSSH2_FX_UNKNOWN_PRINCIPLE;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    break;
-  case 'T':
+  case 'Q':
     if (memEQ(name, "LIBSSH2_ERROR_REQUEST_DENIED", 28)) {
-    /*                                   ^              */
+    /*                               ^                  */
 #ifdef LIBSSH2_ERROR_REQUEST_DENIED
       *iv_return = LIBSSH2_ERROR_REQUEST_DENIED;
       return PERL_constant_ISIV;
@@ -1337,11 +1447,22 @@ constant_28 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
-  case '_':
-    if (memEQ(name, "LIBSSH2_ERROR_SOCKET_TIMEOUT", 28)) {
-    /*                                   ^              */
-#ifdef LIBSSH2_ERROR_SOCKET_TIMEOUT
-      *iv_return = LIBSSH2_ERROR_SOCKET_TIMEOUT;
+  case 'S':
+    if (memEQ(name, "LIBSSH2_FX_PERMISSION_DENIED", 28)) {
+    /*                               ^                  */
+#ifdef LIBSSH2_FX_PERMISSION_DENIED
+      *iv_return = LIBSSH2_FX_PERMISSION_DENIED;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'W':
+    if (memEQ(name, "LIBSSH2_FX_UNKNOWN_PRINCIPLE", 28)) {
+    /*                               ^                  */
+#ifdef LIBSSH2_FX_UNKNOWN_PRINCIPLE
+      *iv_return = LIBSSH2_FX_UNKNOWN_PRINCIPLE;
       return PERL_constant_ISIV;
 #else
       return PERL_constant_NOTDEF;
@@ -1359,23 +1480,34 @@ constant_29 (pTHX_ const char *name, IV *iv_return) {
      LIBSSH2_ERROR_CHANNEL_FAILURE LIBSSH2_ERROR_CHANNEL_UNKNOWN
      LIBSSH2_POLLFD_CHANNEL_CLOSED LIBSSH2_POLLFD_SESSION_CLOSED
      LIBSSH2_SFTP_ATTR_PERMISSIONS LIBSSH2_SFTP_RENAME_OVERWRITE
-     LIBSSH2_SFTP_TYPE_CHAR_DEVICE */
-  /* Offset 25 gives the best switch position.  */
-  switch (name[25]) {
-  case 'I':
-    if (memEQ(name, "LIBSSH2_SFTP_ATTR_PERMISSIONS", 29)) {
-    /*                                        ^          */
-#ifdef LIBSSH2_SFTP_ATTR_PERMISSIONS
-      *iv_return = LIBSSH2_SFTP_ATTR_PERMISSIONS;
+     LIBSSH2_SFTP_TYPE_CHAR_DEVICE LIBSSH2_SOCKET_BLOCK_OUTBOUND */
+  /* Offset 15 gives the best switch position.  */
+  switch (name[15]) {
+  case 'B':
+    if (memEQ(name, "LIBSSH2_SOCKET_BLOCK_OUTBOUND", 29)) {
+    /*                              ^                    */
+#ifdef LIBSSH2_SOCKET_BLOCK_OUTBOUND
+      *iv_return = LIBSSH2_SOCKET_BLOCK_OUTBOUND;
       return PERL_constant_ISIV;
 #else
       return PERL_constant_NOTDEF;
 #endif
     }
     break;
-  case 'L':
+  case 'C':
+    if (memEQ(name, "LIBSSH2_POLLFD_CHANNEL_CLOSED", 29)) {
+    /*                              ^                    */
+#ifdef LIBSSH2_POLLFD_CHANNEL_CLOSED
+      *iv_return = LIBSSH2_POLLFD_CHANNEL_CLOSED;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'H':
     if (memEQ(name, "LIBSSH2_ERROR_CHANNEL_FAILURE", 29)) {
-    /*                                        ^          */
+    /*                              ^                    */
 #ifdef LIBSSH2_ERROR_CHANNEL_FAILURE
       *iv_return = LIBSSH2_ERROR_CHANNEL_FAILURE;
       return PERL_constant_ISIV;
@@ -1383,10 +1515,8 @@ constant_29 (pTHX_ const char *name, IV *iv_return) {
       return PERL_constant_NOTDEF;
 #endif
     }
-    break;
-  case 'N':
     if (memEQ(name, "LIBSSH2_ERROR_CHANNEL_UNKNOWN", 29)) {
-    /*                                        ^          */
+    /*                              ^                    */
 #ifdef LIBSSH2_ERROR_CHANNEL_UNKNOWN
       *iv_return = LIBSSH2_ERROR_CHANNEL_UNKNOWN;
       return PERL_constant_ISIV;
@@ -1395,29 +1525,9 @@ constant_29 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
-  case 'O':
-    if (memEQ(name, "LIBSSH2_POLLFD_CHANNEL_CLOSED", 29)) {
-    /*                                        ^          */
-#ifdef LIBSSH2_POLLFD_CHANNEL_CLOSED
-      *iv_return = LIBSSH2_POLLFD_CHANNEL_CLOSED;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    if (memEQ(name, "LIBSSH2_POLLFD_SESSION_CLOSED", 29)) {
-    /*                                        ^          */
-#ifdef LIBSSH2_POLLFD_SESSION_CLOSED
-      *iv_return = LIBSSH2_POLLFD_SESSION_CLOSED;
-      return PERL_constant_ISIV;
-#else
-      return PERL_constant_NOTDEF;
-#endif
-    }
-    break;
-  case 'R':
+  case 'N':
     if (memEQ(name, "LIBSSH2_SFTP_RENAME_OVERWRITE", 29)) {
-    /*                                        ^          */
+    /*                              ^                    */
 #ifdef LIBSSH2_SFTP_RENAME_OVERWRITE
       *iv_return = LIBSSH2_SFTP_RENAME_OVERWRITE;
       return PERL_constant_ISIV;
@@ -1426,11 +1536,33 @@ constant_29 (pTHX_ const char *name, IV *iv_return) {
 #endif
     }
     break;
-  case 'V':
+  case 'P':
     if (memEQ(name, "LIBSSH2_SFTP_TYPE_CHAR_DEVICE", 29)) {
-    /*                                        ^          */
+    /*                              ^                    */
 #ifdef LIBSSH2_SFTP_TYPE_CHAR_DEVICE
       *iv_return = LIBSSH2_SFTP_TYPE_CHAR_DEVICE;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'S':
+    if (memEQ(name, "LIBSSH2_POLLFD_SESSION_CLOSED", 29)) {
+    /*                              ^                    */
+#ifdef LIBSSH2_POLLFD_SESSION_CLOSED
+      *iv_return = LIBSSH2_POLLFD_SESSION_CLOSED;
+      return PERL_constant_ISIV;
+#else
+      return PERL_constant_NOTDEF;
+#endif
+    }
+    break;
+  case 'T':
+    if (memEQ(name, "LIBSSH2_SFTP_ATTR_PERMISSIONS", 29)) {
+    /*                              ^                    */
+#ifdef LIBSSH2_SFTP_ATTR_PERMISSIONS
+      *iv_return = LIBSSH2_SFTP_ATTR_PERMISSIONS;
       return PERL_constant_ISIV;
 #else
       return PERL_constant_NOTDEF;
@@ -1645,7 +1777,7 @@ constant (pTHX_ const char *name, STRLEN len, IV *iv_return) {
      Regenerate these constant functions by feeding this entire source file to
      perl -x
 
-#!/usr/bin/perl5.8.7 -w
+#!perl -w
 use ExtUtils::Constant qw (constant_types C_constant XS_constant);
 
 my $types = {map {($_, 1)} qw(IV)};
@@ -1665,11 +1797,12 @@ my @names = (qw(LIBSSH2_CALLBACK_DEBUG LIBSSH2_CALLBACK_DISCONNECT
 	       LIBSSH2_ERROR_CHANNEL_REQUEST_DENIED
 	       LIBSSH2_ERROR_CHANNEL_UNKNOWN
 	       LIBSSH2_ERROR_CHANNEL_WINDOW_EXCEEDED LIBSSH2_ERROR_DECRYPT
-	       LIBSSH2_ERROR_FILE LIBSSH2_ERROR_HOSTKEY_INIT
-	       LIBSSH2_ERROR_HOSTKEY_SIGN LIBSSH2_ERROR_INVAL
-	       LIBSSH2_ERROR_INVALID_MAC LIBSSH2_ERROR_INVALID_POLL_TYPE
-	       LIBSSH2_ERROR_KEX_FAILURE LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE
-	       LIBSSH2_ERROR_METHOD_NONE LIBSSH2_ERROR_METHOD_NOT_SUPPORTED
+	       LIBSSH2_ERROR_EAGAIN LIBSSH2_ERROR_FILE
+	       LIBSSH2_ERROR_HOSTKEY_INIT LIBSSH2_ERROR_HOSTKEY_SIGN
+	       LIBSSH2_ERROR_INVAL LIBSSH2_ERROR_INVALID_MAC
+	       LIBSSH2_ERROR_INVALID_POLL_TYPE LIBSSH2_ERROR_KEX_FAILURE
+	       LIBSSH2_ERROR_KEY_EXCHANGE_FAILURE LIBSSH2_ERROR_METHOD_NONE
+	       LIBSSH2_ERROR_METHOD_NOT_SUPPORTED
 	       LIBSSH2_ERROR_PASSWORD_EXPIRED LIBSSH2_ERROR_PROTO
 	       LIBSSH2_ERROR_PUBLICKEY_PROTOCOL
 	       LIBSSH2_ERROR_PUBLICKEY_UNRECOGNIZED
@@ -1717,15 +1850,19 @@ my @names = (qw(LIBSSH2_CALLBACK_DEBUG LIBSSH2_CALLBACK_DISCONNECT
 	       LIBSSH2_SFTP_TYPE_REGULAR LIBSSH2_SFTP_TYPE_SOCKET
 	       LIBSSH2_SFTP_TYPE_SPECIAL LIBSSH2_SFTP_TYPE_SYMLINK
 	       LIBSSH2_SFTP_TYPE_UNKNOWN LIBSSH2_SFTP_VERSION
+	       LIBSSH2_SOCKET_BLOCK_INBOUND LIBSSH2_SOCKET_BLOCK_OUTBOUND
 	       LIBSSH2_SOCKET_POLL_MAXLOOPS LIBSSH2_SOCKET_POLL_UDELAY
 	       LIBSSH2_TERM_HEIGHT LIBSSH2_TERM_HEIGHT_PX LIBSSH2_TERM_WIDTH
-	       LIBSSH2_TERM_WIDTH_PX));
+	       LIBSSH2_TERM_WIDTH_PX LIBSSH2_TRACE_AUTH LIBSSH2_TRACE_CONN
+	       LIBSSH2_TRACE_ERROR LIBSSH2_TRACE_KEX LIBSSH2_TRACE_PUBLICKEY
+	       LIBSSH2_TRACE_SCP LIBSSH2_TRACE_SFTP LIBSSH2_TRACE_SOCKET
+	       LIBSSH2_TRACE_TRANS));
 
-print constant_types(); # macro defs
+print constant_types(), "\n"; # macro defs
 foreach (C_constant ("Net::SSH2", 'constant', 'IV', $types, undef, 3, @names) ) {
     print $_, "\n"; # C constant subs
 }
-print "#### XS Section:\n";
+print "\n#### XS Section:\n";
 print XS_constant ("Net::SSH2", $types);
 __END__
    */

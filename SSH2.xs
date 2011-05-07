@@ -553,6 +553,13 @@ net_ss_trace(SSH2* ss, SV* bitmask)
 CODE:
     libssh2_trace(ss->session, SvIV(bitmask));
 
+SV*
+net_ss_block_directions(SSH2* ss)
+CODE:
+    RETVAL = newSViv((IV)libssh2_session_block_directions(ss->session));
+OUTPUT:
+    RETVAL
+
 void
 net_ss_blocking(SSH2* ss, SV* blocking)
 CODE:
@@ -1422,7 +1429,7 @@ CODE:
         if (error >= 0 && error < countof(sftp_error))
             ST(1) = sv_2mortal(newSVpvf("SSH_FX_%s", sftp_error[error]));
         else
-            ST(1) = sv_2mortal(newSVpvf("SSH_FX_UNKNOWN(%d)", error));
+            ST(1) = sv_2mortal(newSVpvf("SSH_FX_UNKNOWN(%lu)", error));
         XSRETURN(2);
     }
 

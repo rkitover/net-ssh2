@@ -30,6 +30,23 @@ my @EX_channel = qw(
         LIBSSH2_CHANNEL_EXTENDED_DATA_NORMAL
 );
 
+my @EX_socket = qw(
+        LIBSSH2_SOCKET_BLOCK_INBOUND
+        LIBSSH2_SOCKET_BLOCK_OUTBOUND
+);
+
+my @EX_trace = qw(
+        LIBSSH2_TRACE_TRANS
+        LIBSSH2_TRACE_KEX
+        LIBSSH2_TRACE_AUTH
+        LIBSSH2_TRACE_CONN
+        LIBSSH2_TRACE_SCP
+        LIBSSH2_TRACE_SFTP
+        LIBSSH2_TRACE_ERROR
+        LIBSSH2_TRACE_PUBLICKEY
+        LIBSSH2_TRACE_SOCKET
+);
+
 my @EX_error = qw(
         LIBSSH2_ERROR_ALLOC
         LIBSSH2_ERROR_BANNER_NONE
@@ -66,6 +83,7 @@ my @EX_error = qw(
         LIBSSH2_ERROR_SOCKET_TIMEOUT
         LIBSSH2_ERROR_TIMEOUT
         LIBSSH2_ERROR_ZLIB
+        LIBSSH2_ERROR_EAGAIN
 );
 
 my @EX_hash = qw(
@@ -170,13 +188,15 @@ my @EX_disconnect = qw(
 
 our %EXPORT_TAGS = (
     all        => [
-        @EX_callback, @EX_channel, @EX_error, @EX_hash, @EX_method,
-        @EX_fx, @EX_fxf, @EX_sftp, @EX_disconnect,
+        @EX_callback, @EX_channel, @EX_error, @EX_socket, @EX_trace, @EX_hash,
+        @EX_method, @EX_fx, @EX_fxf, @EX_sftp, @EX_disconnect,
     ],
     # ssh
     callback   => \@EX_callback,
     channel    => \@EX_channel,
     error      => \@EX_error,
+    socket     => \@EX_socket,
+    trace      => \@EX_trace,
     hash       => \@EX_hash,
     method     => \@EX_method,
     disconnect => \@EX_disconnect,
@@ -539,6 +559,60 @@ false on failure; use the error method to get extended error information.
 The typical order is to create the SSH2 object, set up the connection methods
 you want to use, call connect, authenticate with one of the C<auth> methods,
 then create channels on the connection to perform commands.
+
+=head1 EXPORTS
+
+Exports the following constant tags:
+
+=over 4
+
+=item all
+
+All constants.
+
+=back
+
+ssh constants:
+
+=over 4
+
+=item callback
+
+=item channel
+
+=item error
+
+=item socket
+
+=item trace
+
+Tracing constants for use with C<< ->trace >> and C<< ->new(trace => ...) >>.
+
+=item hash
+
+Key hash constants.
+
+=item method
+
+=item disconnect
+
+Disconnect type constants.
+
+=back
+
+SFTP constants:
+
+=over 4
+
+=item fx
+
+=item fxf
+
+=item sftp
+
+=back
+
+=head1 METHODS
 
 =head2 new
 
@@ -929,6 +1003,12 @@ the integer value.
 =back
 
 Returns undef on error, or the number of active objects.
+
+=head2 block_directions
+
+Get the blocked direction when a function returns LIBSSH2_ERROR_EAGAIN, returns
+LIBSSH2_SOCKET_BLOCK_INBOUND or LIBSSH2_SOCKET_BLOCK_OUTBOUND from the socket
+export group.
 
 =head2 debug ( state )
 
