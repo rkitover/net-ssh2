@@ -1313,6 +1313,9 @@ CODE:
          pv_buffer, len_buffer);
         if (count < 0 && LIBSSH2_ERROR_EAGAIN != count)
             XSRETURN_EMPTY;
+        if (LIBSSH2_ERROR_EAGAIN == count
+                && libssh2_session_get_blocking(ch->session) == 0)
+            XSRETURN_IV(LIBSSH2_ERROR_EAGAIN);
     } while (LIBSSH2_ERROR_EAGAIN == count);
     XSRETURN_IV(count);
 
