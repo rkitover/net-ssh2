@@ -200,7 +200,8 @@ Returns number of bytes flushed, undef on error.
 
 =head2 exit_signal
 
-Returns the exit signal of the command executed on the channel.
+Returns the exit signal of the command executed on the channel. Requires libssh
+1.2.8 or higher.
 
 =head1 SEE ALSO
 
