@@ -1,5 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
+        - fix for segfault due to auth_list() (RT#68060)
+
 0.34  2011-05-07 08:34:35
         - fix trace option to ->new
         - handle partial writes for scp_put

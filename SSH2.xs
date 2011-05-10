@@ -789,7 +789,7 @@ PPCODE:
         count = split_comma(sp, auth);
     else
         PUSHs(sv_2mortal(newSVpv(auth, 0)));
-    Safefree(auth);
+    /* Safefree(auth); this causes a double-free segfault */
     XSRETURN(count);
 
 void
@@ -1153,7 +1153,7 @@ CODE:
         NULL, NULL, NULL, NULL, NULL);
     if (exitsignal) {
         RETVAL = newSVpv(exitsignal, 0);
-        libssh2_free(ch->ss->session, exitsignal);
+        Safefree(exitsignal);
     }
 OUTPUT:
     RETVAL
