@@ -17,7 +17,7 @@ perl_version '5.006000';
 
 my @search_paths = (
   $Config{siteprefixexp}, $Config{prefixexp},
-  '/usr/local/ssl', '/usr', '/usr/local', '/opt', '/',
+  '/usr/local/ssl', '/usr', '/usr/local', '/opt', '/opt/local', '/',
   $ENV{HOME}
 );
 my %uniq;
