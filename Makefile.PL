@@ -41,6 +41,10 @@ obtained from http://www.openssl.org.
 Debian:   sudo aptitude install libssh2-1-dev
 OpenSUSE: sudo zypper in libssh2-1 libssh2-devel
 
+You can pass your libssh2 lib and include dirs on the command line. E.g.:
+
+    perl Makefile.PL lib=$HOME/libssh2/lib inc=$HOME/libssh2/include
+
 EOF
 
 checklibs
