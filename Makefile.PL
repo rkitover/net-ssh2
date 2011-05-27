@@ -7,6 +7,11 @@ my $lib = '';
 my $inc = '';
 my $extra_libs = '-lz -lssl -lcrypto';
 
+for (@ARGV) {
+    /^inc=(.*)/ and $inc = $1;
+    /^lib=(.*)/ and $lib = $1;
+}
+
 # Windows, as usual, is a special case
 my $win32 = ($^O eq 'MSWin32');
 my @define = $win32 ? (DEFINE => '-DLIBSSH2_WIN32') : ();
