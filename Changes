@@ -1,5 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
+0.36  2011-05-27 21:28:00
         - allow setting lib and inc paths on the command line (salva)
 
 0.35  2011-05-10 17:43:17
