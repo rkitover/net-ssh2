@@ -8,6 +8,9 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#define NEED_sv_2pv_flags
+#define NEED_newRV_noinc
+#define NEED_sv_2pv_nolen
 #include "ppport.h"
 
 #include <libssh2.h>
@@ -1014,7 +1017,7 @@ CODE:
     clear_error(ss);
     count = av_len(event) + 1;
     debug("%s::poll: timeout = %d, array[%d]\n", class, timeout, count);
-    if (!count)  // some architectures return null for malloc(0)
+    if (!count)  /* some architectures return null for malloc(0) */
         XSRETURN_IV(0);
 
     New(0, pollfd, count, LIBSSH2_POLLFD);
@@ -1141,7 +1144,7 @@ CODE:
     }
     XSRETURN_IV(success);
 
-#if (LIBSSH2_VERSION_MAJOR == 1 && ((LIBSSH2_VERSION_MINOR == 2 && LIBSSH2_VERSION_PATCH >= 8) || LIBSSH2_VERSION_MINOR > 2)) || LIBSSH2_VERSION_MAJOR > 1
+#if LIBSSH2_VERSION_NUM >= 0x010208
 
 SV*
 net_ch_exit_signal(SSH2_CHANNEL* ch)
