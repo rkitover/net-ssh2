@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.38  2011-06-02 14:52:30
+        - add version check for block_directions
+
 0.37  2011-06-02 14:34:26
         - update ppport.h
         - use correct libssh2 version check for exit_signal support

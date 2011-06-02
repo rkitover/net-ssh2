@@ -556,12 +556,23 @@ net_ss_trace(SSH2* ss, SV* bitmask)
 CODE:
     libssh2_trace(ss->session, SvIV(bitmask));
 
+#if LIBSSH2_VERSION_MAJOR >= 1
+
 SV*
 net_ss_block_directions(SSH2* ss)
 CODE:
     RETVAL = newSViv((IV)libssh2_session_block_directions(ss->session));
 OUTPUT:
     RETVAL
+
+#else
+
+void
+net_ss_block_directions(SSH2* ss)
+CODE:
+    croak("libssh2 version 1.0 or higher required for block_directions support");
+
+#endif
 
 void
 net_ss_blocking(SSH2* ss, SV* blocking)
