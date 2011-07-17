@@ -830,7 +830,9 @@ CODE:
     if (!password || !SvPOK(password)) {
         char* auth = libssh2_userauth_list(ss->session,
          pv_username, len_username);
-        Safefree(auth);
+        /* This causes a double free segfault
+         * Safefree(auth);
+         */
         XSRETURN_IV(!auth && libssh2_userauth_authenticated(ss->session));
     }
 
