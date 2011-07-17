@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.39  2011-07-17 18:24:30
+        - fix double free in auth_password (RT#69444)
+
 0.38  2011-06-02 14:52:30
         - add version check for block_directions
 
