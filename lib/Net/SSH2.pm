@@ -893,6 +893,10 @@ echoed, respectively) which should return an array of responses.
 If only a username is provided, the default callback will handle standard
 interactive responses; L<Term::ReadKey> is required.
 
+=head2 auth_agent ( username )
+
+Try to authenticate using ssh-agent.
+
 =head2 auth ( ... )
 
 This is a general, prioritizing authentication mechanism that can use any
