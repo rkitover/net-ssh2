@@ -888,7 +888,11 @@ CODE:
             // error
             XSRETURN_IV(agent_end);
         }
+
         rc = libssh2_agent_userauth(agent, pv_username, identity);
+        while (rc == LIBSSH2_ERROR_EAGAIN) {
+          rc = libssh2_agent_userauth(agent, pv_username, identity);
+        }
 
         if(rc >= 0) {
             // authenticated
