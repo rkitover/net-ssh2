@@ -278,6 +278,11 @@ sub connect {
 }
 
 my %Auth = (
+    'agent' => {
+        ssh => 'agent',
+        method => \&auth_agent,
+        params => [qw(username)],
+    },
     'hostbased'     => {
         ssh    => 'hostbased',
         method => \&auth_hostbased,
@@ -311,7 +316,7 @@ my %Auth = (
     },
 );
 
-my @Rank = qw(hostbased publickey keyboard keyboard-auto password none);
+my @Rank = qw(agent hostbased publickey keyboard keyboard-auto password none);
 
 sub auth {
     my ($self, %p) = @_;
