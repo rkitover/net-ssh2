@@ -278,6 +278,11 @@ sub connect {
 }
 
 my %Auth = (
+    'agent' => {
+        ssh => 'agent',
+        method => \&auth_agent,
+        params => [qw(username)],
+    },
     'hostbased'     => {
         ssh    => 'hostbased',
         method => \&auth_hostbased,
@@ -311,7 +316,7 @@ my %Auth = (
     },
 );
 
-my @Rank = qw(hostbased publickey keyboard keyboard-auto password none);
+my @Rank = qw(agent hostbased publickey keyboard keyboard-auto password none);
 
 sub auth {
     my ($self, %p) = @_;
@@ -892,6 +897,10 @@ echoed, respectively) which should return an array of responses.
 
 If only a username is provided, the default callback will handle standard
 interactive responses; L<Term::ReadKey> is required.
+
+=head2 auth_agent ( username )
+
+Try to authenticate using ssh-agent.
 
 =head2 auth ( ... )
 
