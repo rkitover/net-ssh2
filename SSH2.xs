@@ -854,6 +854,7 @@ CODE:
         ss->sv_tmp = NULL;
     }
 
+#if LIBSSH2_VERSION_NUM >= 0x010203
 
 void
 net_ss_auth_agent(SSH2* ss, SV* username)
@@ -912,6 +913,14 @@ CODE:
         XSRETURN_IV(agent_end);
     }
 
+#else
+
+void
+net_ss_auth_agent(SSH2* ss, SV* username)
+CODE:
+    croak("libssh2 version 1.2.3 or higher required for agent support");
+
+#endif
 
 void
 net_ss_auth_publickey(SSH2* ss, SV* username, const char* publickey, \
