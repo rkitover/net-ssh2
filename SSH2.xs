@@ -890,6 +890,12 @@ CODE:
         }
 
         rc = libssh2_agent_userauth(agent, pv_username, identity);
+
+        if (rc == LIBSSH2_ERROR_EAGAIN &&
+            libssh2_session_get_blocking(ss->session) == 0) {
+            XSRETURN_IV(rc);
+        }
+
         while (rc == LIBSSH2_ERROR_EAGAIN) {
           rc = libssh2_agent_userauth(agent, pv_username, identity);
         }
