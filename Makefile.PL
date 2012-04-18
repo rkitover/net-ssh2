@@ -22,13 +22,27 @@ all_from 'lib/Net/SSH2.pm';
 perl_version '5.006000';
 
 my @search_paths = (
+  $ENV{HOME}, ($ENV{HOME}."/libssh2"),
+  (split ' ', $Config{libspath}),
   $Config{siteprefixexp}, $Config{prefixexp},
   '/usr/local/ssl', '/usr', '/usr/local', '/opt', '/opt/local', '/',
-  $ENV{HOME}
 );
-my %uniq;
-@uniq{@search_paths} = ();
-@search_paths = keys %uniq;
+
+my %seen;
+foreach my $path (@search_paths) {
+    $seen{$path}++;
+}
+my (%skip, @without_dups);
+foreach my $path (@search_paths) {
+    next if $skip{$path};
+
+    if ($seen{$path} > 1) {
+        $skip{$path} = 1;
+    }
+
+    push @without_dups, $path;
+}
+@search_paths = @without_dups;
 
 my @search_libs = grep -d, map {($_.64,$_)} map "$_/lib", @search_paths;
 my @search_incs = grep -d, map "$_/include", @search_paths;
