@@ -3,7 +3,7 @@ use Cwd;
 use Config;
 use Module::Install::CheckLib ();
 
-# override library and include directory here if desired
+# override library and include directories here if desired
 my $lib = '';
 my $inc = '';
 my $extra_libs = '-lz -lssl -lcrypto';
@@ -48,14 +48,15 @@ You can pass your libssh2 lib and include dirs on the command line. E.g.:
 
 EOF
 
-checklibs
-    lib => 'ssh2',
-    header => 'libssh2.h',
-    libpath => [@search_libs, $lib ? $lib : ()],
-    incpath => [@search_incs, $inc ? $inc : ()],
-;
-
 if (!$lib && !$inc) {
+
+    checklibs
+        lib => 'ssh2',
+        header => 'libssh2.h',
+        libpath => [@search_libs],
+        incpath => [@search_incs],
+    ;
+
     $lib = (join ' ', map "-L$_", @search_libs) . " -lssh2 $extra_libs";
     $inc =  join ' ', map "-I$_", @search_incs;
 } else {
@@ -64,10 +65,12 @@ if (!$lib && !$inc) {
 }
 
 auto_provides;
+
 libs $lib;
-inc "$inc -I.";
+$inc = "$inc -I.";
+makemaker_args CCFLAGS => $inc, @define;
+
 realclean_files qw/const-c.inc const-xs.inc/;
-makemaker_args @define;
 
 resources repository =>
     'git://github.com/rkitover/net-ssh2.git';
