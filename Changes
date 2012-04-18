@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.41  2012-04-18 22:12:07
+        - fix missing -I for include directory with inc= option to Makefile.PL
+          (RT#73659)
+
 0.40  2011-10-23 18:41:17
         - add ssh-agent support (krimdomu)
 
