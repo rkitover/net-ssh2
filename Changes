@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+        - add LD_RUN_PATH/LD_LIBRARY_PATH to search paths (RT#74747)
+        - fix order of search paths for libs/includes
+
 0.41  2012-04-18 22:12:07
         - fix missing -I for include directory with inc= option to Makefile.PL
           (RT#73659)

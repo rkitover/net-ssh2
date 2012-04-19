@@ -22,6 +22,9 @@ all_from 'lib/Net/SSH2.pm';
 perl_version '5.006000';
 
 my @search_paths = (
+  (split /\Q$Config{path_sep}\E/, $ENV{LD_RUN_PATH}),
+  (split /\Q$Config{path_sep}\E/, ($^O eq 'darwin' ?
+    $ENV{DYLD_LIBRARY_PATH} : $ENV{LD_LIBRARY_PATH})),
   $ENV{HOME}, ($ENV{HOME}."/libssh2"),
   (split ' ', $Config{libspath}),
   $Config{siteprefixexp}, $Config{prefixexp},
@@ -44,7 +47,7 @@ foreach my $path (@search_paths) {
 }
 @search_paths = @without_dups;
 
-my @search_libs = grep -d, map {($_.64,$_)} map "$_/lib", @search_paths;
+my @search_libs = grep -d, map +("$_/lib", "$_/lib64", $_), @search_paths;
 my @search_incs = grep -d, map "$_/include", @search_paths;
 
 print <<'EOF';
