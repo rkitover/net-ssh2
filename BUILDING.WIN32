@@ -1,0 +1,121 @@
+Here I'll describe how to build Net::SSH2 on Windows.
+
+* Install MinGW and MSys
+
+Instructions are here:
+
+    http://www.mingw.org/wiki/Getting_Started
+
+Use the GUI installer, make sure to install GCC, MSys and the Developer Tools.
+
+* Build OpenSSL
+
+Download the latest tarball of OpenSSL from:
+
+    http://www.openssl.org/source/
+
+Unpack it in an MSys bash shell and go into it.
+
+Run:
+
+    ./config
+    make
+    mkdir lib
+    cp libssl.a libcrypto.a lib
+
+* Build zlib
+
+Download the latest tarball of zlib from:
+
+    http://zlib.net/
+
+Unpack it in an MSys bash shell and go into it.
+
+Run:
+
+    make -f win32/Makefile.gcc
+    mkdir include
+    cp *.h include
+    mkdir lib
+    cp libz.a lib
+
+* Build libssh2
+
+Download the latest libssh2 from:
+
+    http://libssh2.org/
+
+Unpack it in an MSys bash shell and go into it.
+
+Note the directories where you built OpenSSL and zlib, I will use mine in the
+following example.
+
+Build libssh2:
+
+    ./buildconf
+    ./configure --with-openssl --with-libz \
+        --with-libssl-prefix=/c/Users/rkitover/src/openssl-1.0.1a \
+        --with-libz-prefix=/c/Users/rkitover/src/zlib-1.2.6
+    make
+
+It might error out during the build, that's ok, the static lib itself
+should be in src/.libs
+
+* Build Net::SSH2
+
+Download and unpack the Net::SSH2 distribution from CPAN.
+
+Open a cmd.exe shell.
+
+For ActiveState Perl, make sure you have dmake installed, to do this you may
+simply invoke:
+
+    ppm install dmake
+
+Also for ActiveState Perl, set your PATH for this session:
+
+    set PATH=c:\perl\bin;c:\mingw\bin;c:\perl\site\bin;c:\windows\system32;c:\windows
+
+It is important that Visual Studio/Platform SDK tools are not in your PATH,
+otherwise ActiveState Perl won't use MinGW, and that the official MinGW (the one
+we compiled the libraries with) takes precedence over the one that is often
+installed via PPM.
+
+For Strawberry Perl, we also want to use the official MinGW rather than the
+bundled one, so set your PATH as follows:
+
+    set PATH=c:\strawberry\perl\bin;c:\mingw\bin;c:\strawberry\c\bin;c:\windows\system32;c:\windows
+
+Edit Makefile.PL, 
+
+Change the line:
+
+    my $extra_libs = '-lz -lssl -lcrypto';
+
+to
+
+    my $extra_libs = 'c:/users/rkitover/src/zlib-1.2.6/lib/libz.a c:/users/rkitover/src/openssl-1.0.1a/lib/libssl.a c:/users/rkitover/src/openssl-1.0.1a/lib/libcrypto.a';
+
+(using the directories where you have the libs.)
+
+Change the line:
+
+    my @define = $win32 ? (DEFINE => '-DLIBSSH2_WIN32') : ();
+
+to
+
+    my @define = $win32 ? (
+        (DEFINE => '-DLIBSSH2_WIN32 -DLIBSSH2_API='),
+        (LDDLFLAGS => $Config{lddlflags} . ' -static-libgcc -static-libstdc++'),
+    ) : ();
+
+Build:
+
+    perl Makefile.PL lib=c:\users\rkitover\src\libssh2\src\.libs inc=c:\users\rkitover\src\libssh2\include
+    dmake
+    dmake test
+    dmake install
+
+That's it!
+
+I will improve both this process and this guide in the future.
