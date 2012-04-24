@@ -70,6 +70,9 @@ You can pass your libssh2 lib and include dirs on the command line. E.g.:
 
     perl Makefile.PL lib=$HOME/libssh2/lib inc=$HOME/libssh2/include
 
+If you want to build on Windows, see the file BUILDING.WIN32 in the
+distribution.
+
 EOF
 
 if (!$lib && !$inc) {
