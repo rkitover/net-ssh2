@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+        - correct fix for (RT#73659) (remove inc=/lib= from @ARGV)
+        - add BUILDING.WIN32 guide for building on Windows from scratch
+
 0.42  2012-04-19 14:05:44
         - add LD_RUN_PATH/LD_LIBRARY_PATH to search paths (RT#74747)
         - fix order of search paths for libs/includes
