@@ -1,5 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
+0.43  2012-04-24 07:47:21
         - correct fix for (RT#73659) (remove inc=/lib= from @ARGV)
         - add BUILDING.WIN32 guide for building on Windows from scratch
 
