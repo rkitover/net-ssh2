@@ -838,10 +838,11 @@ CODE:
 
     /* if we have a callback, setup its parameters */
     if (callback) {
-        SV* rgsv[] = { callback, ST(0), username }; /* callback, params... */
-        for (i = 0; i < countof(rgsv); ++i)
-            SvREFCNT_inc(rgsv[i]);
-        ss->sv_tmp = (SV*)av_make(countof(rgsv), rgsv);
+        AV* args = (AV*)sv_2mortal((SV*)newAV());
+        av_store(args, 0, newSVsv(callback));
+        av_store(args, 1, newSVsv(ST(0)));
+        av_store(args, 2, newSVsv(username));
+        ss->sv_tmp = (SV*)args;
     }
 
     pv_password = SvPV(password, len_password);
@@ -849,10 +850,8 @@ CODE:
      len_username, pv_password, len_password,
      callback ? cb_password_change_callback : NULL));
 
-    if (callback) {
-        SvREFCNT_dec(ss->sv_tmp);
+    if (callback)
         ss->sv_tmp = NULL;
-    }
 
 #if LIBSSH2_VERSION_NUM >= 0x010203
 
