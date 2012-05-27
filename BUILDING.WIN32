@@ -1,27 +1,44 @@
 Here I'll describe how to build Net::SSH2 on Windows.
 
-* Install MinGW and MSys
+** Install MinGW and MSys
 
 Instructions are here:
 
     http://www.mingw.org/wiki/Getting_Started
 
-Use the GUI installer, make sure to install GCC, MSys and the Developer Tools.
+Use the GUI installer, make sure to install the C compiler, the C++ compiler
+(this is VERY important, don't forget the C++ compiler, it is used for
+ linking!), MSys and the Developer Tools.
 
-* Build OpenSSL
+I like to add C:\MinGW\bin;C:\MinGW\MSys\1.0\local\bin;C:\MinGW\MSys\1.0\bin to
+my PATH in the System Control Panel under Environment Variables in Advanced
+Settings; and set the HOME environment variable to C:\Users\rkitover.
 
-Download the latest tarball of OpenSSL from:
+For 64bit perls, you will also need MinGW-w64, get it here:
 
-    http://www.openssl.org/source/
+    http://mingw-w64.sourceforge.net/
 
-Unpack it in an MSys bash shell and go into it.
+under WIN64 Downloads. Get either the rubenvb build from Personal Builds or the
+latest from Automated Builds, whichever is newer. Get the win64 native compiler
+suite, NOT the win32 cross-compiler suite. Unpack it to C:\MinGW_w64\. If there
+is a top level directory in the archive, unpack everything BELOW the top level
+directory to C:\MinGW_w64\.
 
-Run:
+** Building the libraries
 
-    ./config
-    make
-    mkdir lib
-    cp libssl.a libcrypto.a lib
+For this part we are going to use the MinGW MSys bash shell. You should have a
+shortcut for it under the MinGW program group. It's much nicer with the mintty
+terminal, if you want to install it run:
+
+    mingw-get install mintty
+
+then make a copy of the MinGW Shell shortcut to your desktop and modify the
+Target to add the -mintty switch to the end.
+
+For 64bit perls, we will build with the MinGW-w64 toolchain, so modify your PATH
+as follows for this section:
+
+    export PATH=/c/MinGW_w64/bin:$PATH
 
 * Build zlib
 
@@ -29,7 +46,10 @@ Download the latest tarball of zlib from:
 
     http://zlib.net/
 
-Unpack it in an MSys bash shell and go into it.
+Unpack it and go into it:
+
+    tar zxvf zlib-1.2.7.tar.gz
+    cd zlib-1.2.7
 
 Run:
 
@@ -39,13 +59,54 @@ Run:
     mkdir lib
     cp libz.a lib
 
+* Build OpenSSL
+
+Download the latest tarball of OpenSSL from:
+
+    http://www.openssl.org/source/
+
+Unpack it in and go into it:
+
+    tar zxvf openssl-1.0.1c.tar.gz
+    cd openssl-1.0.1c
+
+Configure for 32bit:
+
+    ./config no-shared zlib no-zlib-dynamic \
+        --with-zlib-include='C:\\Users\\rkitover\\src\\zlib-1.2.7\\include' \
+        --with-zlib-lib='C:\\Users\\rkitover\\src\\zlib-1.2.7\\lib'
+
+Configure for 64bit:
+
+    ./Configure mingw64 no-shared no-asm no-hw zlib no-zlib-dynamic \
+        --with-zlib-include='C:\\Users\\rkitover\\src\\zlib-1.2.7\\include' \
+        --with-zlib-lib='C:\\Users\\rkitover\\src\\zlib-1.2.7\\lib'
+
+You can experiment by removing the "no-asm no-hw" flags to ./Configure and
+seeing if the build succeeds, the assembly files did not build for me with the
+latest MinGW-w64, this was with the gcc-4.7.0 rubenvb build.
+
+Build:
+
+    make -j3
+    mkdir lib
+    cp libssl.a libcrypto.a lib
+
+Adjust the -j parameter for your system's number of cores +1.
+
+The build may not run to completion, building the apps may fail, but we don't
+care about that, as long as the .a files build.
+
 * Build libssh2
 
 Download the latest libssh2 from:
 
     http://libssh2.org/
 
-Unpack it in an MSys bash shell and go into it.
+Unpack it and go into it:
+
+    tar zxvf libssh2-1.4.2.tar.gz
+    cd libssh2-1.4.2
 
 Note the directories where you built OpenSSL and zlib, I will use mine in the
 following example.
@@ -54,37 +115,70 @@ Build libssh2:
 
     ./buildconf
     ./configure --with-openssl --with-libz \
-        --with-libssl-prefix=/c/Users/rkitover/src/openssl-1.0.1a \
-        --with-libz-prefix=/c/Users/rkitover/src/zlib-1.2.6
-    make
+        --with-libssl-prefix=/c/Users/rkitover/src/openssl-1.0.1c \
+        --with-libz-prefix=/c/Users/rkitover/src/zlib-1.2.7 \
+        --disable-examples-build
+    make -j3
 
-It might error out during the build, that's ok, the static lib itself
-should be in src/.libs
+The libssh2.a will be in src/.libs .
 
 * Build Net::SSH2
 
-Download and unpack the Net::SSH2 distribution from CPAN.
+Download and unpack the Net::SSH2 distribution from CPAN, follow the download
+link from:
+
+    https://metacpan.org/module/Net::SSH2
 
 Open a cmd.exe shell.
 
-For ActiveState Perl, make sure you have dmake installed, to do this you may
-simply invoke:
+ActivePerl 32bit setup:
+
+Make sure you have dmake installed, to do this you may simply invoke:
 
     ppm install dmake
 
-Also for ActiveState Perl, set your PATH for this session:
+Set your PATH for this session:
 
     set PATH=c:\perl\bin;c:\mingw\bin;c:\perl\site\bin;c:\windows\system32;c:\windows
 
+ActivePerl 64bit setup:
+
+Download the dmake dist from here:
+
+    http://search.cpan.org/CPAN/authors/id/S/SH/SHAY/dmake-4.12-20090907-SHAY.zip
+
+Extract dmake.exe and the startup/ folder into C:\Perl64\site\bin .
+
+Set your PATH as follows:
+
+    set PATH=c:\perl64\bin;c:\mingw_w64\bin;c:\perl64\site\bin;c:\windows\system32;c:\windows
+
 It is important that Visual Studio/Platform SDK tools are not in your PATH,
-otherwise ActiveState Perl won't use MinGW, and that the official MinGW (the one
-we compiled the libraries with) takes precedence over the one that is often
-installed via PPM.
+otherwise ActiveState Perl won't use MinGW, and that the official MinGW (or
+MinGW-w64, the one we compiled the libraries with) takes precedence over the one
+that is often installed via PPM.
 
 For Strawberry Perl, we also want to use the official MinGW rather than the
 bundled one, so set your PATH as follows:
 
     set PATH=c:\strawberry\perl\bin;c:\mingw\bin;c:\strawberry\c\bin;c:\windows\system32;c:\windows
+
+For 64bit Strawberry Perl, set your PATH as follows:
+
+    set PATH=c:\strawberry64\perl\bin;c:\mingw_w64\bin;c:\strawberry64\c\bin;c:\windows\system32;c:\windows
+
+assuming you installed the 64bit Strawberry Perl to C:\Strawberry64 .
+
+For 64bit ActivePerl, edit the config file in C:\Perl64\lib\Config_heavy.pl and
+remove all instances of 'bufferoverflowU.lib'.
+
+For both 64bit perls, set LIBRARY_PATH as follows:
+
+    set LIBRARY_PATH=c:\mingw_w64\x86_64-w64-mingw32\lib
+
+Make sure you have the newest EUMM. Type:
+
+    cpan ExtUtils::MakeMaker
 
 Edit Makefile.PL, 
 
@@ -94,7 +188,7 @@ Change the line:
 
 to
 
-    my $extra_libs = 'c:/users/rkitover/src/zlib-1.2.6/lib/libz.a c:/users/rkitover/src/openssl-1.0.1a/lib/libssl.a c:/users/rkitover/src/openssl-1.0.1a/lib/libcrypto.a';
+    my $extra_libs = 'c:/users/rkitover/src/zlib-1.2.7/lib/libz.a c:/users/rkitover/src/openssl-1.0.1c/lib/libssl.a c:/users/rkitover/src/openssl-1.0.1c/lib/libcrypto.a';
 
 (using the directories where you have the libs.)
 
@@ -111,11 +205,11 @@ to
 
 Build:
 
-    perl Makefile.PL lib=c:\users\rkitover\src\libssh2\src\.libs inc=c:\users\rkitover\src\libssh2\include
+    perl Makefile.PL lib=c:\users\rkitover\src\libssh2-1.4.2\src\.libs inc=c:\users\rkitover\src\libssh2-1.4.2\include
     dmake
     dmake test
     dmake install
 
 That's it!
 
-I will improve both this process and this guide in the future.
+Please send me improvements and clarifications for this guide.

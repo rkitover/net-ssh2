@@ -1,5 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
+        - add 64bit instructions to BUILDING.WIN32 and clarify some things
+
 0.44  2012-04-25 16:27:55
         - update to latest ppport.h
         - fix memory leak in password auth (RT#76701) (salva)
