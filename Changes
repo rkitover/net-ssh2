@@ -1,5 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
+0.45  2012-05-27 09:18:49
         - add 64bit instructions to BUILDING.WIN32 and clarify some things
 
 0.44  2012-04-25 16:27:55
