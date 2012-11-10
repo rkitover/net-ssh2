@@ -1487,7 +1487,7 @@ CODE:
     debug("%s::DESTROY\n", class);
     clear_error(sf->ss);
     libssh2_sftp_shutdown(sf->sftp);
-    debug("%s::DESTROY freeing session\n");
+    debug("%s::DESTROY freeing session\n", class);
     SvREFCNT_dec(sf->sv_ss);
     Safefree(sf);
 

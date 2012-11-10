@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+        - patch from Robert-Jean Denault (Robert-jean.Denault@telus.com) to fix
+          segfault when releasing sftp object in debug mode
+
 0.45  2012-05-27 09:18:49
         - add 64bit instructions to BUILDING.WIN32 and clarify some things
 
