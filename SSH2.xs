@@ -25,6 +25,9 @@
 #ifdef USE_GCRYPT
 #define HAVE_GCRYPT
 #include <gcrypt.h>
+#else /* OpenSSL */
+#define HAVE_OPENSSL
+#include <openssl/crypto.h>
 #endif
 
 #else
@@ -545,6 +548,141 @@ GCRY_THREAD_OPTION_PTH_IMPL;
 
 START_MY_CXT
 
+typedef struct {
+    HV* global_cb_data;
+    UV tid;
+} my_cxt_t;
+
+UV get_my_thread_id(void) /* returns threads->tid() value */
+{
+    dSP;
+    UV tid = 0;
+    int count = 0;
+
+#ifdef USE_ITHREADS
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    XPUSHs(sv_2mortal(newSVpv("threads", 0)));
+    PUTBACK;
+    count = call_method("tid", G_SCALAR|G_EVAL);
+    SPAGAIN;
+    if (SvTRUE(ERRSV) || count != 1)
+       /* if threads not loaded or an error occurs return 0 */
+       tid = 0;
+    else
+       tid = (UV)POPi;
+    PUTBACK;
+    FREETMPS;
+    LEAVE;
+#endif
+
+    return tid;
+}
+
+#if defined(USE_ITHREADS) && !defined(HAVE_GCRYPT)
+/* IMPORTANT NOTE:
+ * openssl locking was implemented according to http://www.openssl.org/docs/crypto/threads.html
+ * we implement both static and dynamic locking as described on URL above
+ * locking is supported when OPENSSL_THREADS macro is defined which means openssl-0.9.7 or newer
+ * we intentionally do not implement cleanup of openssl's threading as it causes troubles
+ * with apache-mpm-worker+mod_perl+mod_ssl+net-ssleay
+ */
+
+static perl_mutex *GLOBAL_openssl_mutex = NULL;
+
+static void openssl_locking_function(int mode, int type, const char *file, int line)
+{
+    if (!GLOBAL_openssl_mutex) return;
+    if (mode & CRYPTO_LOCK)
+      MUTEX_LOCK(&GLOBAL_openssl_mutex[type]);
+    else
+      MUTEX_UNLOCK(&GLOBAL_openssl_mutex[type]);
+}
+
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
+static unsigned long openssl_threadid_func(void)
+{
+    dMY_CXT;
+    return (unsigned long)(MY_CXT.tid);
+}
+#else
+void openssl_threadid_func(CRYPTO_THREADID *id)
+{
+    dMY_CXT;
+    CRYPTO_THREADID_set_numeric(id, (unsigned long)(MY_CXT.tid));
+}
+#endif
+
+struct CRYPTO_dynlock_value
+{
+    perl_mutex mutex;
+};
+
+struct CRYPTO_dynlock_value * openssl_dynlocking_create_function (const char *file, int line)
+{
+    struct CRYPTO_dynlock_value *retval;
+    New(0, retval, 1, struct CRYPTO_dynlock_value);
+    if (!retval) return NULL;
+    MUTEX_INIT(&retval->mutex);
+    return retval;
+}
+
+void openssl_dynlocking_lock_function (int mode, struct CRYPTO_dynlock_value *l, const char *file, int line)
+{
+    if (!l) return;
+    if (mode & CRYPTO_LOCK)
+      MUTEX_LOCK(&l->mutex);
+    else
+      MUTEX_UNLOCK(&l->mutex);
+}
+
+void openssl_dynlocking_destroy_function (struct CRYPTO_dynlock_value *l, const char *file, int line)
+{
+    if (!l) return;
+    MUTEX_DESTROY(&l->mutex);
+    Safefree(l);
+}
+
+void openssl_threads_init(void)
+{
+    int i;
+
+    /* initialize static locking */
+    if ( !CRYPTO_get_locking_callback() ) {
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
+        if ( !CRYPTO_get_id_callback() ) {
+#else
+        if ( !CRYPTO_THREADID_get_callback() ) {
+#endif
+            New(0, GLOBAL_openssl_mutex, CRYPTO_num_locks(), perl_mutex);
+            if (!GLOBAL_openssl_mutex) return;
+            for (i=0; i<CRYPTO_num_locks(); i++) MUTEX_INIT(&GLOBAL_openssl_mutex[i]);
+            CRYPTO_set_locking_callback((void (*)(int,int,const char *,int))openssl_locking_function);
+
+#ifndef WIN32
+            /* no need for threadid_func() on Win32 */
+#if OPENSSL_VERSION_NUMBER < 0x10000000L
+            CRYPTO_set_id_callback(openssl_threadid_func);
+#else
+            CRYPTO_THREADID_set_callback(openssl_threadid_func);
+#endif
+#endif
+        }
+    }
+
+    /* initialize dynamic locking */
+    if ( !CRYPTO_get_dynlock_create_callback() &&
+         !CRYPTO_get_dynlock_lock_callback() &&
+         !CRYPTO_get_dynlock_destroy_callback() ) {
+        CRYPTO_set_dynlock_create_callback(openssl_dynlocking_create_function);
+        CRYPTO_set_dynlock_lock_callback(openssl_dynlocking_lock_function);
+        CRYPTO_set_dynlock_destroy_callback(openssl_dynlocking_destroy_function);
+    }
+}
+
+#endif
+
 /* perl module exports */
 
 MODULE = Net::SSH2		PACKAGE = Net::SSH2		PREFIX = net_ss_
@@ -570,10 +708,23 @@ BOOT:
 
     if (!gcry_check_version(GCRYPT_VERSION))
         croak("libgcrypt version mismatch (needed: %s)", GCRYPT_VERSION);
+#else /* OpenSSL */
+    openssl_threads_init();
+    MY_CXT.global_cb_data = newHV();
+    MY_CXT.tid = get_my_thread_id();
+    debug("Net::SSH2::BOOT: tid=%d my_perl=0x%p\n", MY_CXT.tid, my_perl);
 #endif
 }
 
 #define class "Net::SSH2"
+
+void
+CLONE(...)
+CODE:
+    MY_CXT_CLONE;
+    MY_CXT.global_cb_data = newHV();
+    MY_CXT.tid = get_my_thread_id();
+    debug("%s::CLONE: tid=%d my_perl=0x%p\n", class, MY_CXT.tid, my_perl);
 
 SSH2*
 net_ss__new(SV* proto)
