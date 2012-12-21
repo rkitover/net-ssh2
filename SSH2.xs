@@ -20,6 +20,16 @@
 
 #include "const-c.inc"
 
+#if defined(USE_ITHREADS) && (defined(I_PTHREAD) || defined(WIN32))
+
+#ifdef USE_GCRYPT
+#define HAVE_GCRYPT
+#include <gcrypt.h>
+#endif
+
+#else
+#warning "Building a non-threadsafe Net::SSH2"
+#endif
 
 /* constants */
 
@@ -523,6 +533,17 @@ static void (*msg_cb[])() = {
     (void (*)())cb_x11_open_callback
 };
 
+#define MY_CXT_KEY "Net::SSH2::_guts" XS_VERSION
+
+#ifdef HAVE_GCRYPT
+#ifndef WIN32
+GCRY_THREAD_OPTION_PTHREAD_IMPL;
+#else
+GCRY_THREAD_OPTION_PTH_IMPL;
+#endif
+#endif
+
+START_MY_CXT
 
 /* perl module exports */
 
@@ -530,6 +551,27 @@ MODULE = Net::SSH2		PACKAGE = Net::SSH2		PREFIX = net_ss_
 PROTOTYPES: DISABLE
 
 INCLUDE: const-xs.inc
+
+BOOT:
+{
+    MY_CXT_INIT;
+#ifdef HAVE_GCRYPT
+    gcry_error_t ret;
+#ifndef WIN32
+    ret = gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+#else
+    ret = gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pth);
+#endif
+    if (gcry_err_code(ret) != GPG_ERR_NO_ERROR)
+        croak("could not initialize libgcrypt for threads (%d: %s/%s)",
+         gcry_err_code(ret),
+         gcry_strsource(ret),
+         gcry_strerror(ret));
+
+    if (!gcry_check_version(GCRYPT_VERSION))
+        croak("libgcrypt version mismatch (needed: %s)", GCRYPT_VERSION);
+#endif
+}
 
 #define class "Net::SSH2"
 
