@@ -767,6 +767,22 @@ CODE:
 
 #endif
 
+#if LIBSSH2_VERSION_NUM >= 0x010209
+
+void
+net_ss_timeout(SSH2* ss, long timeout)
+CODE:
+    libssh2_session_set_timeout(ss->session, timeout);
+
+#else
+
+void
+net_ss_timeout(SSH2* ss, long timeout)
+CODE:
+    croak("libssh2 version 1.2.9 or higher required for set_timeout support");
+
+#endif
+
 void
 net_ss_blocking(SSH2* ss, SV* blocking)
 CODE:
