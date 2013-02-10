@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+        - timeout method to set a global timeout for every action (uses
+          libssh2_session_set_timeout) (pullreq from Thierry Treyer: zehkae)
+        - threads support for OpenSSL and libgcrypt (pullreq from James Mccoy:
+          jamessan)
         - support for building with libgcrypt (pass gcrypt to Makefile.PL)
           (pullreq from James Mccoy: jamessan)
 
