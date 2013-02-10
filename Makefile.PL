@@ -6,7 +6,8 @@ use Module::Install::CheckLib ();
 # override library and include directories here if desired
 my $lib = '';
 my $inc = '';
-my $extra_libs = '-lz -lssl -lcrypto';
+my $extra_libs = '-lz';
+my $use_gcrypt = 0;
 
 my @args = @ARGV;
 my @pass_through_args;
@@ -16,13 +17,27 @@ while (my $arg = shift @args) {
         $$var   = $val;
         next;
     }
+    elsif ($arg eq 'gcrypt') {
+        $use_gcrypt = 1;
+        next;
+    }
     push @pass_through_args, $arg;
 }
 @ARGV = @pass_through_args;
 
+if ($use_gcrypt) {
+    $extra_libs .= ' -lgcrypt';
+}
+else {
+    $extra_libs .= ' -lssl -lcrypto';
+}
+
 # Windows, as usual, is a special case
 my $win32 = ($^O eq 'MSWin32');
-my @define = $win32 ? (DEFINE => '-DLIBSSH2_WIN32') : ();
+my $defines = '';
+$defines .= '-DLIBSSH2_WIN32 ' if $win32;
+$defines .= '-DUSE_GCRYPT ' if $use_gcrypt;
+my @define = $defines ? (DEFINE => $defines) : ();
 
 name 'Net-SSH2';
 all_from 'lib/Net/SSH2.pm';
@@ -61,7 +76,8 @@ print <<'EOF';
 
 The libssh2 library is required by this module.  If you don't have it, you can
 download it from http://www.libssh2.org; you may also need OpenSSL, which can be
-obtained from http://www.openssl.org.
+obtained from http://www.openssl.org, or libgcrypt, which can be obtained from
+http://www.gnupg.org.
 
 Debian:   sudo aptitude install libssh2-1-dev
 OpenSUSE: sudo zypper in libssh2-1 libssh2-devel
