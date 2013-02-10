@@ -86,6 +86,11 @@ You can pass your libssh2 lib and include dirs on the command line. E.g.:
 
     perl Makefile.PL lib=$HOME/libssh2/lib inc=$HOME/libssh2/include
 
+To build with libgcrypt instead of OpenSSL, pass 'gcrypt' as a parameter to
+Makefile.PL, e.g.:
+
+    perl Makefile.PL gcrypt
+
 If you want to build on Windows, see the file BUILDING.WIN32 in the
 distribution.
 
