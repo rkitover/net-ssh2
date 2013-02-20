@@ -31,7 +31,13 @@
 #endif
 
 #else
+/* XXX: is #warning portable across C compilers? */
 #warning "Building a non-threadsafe Net::SSH2"
+#endif
+
+#ifndef MULTIPLICITY
+/* for debugging output */
+#define my_perl ((void *)0)
 #endif
 
 /* constants */
@@ -41,7 +47,7 @@
 #endif  /* LIBSSH2_ERROR_NONE */
 
 /* LIBSSH2_ERROR_* values; from 0 continuing negative */
-const char* xs_libssh2_error[] = {
+static const char *const xs_libssh2_error[] = {
     "NONE",
     "SOCKET_NONE",
     "BANNER_NONE",
@@ -83,7 +89,7 @@ const char* xs_libssh2_error[] = {
 };
 
 /* SSH_FX_* values; from 0 continuing positive */
-const char* sftp_error[] = {
+static const char *const sftp_error[] = {
     "OK",
     "EOF",
     "NO_SUCH_FILE",
@@ -546,14 +552,14 @@ GCRY_THREAD_OPTION_PTH_IMPL;
 #endif
 #endif
 
-START_MY_CXT
-
 typedef struct {
     HV* global_cb_data;
     UV tid;
 } my_cxt_t;
 
-UV get_my_thread_id(void) /* returns threads->tid() value */
+START_MY_CXT
+
+static UV get_my_thread_id(void) /* returns threads->tid() value */
 {
     dSP;
     UV tid = 0;
@@ -607,7 +613,7 @@ static unsigned long openssl_threadid_func(void)
     return (unsigned long)(MY_CXT.tid);
 }
 #else
-void openssl_threadid_func(CRYPTO_THREADID *id)
+static void openssl_threadid_func(CRYPTO_THREADID *id)
 {
     dMY_CXT;
     CRYPTO_THREADID_set_numeric(id, (unsigned long)(MY_CXT.tid));
@@ -619,7 +625,7 @@ struct CRYPTO_dynlock_value
     perl_mutex mutex;
 };
 
-struct CRYPTO_dynlock_value * openssl_dynlocking_create_function (const char *file, int line)
+static struct CRYPTO_dynlock_value *openssl_dynlocking_create_function(const char *file, int line)
 {
     struct CRYPTO_dynlock_value *retval;
     New(0, retval, 1, struct CRYPTO_dynlock_value);
@@ -628,7 +634,7 @@ struct CRYPTO_dynlock_value * openssl_dynlocking_create_function (const char *fi
     return retval;
 }
 
-void openssl_dynlocking_lock_function (int mode, struct CRYPTO_dynlock_value *l, const char *file, int line)
+static void openssl_dynlocking_lock_function(int mode, struct CRYPTO_dynlock_value *l, const char *file, int line)
 {
     if (!l) return;
     if (mode & CRYPTO_LOCK)
@@ -637,14 +643,14 @@ void openssl_dynlocking_lock_function (int mode, struct CRYPTO_dynlock_value *l,
       MUTEX_UNLOCK(&l->mutex);
 }
 
-void openssl_dynlocking_destroy_function (struct CRYPTO_dynlock_value *l, const char *file, int line)
+static void openssl_dynlocking_destroy_function(struct CRYPTO_dynlock_value *l, const char *file, int line)
 {
     if (!l) return;
     MUTEX_DESTROY(&l->mutex);
     Safefree(l);
 }
 
-void openssl_threads_init(void)
+static void openssl_threads_init(void)
 {
     int i;
 
@@ -658,7 +664,7 @@ void openssl_threads_init(void)
             New(0, GLOBAL_openssl_mutex, CRYPTO_num_locks(), perl_mutex);
             if (!GLOBAL_openssl_mutex) return;
             for (i=0; i<CRYPTO_num_locks(); i++) MUTEX_INIT(&GLOBAL_openssl_mutex[i]);
-            CRYPTO_set_locking_callback((void (*)(int,int,const char *,int))openssl_locking_function);
+            CRYPTO_set_locking_callback(openssl_locking_function);
 
 #ifndef WIN32
             /* no need for threadid_func() on Win32 */
@@ -679,6 +685,13 @@ void openssl_threads_init(void)
         CRYPTO_set_dynlock_lock_callback(openssl_dynlocking_lock_function);
         CRYPTO_set_dynlock_destroy_callback(openssl_dynlocking_destroy_function);
     }
+}
+
+#else
+
+/* no threads */
+static void openssl_threads_init(void)
+{
 }
 
 #endif
