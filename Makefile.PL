@@ -25,15 +25,24 @@ while (my $arg = shift @args) {
 }
 @ARGV = @pass_through_args;
 
+# Windows, as usual, is a special case
+my $win32 = ($^O eq 'MSWin32');
+
 if ($use_gcrypt) {
     $extra_libs .= ' -lgcrypt';
 }
 else {
+  if ($win32 && $Config{cc} =~ /cl/) {
+    $extra_libs .= ' -lssleay32 -llibeay32'; # Win32 + MSVC compiler
+  }
+  if ($win32 && $Config{cc} =~ /gcc/) {
+    $extra_libs .= ' -lssl32 -leay32'; # Win32 + GCC compiler (mingw)
+  }
+  else {
     $extra_libs .= ' -lssl -lcrypto';
+  }
 }
 
-# Windows, as usual, is a special case
-my $win32 = ($^O eq 'MSWin32');
 my $defines = '';
 $defines .= '-DLIBSSH2_WIN32 ' if $win32;
 $defines .= '-DUSE_GCRYPT ' if $use_gcrypt;
