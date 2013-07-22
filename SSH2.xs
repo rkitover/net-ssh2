@@ -534,6 +534,12 @@ static LIBSSH2_X11_OPEN_FUNC(cb_x11_open_callback) {
     PUTBACK; FREETMPS; LEAVE;
 }
 
+void * cb_as_void_ptr(void (*cb)()) {
+    void * addr;
+    memcpy(&addr, &cb, sizeof addr);
+    return addr;
+}
+
 static void (*msg_cb[])() = {
     (void (*)())cb_ignore_callback,
     (void (*)())cb_debug_callback,
@@ -952,7 +958,7 @@ CODE:
     ss->sv_ss = SvRV(ST(0));  /* don't keep a reference, just store it */
     SvREFCNT_dec(ss->rgsv_cb[i_type]);
     libssh2_session_callback_set(ss->session,
-     i_type, callback ? msg_cb[i_type] : NULL);
+     i_type, callback ? cb_as_void_ptr(msg_cb[i_type]) : NULL);
     SvREFCNT_inc(callback);
     ss->rgsv_cb[i_type] = callback;
     XSRETURN_IV(1);
@@ -1102,12 +1108,12 @@ CODE:
         agent_end = libssh2_agent_get_identity(agent, &identity, prev_identity);
 
         if(agent_end == 1) {
-            // Reached end, not successfully authenticated.
+            /* Reached end, not successfully authenticated. */
             XSRETURN_IV(0);
         }
 
         if(agent_end < 0) {
-            // error
+            /* error */
             XSRETURN_IV(agent_end);
         }
 
@@ -1123,7 +1129,7 @@ CODE:
         }
 
         if(rc >= 0) {
-            // authenticated
+            /* authenticated */
             XSRETURN_IV(!rc);
         }
 
@@ -1450,10 +1456,11 @@ CODE:
 
 SV*
 net_ch_exit_signal(SSH2_CHANNEL* ch)
+PREINIT:
+    char *exitsignal = NULL;  
 CODE:
     clear_error(ch->ss);
     RETVAL = NULL;
-    char *exitsignal = NULL;  
     libssh2_channel_get_exit_signal(ch->channel, &exitsignal,
         NULL, NULL, NULL, NULL, NULL);
     if (exitsignal) {
@@ -2147,7 +2154,8 @@ CODE:
     }
 
     success = !libssh2_publickey_add_ex(pk->pkey,
-     pv_name, len_name, pv_blob, len_blob, overwrite, num_attrs, attrs);
+     (const unsigned char *)pv_name, len_name,
+     (const unsigned char *)pv_blob, len_blob, overwrite, num_attrs, attrs);
 
     Safefree(attrs);
     XSRETURN_IV(!success);
@@ -2162,7 +2170,8 @@ CODE:
     pv_name = SvPV(name, len_name);
     pv_blob = SvPV(blob, len_blob);
     XSRETURN_IV(!libssh2_publickey_remove_ex(pk->pkey,
-     pv_name, len_name, pv_blob, len_blob));
+     (const unsigned char *)pv_name, len_name,
+     (const unsigned char *)pv_blob, len_blob));
 
 void
 net_pk_fetch(SSH2_PUBLICKEY* pk)

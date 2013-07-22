@@ -124,8 +124,15 @@ if (!$lib && !$inc) {
 auto_provides;
 
 libs $lib;
+
 inc "$inc -I.";
-makemaker_args @define;
+
+makemaker_args 
+    @define,
+    ($Config{cc} =~ /gcc/i ? (
+        CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c89 -pedantic-errors -Wno-long-long'
+    ) : ())
+;
 
 realclean_files qw/const-c.inc const-xs.inc/;
 
