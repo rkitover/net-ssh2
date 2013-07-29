@@ -31,8 +31,9 @@
 #endif
 
 #else
-/* XXX: is #warning portable across C compilers? */
-#warning "Building a non-threadsafe Net::SSH2"
+/* is #warning portable across C compilers? */
+/* NO, an error with -pedantic */
+/* #warning "Building a non-threadsafe Net::SSH2" */
 #endif
 
 #ifndef MULTIPLICITY
