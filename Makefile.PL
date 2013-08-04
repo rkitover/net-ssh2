@@ -129,7 +129,8 @@ inc "$inc -I.";
 
 makemaker_args 
     @define,
-    ($Config{cc} =~ /gcc/i ? (
+    # this is known to NOT work on mingw and solaris, and we only turn it on for devs
+    ($Module::Install::AUTHOR && $^O ne 'MSWin32' && $^O ne 'solaris' && $Config{cc} =~ /gcc/i ? (
         CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c89 -pedantic-errors -Wno-long-long'
     ) : ())
 ;

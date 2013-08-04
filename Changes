@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+        - turn off -std=c89 -pedantic-errors for all builds except authors not
+          on mingw or solaris
+
 0.50  2013-07-29 10:25:13
         - remove #warning, not standard C89, throws an error on non-threaded
           builds due to -pedantic-errors (RT#87398)
