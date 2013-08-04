@@ -1,5 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
+0.51  2013-08-03 21:17:47
         - turn off -std=c89 -pedantic-errors for all builds except authors not
           on mingw or solaris
 
