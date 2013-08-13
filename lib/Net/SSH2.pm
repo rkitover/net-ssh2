@@ -425,7 +425,7 @@ sub scp_put {
     $chan->write("\0");
     my $eof;
     $chan->read($eof, 1);
-    return 1;
+    return $eof;
 }
 
 my %Event;
