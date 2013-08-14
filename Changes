@@ -1,5 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
+0.52  2013-08-14 02:43:11
         - detect scp not being installed on the remote and return undef from
           scp_put (krimdomu: Jan) (GitHub PR: #17)
 
