@@ -423,9 +423,7 @@ sub scp_put {
 
     # send/receive SCP acknowledgement
     $chan->write("\0");
-    my $eof;
-    $chan->read($eof, 1);
-    return $eof;
+    return $chan->read((my $eof), 1) || undef;
 }
 
 my %Event;
