@@ -4,16 +4,17 @@ use Config;
 use Module::Install::CheckLib ();
 
 # override library and include directories here if desired
-my $lib = '';
-my $inc = '';
-my $extra_libs = '-lz';
+my $lib = $ENV{LIBSSH2_LIB} || '';
+my $inc = $ENV{LIBSSH2_INCLUDE} || '';
+my $extra_libs = '-lz' . ($ENV{LIBSSH2_LDARGS} ? (' ' . $ENV{LIBSSH2_LDARGS}) : '');
+my $ldargs; # from command line
 my $use_gcrypt = 0;
 
 my @args = @ARGV;
 my @pass_through_args;
 while (my $arg = shift @args) {
-    if (my ($param, $val) = $arg =~ /^(inc|lib)=(.*)\z/) {
-        my $var = $param eq 'inc' ? \$inc : \$lib;
+    if (my ($param, $val) = $arg =~ /^(inc|lib|ldargs)=(.*)\z/) {
+        my $var = $param eq 'inc' ? \$inc : ($param eq 'lib' ? \$lib : \$ldargs);
         $$var   = $val;
         next;
     }
@@ -42,6 +43,8 @@ else {
     $extra_libs .= ' -lssl -lcrypto';
   }
 }
+
+$extra_libs = "$extra_libs $ldargs" if $ldargs;
 
 my $defines = '';
 $defines .= '-DLIBSSH2_WIN32 ' if $win32;
@@ -84,16 +87,21 @@ my @search_incs = grep -d, map "$_/include", @search_paths;
 print <<'EOF';
 
 The libssh2 library is required by this module.  If you don't have it, you can
-download it from http://www.libssh2.org; you may also need OpenSSL, which can be
-obtained from http://www.openssl.org, or libgcrypt, which can be obtained from
-http://www.gnupg.org.
+download it from http://www.libssh2.org; you may also need OpenSSL, which can
+be obtained from http://www.openssl.org , or libgcrypt, which can be obtained
+from http://www.gnupg.org .
 
 Debian:   sudo aptitude install libssh2-1-dev
 OpenSUSE: sudo zypper in libssh2-1 libssh2-devel
 
-You can pass your libssh2 lib and include dirs on the command line. E.g.:
+You can pass your libssh2 lib and include dirs (and extra link args) on the
+command line. E.g.:
 
-    perl Makefile.PL lib=$HOME/libssh2/lib inc=$HOME/libssh2/include
+    perl Makefile.PL lib=$HOME/libssh2/lib inc=$HOME/libssh2/include \
+        ldargs="-lz"
+
+These can also be set through the LIBSSH2_LIB/LIBSSH2_INCLUDE/LIBSSH2_LDARGS
+environment variables.
 
 To build with libgcrypt instead of OpenSSL, pass 'gcrypt' as a parameter to
 Makefile.PL, e.g.:
