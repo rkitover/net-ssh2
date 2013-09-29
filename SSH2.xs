@@ -180,6 +180,13 @@ typedef struct SSH2_PUBLICKEY {
     LIBSSH2_PUBLICKEY* pkey;
 } SSH2_PUBLICKEY;
 
+/* Net::SSH2::KnownHosts object */
+typedef struct SSH2_KNOWNHOSTS {
+    SSH2 *ss;
+    SV *sv_ss;
+    LIBSSH2_KNOWNHOSTS* knownhosts;
+} SSH2_KNOWNHOSTS;
+
 static int net_ss_debug_out = 0;
 static unsigned long net_ch_gensym = 0;
 static unsigned long net_fi_gensym = 0;
@@ -358,6 +365,9 @@ static int return_stat_attrs(SV** sp, LIBSSH2_SFTP_ATTRIBUTES* attrs,
 
 /* wrap a libSSH2 public key object */
 #define NEW_PUBLICKEY(create) NEW_ITEM(SSH2_PUBLICKEY, pkey, create, ss)
+
+/* wrap a libSSH2 knownhosts object */
+#define NEW_KNOWNHOSTS(create) NEW_ITEM(SSH2_KNOWNHOSTS, knownhosts, create, ss)
 
 /* callback for returning a password via "keyboard-interactive" auth */
 static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_password) {
@@ -704,6 +714,7 @@ static void openssl_threads_init(void)
 #endif
 
 /* perl module exports */
+
 
 MODULE = Net::SSH2		PACKAGE = Net::SSH2		PREFIX = net_ss_
 PROTOTYPES: DISABLE
@@ -1314,6 +1325,13 @@ CODE:
      (char*)host, port, bound_port ? &i_bound_port : NULL, queue_maxsize));
     if (RETVAL && bound_port)
         sv_setiv(SvRV(bound_port), i_bound_port);
+OUTPUT:
+    RETVAL
+
+SSH2_KNOWNHOSTS*
+net_ss_knownhosts(SSH2 *ss)
+CODE:
+    NEW_KNOWNHOSTS(libssh2_knownhost_init(ss->session));
 OUTPUT:
     RETVAL
 
@@ -2217,6 +2235,52 @@ PPCODE:
     if (GIMME_V == G_ARRAY)
         XSRETURN(keys);
     XSRETURN_UV(keys);
+
+#undef class
+
+MODULE = Net::SSH2		PACKAGE = Net::SSH2::KnownHosts   PREFIX = net_kh_
+PROTOTYPES: DISABLE
+
+#define class "Net::SSH2::Knownhosts"
+
+void
+net_kh_DESTROY(SSH2_KNOWNHOSTS *kh)
+CODE:
+    debug("%s::DESTROY\n", class);
+    clear_error(kh->ss);
+    libssh2_knownhost_free(kh->knownhosts);
+    SvREFCNT_dec(kh->sv_ss);
+    Safefree(kh);
+
+
+
+void
+net_kh_readfile(SSH2_KNOWNHOSTS *kh, const char *filename)
+PREINIT:
+    int success;
+CODE:
+    clear_error(kh->ss);
+    success = libssh2_knownhost_readfile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    XSRETURN_IV(!success);
+
+void
+net_kh_writefile(SSH2_KNOWNHOSTS *kh, const char *filename)
+PREINIT:
+    int success;
+CODE:
+    clear_error(kh->ss);
+    success = libssh2_knownhost_writefile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    XSRETURN_IV(!success);
+    /*libssh2_knownhost_add()*/
+    /*libssh2_knownhost_addc()*/
+    /*libssh2_knownhost_check()*/
+    /*libssh2_knownhost_checkp()*/
+    /*libssh2_knownhost_del()*/
+    /*libssh2_knownhost_get()*/
+    /*libssh2_knownhost_readfile()*/
+    /*libssh2_knownhost_readline()*/
+    /*libssh2_knownhost_writefile()*/
+    /*libssh2_knownhost_writeline()*/
 
 #undef class
 
