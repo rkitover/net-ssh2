@@ -537,6 +537,7 @@ require Net::SSH2::Channel;
 require Net::SSH2::SFTP;
 require Net::SSH2::File;
 require Net::SSH2::Listener;
+require Net::SSH2::KnownHosts;
 
 1;
 __END__
@@ -1044,6 +1045,10 @@ Return SecureFTP interface object (see L<Net::SSH2::SFTP>).
 =head2 public_key
 
 Return public key interface object (see L<Net::SSH2::PublicKey>).
+
+=head2 known_hosts
+
+Returns known hosts interface object (see L<Net::SSH2::KnownHosts>).
 
 =head2 poll ( timeout, arrayref of hashes )
 
