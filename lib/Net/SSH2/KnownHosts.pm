@@ -22,6 +22,9 @@ The methods currently supported are as follows:
 
 Populates the object with the entries in the given file.
 
+Returns the number of successfully read entries or undef when some
+error happens.
+
 =head2 writefile (filename)
 
 Saves the known host entries to the given file.

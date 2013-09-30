@@ -2354,11 +2354,14 @@ CODE:
 void
 net_kh_readfile(SSH2_KNOWNHOSTS *kh, const char *filename)
 PREINIT:
-    int success;
+    int n;
 CODE:
     clear_error(kh->ss);
-    success = libssh2_knownhost_readfile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
-    XSRETURN_IV(!success);
+    n = libssh2_knownhost_readfile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    if (n >= 0)
+        XSRETURN_IV(n);
+    else
+        XSRETURN_EMPTY;
 
 void
 net_kh_writefile(SSH2_KNOWNHOSTS *kh, const char *filename)
