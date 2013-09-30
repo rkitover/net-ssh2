@@ -1348,7 +1348,7 @@ OUTPUT:
     RETVAL
 
 SSH2_KNOWNHOSTS*
-net_ss_knownhosts(SSH2 *ss)
+net_ss_known_hosts(SSH2 *ss)
 CODE:
     NEW_KNOWNHOSTS(libssh2_knownhost_init(ss->session));
 OUTPUT:
