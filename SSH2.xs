@@ -2281,7 +2281,7 @@ CODE:
     if (n >= 0)
         XSRETURN_IV(n);
     else
-        XSRETURN_EMPTY
+        XSRETURN_EMPTY;
 
 void
 net_kh_writefile(SSH2_KNOWNHOSTS *kh, const char *filename)
