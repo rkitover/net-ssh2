@@ -1048,6 +1048,25 @@ PPCODE:
     XSRETURN_EMPTY;
 
 void
+net_ss_remote_hostkey(SSH2* ss)
+PREINIT:
+    const char *key_pv;
+    size_t key_len;
+    int type_int;
+PPCODE:
+    if (key_pv = libssh2_session_hostkey(ss->session, &key_len, &type_int)) {
+        XPUSHs(sv_2mortal(newSVpvn(key_pv, key_len)));
+        if (GIMME_V != G_ARRAY)
+            XSRETURN(1);
+        else {
+            XPUSHs(sv_2mortal(newSViv(type_int)));
+            XSRETURN(2);
+        }
+    }
+    else
+        XSRETURN_EMPTY;
+
+void
 net_ss_auth_list(SSH2* ss, SV* username = NULL)
 PREINIT:
     const char* pv_username = NULL;

@@ -877,7 +877,14 @@ nulls or control characters.  The type may be:
 
 =back
 
-Note: in previous versions of the module this method was wrongly called hostname.
+Note: in previous versions of the module this method was called
+C<hostkey>.
+
+=head2 remote_hostkey
+
+Returns the public key of the remote host and its type which is one of
+C<LIBSSH2_HOSTKEY_TYPE_RSA>, C<LIBSSH2_HOSTKEY_TYPE_DSS>, or
+C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
 
 =head2 auth_list ( [username] )
 
