@@ -534,6 +534,7 @@ require Net::SSH2::Channel;
 require Net::SSH2::SFTP;
 require Net::SSH2::File;
 require Net::SSH2::Listener;
+require Net::SSH2::KnownHosts;
 
 1;
 __END__

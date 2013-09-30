@@ -2252,8 +2252,6 @@ CODE:
     SvREFCNT_dec(kh->sv_ss);
     Safefree(kh);
 
-
-
 void
 net_kh_readfile(SSH2_KNOWNHOSTS *kh, const char *filename)
 PREINIT:
@@ -2271,16 +2269,42 @@ CODE:
     clear_error(kh->ss);
     success = libssh2_knownhost_writefile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
     XSRETURN_IV(!success);
-    /*libssh2_knownhost_add()*/
-    /*libssh2_knownhost_addc()*/
-    /*libssh2_knownhost_check()*/
-    /*libssh2_knownhost_checkp()*/
-    /*libssh2_knownhost_del()*/
-    /*libssh2_knownhost_get()*/
-    /*libssh2_knownhost_readfile()*/
-    /*libssh2_knownhost_readline()*/
-    /*libssh2_knownhost_writefile()*/
-    /*libssh2_knownhost_writeline()*/
+
+void
+net_kh_add(SSH2_KNOWNHOSTS *kh, const char *host, const char *salt, SV *key, SV *comment, int typemask)
+PREINIT:
+    int success;
+    STRLEN key_len, comment_len;
+    const char *key_pv, *comment_pv;
+CODE:
+    key_pv = SvPV_const(key, key_len);
+    if (SvOK(comment))
+        comment_pv = SvPV_const(comment, comment_len);
+    else {
+        comment_pv = NULL;
+        comment_len = 0;
+    }
+    success = libssh2_knownhost_addc(kh->knownhosts, host, salt, key_pv, key_len,
+                                     comment_pv, comment_len, typemask, NULL);
+    XSRETURN_IV(!success);
+
+int
+net_kh_check(SSH2_KNOWNHOSTS *kh, const char *host, SV *port, SV *key, int typemask)
+PREINIT:
+    STRLEN key_len;
+    const char *key_pv;
+CODE:
+    key_pv = SvPV_const(key, key_len);
+    RETVAL = libssh2_knownhost_checkp(kh->knownhosts, host, (SvOK(port) ? SvUV(port) : 0),
+                                      key_pv, key_len, typemask, NULL);
+OUTPUT:
+    RETVAL
+
+# /* TODO */
+# libssh2_knownhost_del()
+# libssh2_knownhost_get()
+# libssh2_knownhost_readline()
+# libssh2_knownhost_writeline()
 
 #undef class
 
