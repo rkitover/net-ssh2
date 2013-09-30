@@ -1001,6 +1001,10 @@ Return SecureFTP interface object (see L<Net::SSH2::SFTP>).
 
 Return public key interface object (see L<Net::SSH2::PublicKey>).
 
+=head2 known_hosts
+
+Returns known hosts interface object (see L<Net::SSH2::KnownHosts>).
+
 =head2 poll ( timeout, arrayref of hashes )
 
 Pass in a timeout in milliseconds and an arrayref of hashes with the following
