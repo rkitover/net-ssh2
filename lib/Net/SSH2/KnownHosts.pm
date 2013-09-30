@@ -87,4 +87,28 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.0 or,
 at your option, any later version of Perl 5 you may have available.
 
+The documentation on this file is based on the comments inside
+C<libssh2.h> file from the libssh2 distribution which has the
+following copyright and license:
+
+Copyright (c) 2004-2009, Sara Golemon <sarag@libssh2.org>
+Copyright (c) 2009-2012 Daniel Stenberg
+Copyright (c) 2010 Simon Josefsson <simon@josefsson.org>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+Neither the name of the copyright holder nor the names of any other
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
 =cut
