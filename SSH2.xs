@@ -1029,7 +1029,7 @@ CODE:
      ss->session, reason, description, lang));
 
 void
-net_ss_hostkey(SSH2* ss, SV* hash_type)
+net_ss_hostkey_hash(SSH2* ss, SV* hash_type)
 PREINIT:
     IV type;
     const char* hash;
