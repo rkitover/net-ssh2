@@ -875,7 +875,7 @@ nulls or control characters.  The type may be:
 =back
 
 Note: in previous versions of the module this method was called
-C<hostname>.
+C<hostkey>.
 
 =head2 remote_hostkey
 
