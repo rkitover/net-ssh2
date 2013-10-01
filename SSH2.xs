@@ -180,6 +180,13 @@ typedef struct SSH2_PUBLICKEY {
     LIBSSH2_PUBLICKEY* pkey;
 } SSH2_PUBLICKEY;
 
+/* Net::SSH2::KnownHosts object */
+typedef struct SSH2_KNOWNHOSTS {
+    SSH2 *ss;
+    SV *sv_ss;
+    LIBSSH2_KNOWNHOSTS* knownhosts;
+} SSH2_KNOWNHOSTS;
+
 static int net_ss_debug_out = 0;
 static unsigned long net_ch_gensym = 0;
 static unsigned long net_fi_gensym = 0;
@@ -358,6 +365,9 @@ static int return_stat_attrs(SV** sp, LIBSSH2_SFTP_ATTRIBUTES* attrs,
 
 /* wrap a libSSH2 public key object */
 #define NEW_PUBLICKEY(create) NEW_ITEM(SSH2_PUBLICKEY, pkey, create, ss)
+
+/* wrap a libSSH2 knownhosts object */
+#define NEW_KNOWNHOSTS(create) NEW_ITEM(SSH2_KNOWNHOSTS, knownhosts, create, ss)
 
 /* callback for returning a password via "keyboard-interactive" auth */
 static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_password) {
@@ -705,6 +715,7 @@ static void openssl_threads_init(void)
 
 /* perl module exports */
 
+
 MODULE = Net::SSH2		PACKAGE = Net::SSH2		PREFIX = net_ss_
 PROTOTYPES: DISABLE
 
@@ -996,7 +1007,7 @@ CODE:
      ss->session, reason, description, lang));
 
 void
-net_ss_hostkey(SSH2* ss, SV* hash_type)
+net_ss_hostkey_hash(SSH2* ss, SV* hash_type)
 PREINIT:
     IV type;
     const char* hash;
@@ -1013,6 +1024,25 @@ PPCODE:
         XSRETURN(1);
     }
     XSRETURN_EMPTY;
+
+void
+net_ss_remote_hostkey(SSH2* ss)
+PREINIT:
+    const char *key_pv;
+    size_t key_len;
+    int type_int;
+PPCODE:
+    if (key_pv = libssh2_session_hostkey(ss->session, &key_len, &type_int)) {
+        XPUSHs(sv_2mortal(newSVpvn(key_pv, key_len)));
+        if (GIMME_V != G_ARRAY)
+            XSRETURN(1);
+        else {
+            XPUSHs(sv_2mortal(newSViv(type_int)));
+            XSRETURN(2);
+        }
+    }
+    else
+        XSRETURN_EMPTY;
 
 void
 net_ss_auth_list(SSH2* ss, SV* username = NULL)
@@ -1314,6 +1344,13 @@ CODE:
      (char*)host, port, bound_port ? &i_bound_port : NULL, queue_maxsize));
     if (RETVAL && bound_port)
         sv_setiv(SvRV(bound_port), i_bound_port);
+OUTPUT:
+    RETVAL
+
+SSH2_KNOWNHOSTS*
+net_ss_known_hosts(SSH2 *ss)
+CODE:
+    NEW_KNOWNHOSTS(libssh2_knownhost_init(ss->session));
 OUTPUT:
     RETVAL
 
@@ -2217,6 +2254,79 @@ PPCODE:
     if (GIMME_V == G_ARRAY)
         XSRETURN(keys);
     XSRETURN_UV(keys);
+
+#undef class
+
+MODULE = Net::SSH2		PACKAGE = Net::SSH2::KnownHosts   PREFIX = net_kh_
+PROTOTYPES: DISABLE
+
+#define class "Net::SSH2::Knownhosts"
+
+void
+net_kh_DESTROY(SSH2_KNOWNHOSTS *kh)
+CODE:
+    debug("%s::DESTROY\n", class);
+    clear_error(kh->ss);
+    libssh2_knownhost_free(kh->knownhosts);
+    SvREFCNT_dec(kh->sv_ss);
+    Safefree(kh);
+
+void
+net_kh_readfile(SSH2_KNOWNHOSTS *kh, const char *filename)
+PREINIT:
+    int n;
+CODE:
+    clear_error(kh->ss);
+    n = libssh2_knownhost_readfile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    if (n >= 0)
+        XSRETURN_IV(n);
+    else
+        XSRETURN_EMPTY;
+
+void
+net_kh_writefile(SSH2_KNOWNHOSTS *kh, const char *filename)
+PREINIT:
+    int success;
+CODE:
+    clear_error(kh->ss);
+    success = libssh2_knownhost_writefile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    XSRETURN_IV(!success);
+
+void
+net_kh_add(SSH2_KNOWNHOSTS *kh, const char *host, const char *salt, SV *key, SV *comment, int typemask)
+PREINIT:
+    int success;
+    STRLEN key_len, comment_len;
+    const char *key_pv, *comment_pv;
+CODE:
+    key_pv = SvPV_const(key, key_len);
+    if (SvOK(comment))
+        comment_pv = SvPV_const(comment, comment_len);
+    else {
+        comment_pv = NULL;
+        comment_len = 0;
+    }
+    success = libssh2_knownhost_addc(kh->knownhosts, host, salt, key_pv, key_len,
+                                     comment_pv, comment_len, typemask, NULL);
+    XSRETURN_IV(!success);
+
+int
+net_kh_check(SSH2_KNOWNHOSTS *kh, const char *host, SV *port, SV *key, int typemask)
+PREINIT:
+    STRLEN key_len;
+    const char *key_pv;
+CODE:
+    key_pv = SvPV_const(key, key_len);
+    RETVAL = libssh2_knownhost_checkp(kh->knownhosts, host, (SvOK(port) ? SvUV(port) : 0),
+                                      key_pv, key_len, typemask, NULL);
+OUTPUT:
+    RETVAL
+
+# /* TODO */
+# libssh2_knownhost_del()
+# libssh2_knownhost_get()
+# libssh2_knownhost_readline()
+# libssh2_knownhost_writeline()
 
 #undef class
 

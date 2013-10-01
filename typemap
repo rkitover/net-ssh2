@@ -11,6 +11,7 @@ TYPEMAP
     SSH2_FILE     *   O_FILE
     SSH2_DIR      *   O_DIR
     SSH2_PUBLICKEY*   O_PUBLICKEY
+    SSH2_KNOWNHOSTS*  O_KNOWNHOSTS
 
 OUTPUT
 T_PV
@@ -70,6 +71,9 @@ O_DIR
 O_PUBLICKEY
     sv_setref_pv($arg, "Net::SSH2::PublicKey", (void *)$var);
 
+O_KNOWNHOSTS
+    sv_setref_pv($arg, "Net::SSH2::KnownHosts", (void *)$var);
+
 INPUT
 T_PV
     $var = ($type)SvPV_nolen($arg)
@@ -122,3 +126,8 @@ O_PUBLICKEY
     else
         croak(\"${Package}::$func_name() - invalid public key object\");
 
+O_KNOWNHOSTS
+    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
+        $var = ($type)SvIV((SV*)SvRV($arg));
+    else
+        croak(\"${Package}::$func_name() - invalid knownhost object\");

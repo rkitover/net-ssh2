@@ -505,6 +505,11 @@ sub _cb_kbdint_response_default {
     @out
 }
 
+my $hostkey_warned;
+sub hostkey {
+    $hostkey_warned++ or carp "Net::SSH2 'hostkey' method is obsolete, use 'hostkey_hash' instead";
+    shift->hostkey_hash(@_);
+}
 
 # mechanics
 
@@ -534,6 +539,7 @@ require Net::SSH2::Channel;
 require Net::SSH2::SFTP;
 require Net::SSH2::File;
 require Net::SSH2::Listener;
+require Net::SSH2::KnownHosts;
 
 1;
 __END__
@@ -855,7 +861,7 @@ Send a clean disconnect message to the remote server.  Default values are empty
 strings for description and language, and C<SSH_DISCONNECT_BY_APPLICATION> for
 the reason.
 
-=head2 hostkey ( hash type )
+=head2 hostkey_hash ( hash type )
 
 Returns a hash of the host key; note that the key is raw data and may contain
 nulls or control characters.  The type may be:
@@ -867,6 +873,15 @@ nulls or control characters.  The type may be:
 =item SHA1 (20 bytes)
 
 =back
+
+Note: in previous versions of the module this method was called
+C<hostkey>.
+
+=head2 remote_hostkey
+
+Returns the public key of the remote host and its type which is one of
+C<LIBSSH2_HOSTKEY_TYPE_RSA>, C<LIBSSH2_HOSTKEY_TYPE_DSS>, or
+C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
 
 =head2 auth_list ( [username] )
 
@@ -999,6 +1014,10 @@ Return SecureFTP interface object (see L<Net::SSH2::SFTP>).
 =head2 public_key
 
 Return public key interface object (see L<Net::SSH2::PublicKey>).
+
+=head2 known_hosts
+
+Returns known hosts interface object (see L<Net::SSH2::KnownHosts>).
 
 =head2 poll ( timeout, arrayref of hashes )
 
