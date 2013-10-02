@@ -940,6 +940,18 @@ PPCODE:
     XSRETURN_IV(!i);
 
 void
+net_ss_flag(SSH2* ss, SV* flag, int value)
+PREINIT:
+    IV flag_iv;
+    int success;
+PPCODE:
+    clear_error(ss);
+    if (!iv_constant_sv("LIBSSH2_FLAG_", flag, &flag_iv))
+        croak("%s::method: unknown flag: %s", class, SvPV_nolen(flag));
+    success = libssh2_session_flag(ss->session, (int)flag_iv, value);
+    XSRETURN_IV(!success);
+
+void
 net_ss_callback(SSH2* ss, SV* type, SV* callback = NULL)
 PREINIT:
     IV i_type;
