@@ -1678,6 +1678,20 @@ CODE:
     XSRETURN_IV(count);
 
 void
+net_ch_window_write(SSH2_CHANNEL* ch)
+PREINIT:
+    unsigned long window_size_initial;
+PPCODE:
+    XPUSHs(sv_2mortal(newSVuv(libssh2_channel_window_write_ex(ch->channel,
+                                                              &window_size_initial))));
+    if (GIMME_V == G_ARRAY) {
+        XPUSHs(sv_2mortal(newSVuv(window_size_initial)));
+        XSRETURN(2);
+    }
+    else
+        XSRETURN(1);
+
+void
 net_ch_flush(SSH2_CHANNEL* ch, int ext = 0)
 PREINIT:
     int count;
