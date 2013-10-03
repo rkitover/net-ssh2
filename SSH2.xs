@@ -1258,6 +1258,23 @@ CODE:
     ss->sv_tmp = NULL;
     XSRETURN_IV(success);
 
+void
+net_ss_keepalive_config(SSH2 *ss, int want_reply, unsigned int interval)
+CODE:
+    libssh2_keepalive_config(ss->session, want_reply, interval);
+
+void
+net_ss_keepalive_send(SSH2 *ss)
+PREINIT:
+    int success;
+    int seconds_to_next;
+PPCODE:
+    success = libssh2_keepalive_send(ss->session, &seconds_to_next);
+    if (success == LIBSSH2_ERROR_NONE)
+        XSRETURN_IV(seconds_to_next);
+    else
+        XSRETURN_EMPTY;
+
 SSH2_CHANNEL*
 net_ss_channel(SSH2* ss, SV* channel_type = NULL, \
  int window_size = LIBSSH2_CHANNEL_WINDOW_DEFAULT, \
