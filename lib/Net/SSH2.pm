@@ -989,6 +989,25 @@ let them trigger from the underlying socket layer.
 
 =back
 
+=head2 keepalive_config(want_reply, interval)
+
+Set how often keepalive messages should be sent.
+
+C<want_reply> indicates whether the keepalive messages should request
+a response from the server. C<interval> is number of seconds that can
+pass without any I/O.
+
+=head2 keepalive_send
+
+Send a keepalive message if needed.
+
+On failure returns undef. On success returns how many seconds you can
+sleep after this call before you need to call it again.
+
+Note that the underlaying libssh2 function C<libssh2_keepalive_send>
+can not recover from EAGAIN errors. If this method fails with such
+error, the SSH connection may become corrupted.
+
 =head2 channel ( [type, [window size, [packet size]]] )
 
 Creates and returns a new channel object.  The default type is "session".
