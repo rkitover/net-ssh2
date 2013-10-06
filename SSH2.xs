@@ -1258,6 +1258,8 @@ CODE:
     ss->sv_tmp = NULL;
     XSRETURN_IV(success);
 
+#if LIBSSH2_VERSION_NUM >= 0x010205
+
 void
 net_ss_keepalive_config(SSH2 *ss, int want_reply, unsigned int interval)
 CODE:
@@ -1274,6 +1276,20 @@ PPCODE:
         XSRETURN_IV(seconds_to_next);
     else
         XSRETURN_EMPTY;
+
+#else
+
+void
+net_ss_keepalive_config(SSH2 *ss, int want_reply, unsigned int interval)
+CODE:
+    croak("libssh2 version 1.2.5 or higher required for keepalive_config support");
+
+void
+net_ss_keepalive_send(SSH2 *ss)
+CODE:
+    croak("libssh2 version 1.2.5 or higher required for keepalive_send support");
+
+#endif
 
 SSH2_CHANNEL*
 net_ss_channel(SSH2* ss, SV* channel_type = NULL, \
