@@ -203,6 +203,12 @@ Returns number of bytes flushed, undef on error.
 Returns the exit signal of the command executed on the channel. Requires libssh
 1.2.8 or higher.
 
+=head2 window_write
+
+Returns the number of bytes which may be safely writen on the channel
+without blocking. In list context it also returns the the size of the
+initial window.
+
 =head1 SEE ALSO
 
 L<Net::SSH2>.
