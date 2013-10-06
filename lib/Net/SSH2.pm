@@ -836,7 +836,7 @@ compression methods.
 
 =back
 
-=head2 connect ( handle | host [, port [, Timeout => secs ]] )
+=head2 connect ( handle | host [, port [, Timeout => secs ] [, Compress => 1]] )
 
 Accepts a handle over which to conduct the SSH 2 protocol.  The handle may be:
 
@@ -963,6 +963,29 @@ L<auth_keyboard> callback.
 =item cb_password
 
 L<auth_password> callback.
+
+=back
+
+=head2 flag (key, value)
+
+Sets the given session flag.
+
+The currently supported flag values are:
+
+=over 4
+
+=item COMPRESS
+
+If set before the connection negotiation is performed, compression
+will be negotiated for this connection.
+
+Compression can also be enabled passing the C<Compress> option
+L</connect>.
+
+=item SIGPIPE
+
+if set, Net::SSH2/libssh2 will not attempt to block SIGPIPEs but will
+let them trigger from the underlying socket layer.
 
 =back
 
