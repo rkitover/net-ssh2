@@ -939,6 +939,8 @@ PPCODE:
     SvREFCNT_dec(prefs);
     XSRETURN_IV(!i);
 
+#if LIBSSH2_VERSION_NUM >= 0x010200
+
 void
 net_ss_flag(SSH2* ss, SV* flag, int value)
 PREINIT:
@@ -950,6 +952,15 @@ PPCODE:
         croak("%s::method: unknown flag: %s", class, SvPV_nolen(flag));
     success = libssh2_session_flag(ss->session, (int)flag_iv, value);
     XSRETURN_IV(!success);
+
+#else
+
+void
+net_ss_flag(SSH2_CHANNEL* ch, SV* flag, int value)
+CODE:
+    croak("libssh2 version 1.2 or higher required for flag support");
+
+#endif
 
 void
 net_ss_callback(SSH2* ss, SV* type, SV* callback = NULL)
@@ -1677,6 +1688,8 @@ CODE:
     } while (LIBSSH2_ERROR_EAGAIN == count);
     XSRETURN_IV(count);
 
+#if LIBSSH2_VERSION_NUM >= 0x010200
+
 void
 net_ch_window_write(SSH2_CHANNEL* ch)
 PREINIT:
@@ -1690,6 +1703,15 @@ PPCODE:
     }
     else
         XSRETURN(1);
+
+#else
+
+void
+net_ch_window_write(SSH2_CHANNEL* ch)
+CODE:
+    croak("libssh2 version 1.2 or higher required for window_write support");
+
+#endif
 
 void
 net_ch_flush(SSH2_CHANNEL* ch, int ext = 0)
