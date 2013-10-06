@@ -273,6 +273,9 @@ sub connect {
         $fd = Win32API::File::FdGetOsFHandle($fd);
     }
 
+    # enable compression when requested
+    $self->flag(COMPRESS => 1) if $opts{Compress};
+
     # pass it in, do protocol
     return $self->_startup($fd, $sock);
 }
