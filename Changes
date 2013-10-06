@@ -1,6 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
 0.54
+        - add keepalive_config and keepalive_send methods
         - add channel method "window_write"
         - add "Compress" option into "connect" method
         - add "flags" method
