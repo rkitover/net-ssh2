@@ -1,6 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
 0.54
+        - add Net::SSH2 known_hosts method and Net::SSH2::KnownHosts
+          class
         - add keepalive_config and keepalive_send methods
         - add channel method "window_write"
         - add "Compress" option into "connect" method
