@@ -4,11 +4,55 @@ use strict;
 use warnings;
 
 1;
+
 __END__
 
 =head1 NAME
 
 Net::SSH2::KnownHosts - SSH 2 knownhosts object
+
+=head1 SYNOPSIS
+
+  my $kh = $ssh2->known_hosts;
+
+  my $ok = eval {
+      $kh->readfile($known_hosts_path);
+  };
+
+  # a non-existent known_hosts file usually is not an error...
+  unless (defined $ok) {
+      if ($ssh2->error != LIBSSH2_ERROR_FILE or -f $known_hosts_path) {
+          die; # propagate error;
+      }
+  }
+
+  my ($key, $type) = $ssh2->remote_hostkey;
+
+  my $flags = ( LIBSSH2_KNOWNHOST_TYPE_PLAIN |
+                LIBSSH2_KNOWNHOST_KEYENC_RAW |
+                (($type + 1) << LIBSSH2_KNOWNHOST_KEY_SHIFT) );
+
+  my $check = $kh->check($hostname, $port, $key, $flags);
+
+  if ($check == LIBSSH2_CHECK_MATCH) {
+      # ok!
+  }
+  elsif ($check == LIBSSH2_KNOWNHOST_CHECK_MISMATCH) {
+      die "host verification failed, the key has changed!";
+  }
+  elsif ($check == LIBSSH2_KNOWNHOST_CHECK_NOTFOUND) {
+      die "host verification failed, key not found in known_hosts file"
+          if $strict_host_key_checking;
+
+      # else, save new key to file:
+      eval {
+          $kh->add($hostname, '', $key, "Perl added me", $flags);
+          $kh->writefile($known_hosts_path);
+      } or warn "unable to save known_hosts file: " . ($ssh2->error)[1];
+  }
+  else {
+      die "host key verification failed, unknown reason";
+  }
 
 =head1 DESCRIPTION
 
