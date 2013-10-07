@@ -2355,7 +2355,7 @@ PPCODE:
 MODULE = Net::SSH2		PACKAGE = Net::SSH2::KnownHosts   PREFIX = net_kh_
 PROTOTYPES: DISABLE
 
-#define class "Net::SSH2::Knownhosts"
+#define class "Net::SSH2::KnownHosts"
 
 #if LIBSSH2_VERSION_NUM >= 0x010200
 
