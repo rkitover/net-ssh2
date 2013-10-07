@@ -720,10 +720,13 @@ static void openssl_threads_init(void)
 static void
 croak_last_error(SSH2 *ss, const char *klass, const char *method) {
     char *errmsg;
-    if (libssh2_session_last_error(ss->session, &errmsg, NULL, 0) != LIBSSH2_ERROR_NONE)
-        croak("%s::%s: %s", klass, method, errmsg);
-
-    croak("Internal error: croak_last_error called but there was no error!");
+    if ((ss->errcode != LIBSSH2_ERROR_NONE) && (ss->errmsg != NULL))
+        errmsg = SvPV_nolen(ss->errmsg);
+    else {
+        if (libssh2_session_last_error(ss->session, &errmsg, NULL, 0) == LIBSSH2_ERROR_NONE)
+            croak("Internal error: croak_last_error called but there was no error!");
+    }
+    croak("%s::%s: %s", klass, method, errmsg);
 }
 
 #define CROAK_LAST_ERROR(session, method) (croak_last_error((session), class, (method)))
@@ -2457,10 +2460,76 @@ CODE:
 OUTPUT:
     RETVAL
 
+void
+net_kh_readline(SSH2_KNOWNHOSTS *kh, SV *line)
+PREINIT:
+    int rc;
+    STRLEN line_len;
+    const char *line_pv;
+PPCODE:
+    line_pv = SvPV_const(line, line_len);
+    rc = libssh2_knownhost_readline(kh->knownhosts, line_pv, line_len, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    if (rc == LIBSSH2_ERROR_NONE) {
+        XPUSHs(&PL_sv_yes);
+        XSRETURN(1);
+    }
+    else
+        CROAK_LAST_ERROR(kh->ss, "readline");
+
+void
+net_kh_writeline(SSH2_KNOWNHOSTS *kh, const char *host, SV *port, SV *key, int typemask)
+PREINIT:
+    int rc;
+    STRLEN key_len;
+    const char *key_pv;
+    UV port_uv;
+    size_t line_len;
+    STRLEN buffer_len;
+    SV *buffer;
+    struct libssh2_knownhost *entry = NULL;
+PPCODE:
+    clear_error(kh->ss);
+    key_pv = SvPV_const(key, key_len);
+    port_uv = (SvOK(port) ? SvUV(port) : 0);
+#if LIBSSH2_VERSION_NUM >= 0x010206
+    rc = libssh2_knownhost_checkp(kh->knownhosts, host, port_uv,
+                                      key_pv, key_len, typemask, &entry);
+#else
+    if ((port != 0) && (port != 22))
+        croak("libssh2 version 1.2.6 is required when using a custom TCP port");
+    rc = libssh2_knownhost_check(kh->knownhosts, host,
+                                 key_pv, key_len, typemask, &entry);
+#endif
+    if ((rc != LIBSSH2_KNOWNHOST_CHECK_MATCH) || !entry) {
+        set_error(kh->ss, LIBSSH2_ERROR_KNOWN_HOSTS, "matching host key not found");
+    }
+    else {
+        buffer = sv_2mortal(newSV(512));
+        SvPOK_on(buffer);
+        while (1) {
+            rc = libssh2_knownhost_writeline(kh->knownhosts, entry,
+                                             SvPVX(buffer), SvLEN(buffer),
+                                             &line_len, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+            if (rc == LIBSSH2_ERROR_NONE) {
+                SvPVX(buffer)[line_len] = '\0';
+                SvCUR_set(buffer, line_len);
+                XPUSHs(buffer);
+                XSRETURN(1);
+            }
+
+            if ((rc != LIBSSH2_ERROR_BUFFER_TOO_SMALL) ||
+                (SvLEN(buffer) > 64 * 1024)) break;
+                
+            SvGROW(buffer, SvLEN(buffer) * 2);
+        }
+    }
+    CROAK_LAST_ERROR(kh->ss, "writeline");
+
+
+
 # /* TODO */
 # libssh2_knownhost_del()
 # libssh2_knownhost_get()
-# libssh2_knownhost_readline()
 # libssh2_knownhost_writeline()
 
 #endif

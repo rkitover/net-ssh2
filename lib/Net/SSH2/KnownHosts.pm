@@ -123,6 +123,34 @@ Returns:
     LIBSSH2_KNOWNHOST_CHECK_NOTFOUND (2)
     LIBSSH2_KNOWNHOST_CHECK_FAILURE  (3)
 
+=head2 readline (string)
+
+Read a known_hosts entry from the given string.
+
+This method dies when some error happens.
+
+For instance, the following piece of code is more or less equivalent
+to the L<readfile> method:
+
+  my $kh = $ssh2->known_hosts;
+  if (open my $fh, '<', $known_hosts_path) {
+      while (<>) {
+          eval { $kh->readline($_) }
+             or warn "unable to parse known_hosts entry $_";
+      }
+  }
+
+=head2 writeline (hostname, port, key, key_type|host_format|key_format)
+
+Searchs the entry matching the given parameters (as described in the
+L</check> method) and formats it into a line in the known_hosts
+format.
+
+This method dies when some error happens.
+
+This method should be considered experimental, the interface may
+change.
+
 =head1 SEE ALSO
 
 L<Net::SSH2>, L<sshd(8)>.
