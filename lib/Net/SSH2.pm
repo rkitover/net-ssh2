@@ -273,8 +273,10 @@ sub connect {
         $fd = Win32API::File::FdGetOsFHandle($fd);
     }
 
-    # enable compression when requested
-    $self->flag(COMPRESS => 1) if $opts{Compress};
+    # enable compression when requested and if the underlaying libssh2
+    # supports it
+    $self->flag(COMPRESS => 1)
+        if $opts{Compress} and ($self->version)[1] >= 0x010200;
 
     # pass it in, do protocol
     return $self->_startup($fd, $sock);

@@ -180,12 +180,16 @@ typedef struct SSH2_PUBLICKEY {
     LIBSSH2_PUBLICKEY* pkey;
 } SSH2_PUBLICKEY;
 
+#if LIBSSH2_VERSION_NUM >= 0x010200
+
 /* Net::SSH2::KnownHosts object */
 typedef struct SSH2_KNOWNHOSTS {
     SSH2 *ss;
     SV *sv_ss;
     LIBSSH2_KNOWNHOSTS* knownhosts;
 } SSH2_KNOWNHOSTS;
+
+#endif
 
 static int net_ss_debug_out = 0;
 static unsigned long net_ch_gensym = 0;
@@ -966,7 +970,7 @@ PPCODE:
 #else
 
 void
-net_ss_flag(SSH2_CHANNEL* ch, SV* flag, int value)
+net_ss_flag(SSH2* ss, SV* flag, int value)
 CODE:
     croak("libssh2 version 1.2 or higher required for flag support");
 
@@ -1402,12 +1406,23 @@ CODE:
 OUTPUT:
     RETVAL
 
+#if LIBSSH2_VERSION_NUM >= 0x010200
+
 SSH2_KNOWNHOSTS*
 net_ss_known_hosts(SSH2 *ss)
 CODE:
     NEW_KNOWNHOSTS(libssh2_knownhost_init(ss->session));
 OUTPUT:
     RETVAL
+
+#else
+
+void
+net_ss_known_hosts(SSH2 *ss)
+CODE:
+    croak("libssh2 version 1.2 or higher required for known_hosts support");
+
+#endif
 
 void
 net_ss__poll(SSH2* ss, int timeout, AV* event)
@@ -2342,6 +2357,8 @@ PROTOTYPES: DISABLE
 
 #define class "Net::SSH2::Knownhosts"
 
+#if LIBSSH2_VERSION_NUM >= 0x010200
+
 void
 net_kh_DESTROY(SSH2_KNOWNHOSTS *kh)
 CODE:
@@ -2386,8 +2403,14 @@ CODE:
         comment_pv = NULL;
         comment_len = 0;
     }
+#if LIBSSH2_VERSION_NUM >= 0x010205
     success = libssh2_knownhost_addc(kh->knownhosts, host, salt, key_pv, key_len,
                                      comment_pv, comment_len, typemask, NULL);
+#else
+    if (SvOK(comment))
+        croak("libssh2 version 1.2.5 is required to add keys with comments");
+    success = libssh2_knownhost_add(kh->knownhosts, host, salt, key_pv, key_len, typemask, NULL);
+#endif
     XSRETURN_IV(!success);
 
 int
@@ -2395,10 +2418,19 @@ net_kh_check(SSH2_KNOWNHOSTS *kh, const char *host, SV *port, SV *key, int typem
 PREINIT:
     STRLEN key_len;
     const char *key_pv;
+    UV port_uv;
 CODE:
     key_pv = SvPV_const(key, key_len);
-    RETVAL = libssh2_knownhost_checkp(kh->knownhosts, host, (SvOK(port) ? SvUV(port) : 0),
+    port_uv = (SvOK(port) ? SvUV(port) : 0);
+#if LIBSSH2_VERSION_NUM >= 0x010206
+    RETVAL = libssh2_knownhost_checkp(kh->knownhosts, host, port_uv,
                                       key_pv, key_len, typemask, NULL);
+#else
+    if ((port != 0) && (port != 22))
+        croak("libssh2 version 1.2.6 is required when using a custom TCP port");
+    RETVAL = libssh2_knownhost_check(kh->knownhosts, host,
+                                     key_pv, key_len, typemask, NULL);
+#endif
 OUTPUT:
     RETVAL
 
@@ -2407,6 +2439,8 @@ OUTPUT:
 # libssh2_knownhost_get()
 # libssh2_knownhost_readline()
 # libssh2_knownhost_writeline()
+
+#endif
 
 #undef class
 
