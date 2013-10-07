@@ -22,18 +22,20 @@ The methods currently supported are as follows:
 
 Populates the object with the entries in the given file.
 
-Returns the number of successfully read entries or undef when some
-error happens.
+This method dies when some error happens. On success it returns the
+number or entries read.
 
 =head2 writefile (filename)
 
 Saves the known host entries to the given file.
 
+This method dies when some error happens.
+
 =head2 add (hostname, salt, key, comment, key_type|host_format|key_format)
 
 Add a host and its associated key to the collection of known hosts.
 
-The C<host_format> argument specifies on what format the given host:
+The C<host_format> argument specifies the format of the given host:
 
     LIBSSH2_KNOWNHOST_TYPE_PLAIN  - ascii "hostname.domain.tld"
     LIBSSH2_KNOWNHOST_TYPE_SHA1   - SHA1(salt, host) base64-encoded!
@@ -58,6 +60,8 @@ Fnally, the available key types are as follow:
     LIBSSH2_KNOWNHOST_KEY_SSHDSS
 
 The comment argument may be undef.
+
+This method dies when some error happens.
 
 =head2 check (hostname, port, key, key_type|host_format|key_format)
 

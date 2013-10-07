@@ -717,6 +717,17 @@ static void openssl_threads_init(void)
 
 #endif
 
+static void
+croak_last_error(SSH2 *ss, const char *klass, const char *method) {
+    char *errmsg;
+    if (libssh2_session_last_error(ss->session, &errmsg, NULL, 0) != LIBSSH2_ERROR_NONE)
+        croak("%s::%s: %s", klass, method, errmsg);
+
+    croak("Internal error: croak_last_error called but there was no error!");
+}
+
+#define CROAK_LAST_ERROR(session, method) (croak_last_error((session), class, (method)))
+
 /* perl module exports */
 
 MODULE = Net::SSH2		PACKAGE = Net::SSH2		PREFIX = net_ss_
@@ -2378,21 +2389,26 @@ CODE:
     if (n >= 0)
         XSRETURN_IV(n);
     else
-        XSRETURN_EMPTY;
+        CROAK_LAST_ERROR(kh->ss, "readfile");
 
 void
 net_kh_writefile(SSH2_KNOWNHOSTS *kh, const char *filename)
 PREINIT:
-    int success;
-CODE:
+    int rc;
+PPCODE:
     clear_error(kh->ss);
-    success = libssh2_knownhost_writefile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
-    XSRETURN_IV(!success);
+    rc = libssh2_knownhost_writefile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    if (rc == LIBSSH2_ERROR_NONE) {
+        XPUSHs(&PL_sv_yes);
+        XSRETURN(1);
+    }
+    else
+        CROAK_LAST_ERROR(kh->ss, "writefile");
 
 void
 net_kh_add(SSH2_KNOWNHOSTS *kh, const char *host, const char *salt, SV *key, SV *comment, int typemask)
 PREINIT:
-    int success;
+    int rc;
     STRLEN key_len, comment_len;
     const char *key_pv, *comment_pv;
 CODE:
@@ -2405,14 +2421,19 @@ CODE:
         comment_len = 0;
     }
 #if LIBSSH2_VERSION_NUM >= 0x010205
-    success = libssh2_knownhost_addc(kh->knownhosts, host, salt, key_pv, key_len,
+    rc = libssh2_knownhost_addc(kh->knownhosts, host, salt, key_pv, key_len,
                                      comment_pv, comment_len, typemask, NULL);
 #else
     if (SvOK(comment))
         croak("libssh2 version 1.2.5 is required to add keys with comments");
-    success = libssh2_knownhost_add(kh->knownhosts, host, salt, key_pv, key_len, typemask, NULL);
+    rc = libssh2_knownhost_add(kh->knownhosts, host, salt, key_pv, key_len, typemask, NULL);
 #endif
-    XSRETURN_IV(!success);
+    if (rc == LIBSSH2_ERROR_NONE) {
+        XPUSHs(&PL_sv_yes);
+        XSRETURN(1);
+    }
+    else
+        CROAK_LAST_ERROR(kh->ss, "add");
 
 int
 net_kh_check(SSH2_KNOWNHOSTS *kh, const char *host, SV *port, SV *key, int typemask)
