@@ -2396,6 +2396,7 @@ PREINIT:
     STRLEN key_len, comment_len;
     const char *key_pv, *comment_pv;
 CODE:
+    clear_error(kh->ss);
     key_pv = SvPV_const(key, key_len);
     if (SvOK(comment))
         comment_pv = SvPV_const(comment, comment_len);
@@ -2420,6 +2421,7 @@ PREINIT:
     const char *key_pv;
     UV port_uv;
 CODE:
+    clear_error(kh->ss);
     key_pv = SvPV_const(key, key_len);
     port_uv = (SvOK(port) ? SvUV(port) : 0);
 #if LIBSSH2_VERSION_NUM >= 0x010206
