@@ -1786,6 +1786,30 @@ CODE:
     } while (LIBSSH2_ERROR_EAGAIN == count);
     XSRETURN_IV(count);
 
+#if LIBSSH2_VERSION_NUM >= 0x010100
+
+void
+net_ch_receive_window_adjust(SSH2_CHANNEL *ch, unsigned long adjustment, SV *force = &PL_sv_undef)
+PREINIT:
+    unsigned int new_size;
+PPCODE:
+    if (libssh2_channel_receive_window_adjust2(ch->channel, adjustment,
+                                               SvTRUE(force), &new_size) == LIBSSH2_ERROR_NONE) {
+        XPUSHs(sv_2mortal(newSVuv(new_size)));
+        XSRETURN(1);
+    }
+    else
+        XSRETURN_EMPTY;
+
+#else
+
+void
+net_ch_receive_window_adjust(SSH2_CHANNEL* ch, ...)
+CODE:
+    croak("libssh2 version 1.1 or higher required for receive_window_adjust support");
+
+#endif
+
 #if LIBSSH2_VERSION_NUM >= 0x010200
 
 void
@@ -1802,12 +1826,34 @@ PPCODE:
     else
         XSRETURN(1);
 
+void
+net_ch_window_read(SSH2_CHANNEL *ch)
+PREINIT:
+    unsigned long read_avail;
+    unsigned long window_size_initial;
+PPCODE:
+    XPUSHs(sv_2mortal(newSVuv(libssh2_channel_window_read_ex(ch->channel,
+                                                             &read_avail,
+                                                             &window_size_initial))));
+    if (GIMME_V == G_ARRAY) {
+        XPUSHs(sv_2mortal(newSVuv(read_avail)));
+        XPUSHs(sv_2mortal(newSVuv(window_size_initial)));
+        XSRETURN(3);
+    }
+    else
+        XSRETURN(1);
+
 #else
 
 void
 net_ch_window_write(SSH2_CHANNEL* ch)
 CODE:
     croak("libssh2 version 1.2 or higher required for window_write support");
+
+void
+net_ch_window_read(SSH2_CHANNEL* ch)
+CODE:
+    croak("libssh2 version 1.2 or higher required for window_read support");
 
 #endif
 
