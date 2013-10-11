@@ -2547,7 +2547,11 @@ PPCODE:
                                  key_pv, key_len, typemask, &entry);
 #endif
     if ((rc != LIBSSH2_KNOWNHOST_CHECK_MATCH) || !entry) {
-        set_error(kh->ss, LIBSSH2_ERROR_KNOWN_HOSTS, "matching host key not found");
+#if LIBSSH2_VERSION_NUM >= 0x010403
+        set_error(kh->ss, LIBSSH2_ERROR_KNOWN_HOSTS, "matching host key not found");        
+#else
+        set_error(kh->ss, LIBSSH2_ERROR_SOCKET_NONE, "matching host key not found");
+#endif
     }
     else {
         buffer = sv_2mortal(newSV(512));
