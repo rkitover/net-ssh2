@@ -1815,7 +1815,7 @@ CODE:
 void
 net_ch_window_write(SSH2_CHANNEL* ch)
 PREINIT:
-    unsigned long window_size_initial;
+    unsigned long window_size_initial = 0;
 PPCODE:
     XPUSHs(sv_2mortal(newSVuv(libssh2_channel_window_write_ex(ch->channel,
                                                               &window_size_initial))));
@@ -1829,8 +1829,8 @@ PPCODE:
 void
 net_ch_window_read(SSH2_CHANNEL *ch)
 PREINIT:
-    unsigned long read_avail;
-    unsigned long window_size_initial;
+    unsigned long read_avail = 0;
+    unsigned long window_size_initial = 0;
 PPCODE:
     XPUSHs(sv_2mortal(newSVuv(libssh2_channel_window_read_ex(ch->channel,
                                                              &read_avail,
