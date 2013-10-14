@@ -1755,7 +1755,10 @@ CODE:
     }
 
     total += count;
-    if (count > 0 && (unsigned)count < size) {
+
+    if (count > 0 && (unsigned)count < size &&
+        libssh2_session_get_blocking(ch->ss->session)) {
+
         pv_buffer += count;
         size -= count;
         goto again;
