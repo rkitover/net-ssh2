@@ -1210,6 +1210,9 @@ CODE:
     if(agent_end) {
         XSRETURN_IV(agent_end);
     }
+CLEANUP:
+    if (agent)
+        libssh2_agent_free(agent);
 
 #else
 
