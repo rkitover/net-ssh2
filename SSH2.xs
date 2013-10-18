@@ -119,7 +119,7 @@ static const char *const sftp_error[] = {
 
 #define countof(x) (sizeof(x)/sizeof(*x))
 
-#define XLATEXT (ext ? SSH_EXTENDED_DATA_STDERR : 0)
+#define XLATEXT (SvTRUE(ext) ? SSH_EXTENDED_DATA_STDERR : 0)
 
 #define XLATATTR(name, field, flag) \
     else if (strEQ(key, name)) { \
@@ -1735,12 +1735,12 @@ CODE:
     XSRETURN_IV(1);
 
 void
-net_ch_read(SSH2_CHANNEL* ch, SV* buffer, size_t size, int ext = 0)
+net_ch_read(SSH2_CHANNEL* ch, SV* buffer, size_t size, SV *ext = &PL_sv_undef)
 PREINIT:
     char* pv_buffer;
     int count, total = 0;
 CODE:
-    debug("%s::read(size = %d, ext = %d)\n", class, size, ext);
+    debug("%s::read(size = %d, ext = %d)\n", class, size, SvTRUE(ext));
     clear_error(ch->ss);
     SvPOK_on(buffer);
     pv_buffer = sv_grow(buffer, size + 1/*NUL*/);  /* force PV */
@@ -1773,7 +1773,7 @@ CODE:
     XSRETURN_IV(total);
 
 void
-net_ch_write(SSH2_CHANNEL* ch, SV* buffer, int ext = 0)
+net_ch_write(SSH2_CHANNEL* ch, SV* buffer, SV *ext = &PL_sv_undef)
 PREINIT:
     const char* pv_buffer;
     STRLEN len_buffer;
@@ -1864,7 +1864,7 @@ CODE:
 #endif
 
 void
-net_ch_flush(SSH2_CHANNEL* ch, int ext = 0)
+net_ch_flush(SSH2_CHANNEL* ch, SV *ext = &PL_sv_undef)
 PREINIT:
     int count;
 CODE:
