@@ -129,6 +129,11 @@ if (!$lib && !$inc) {
     $inc = "-I$inc" if $inc;
 }
 
+my $extra_ccflags = ' ';
+if ($^O eq 'darwin') {
+	$extra_ccflags .= '-Wno-deprecated-declarations'
+}
+
 auto_provides;
 
 libs $lib;
@@ -137,10 +142,12 @@ inc "$inc -I.";
 
 makemaker_args 
     @define,
-    # this is known to NOT work on mingw and solaris, and we only turn it on for devs
-    ($Module::Install::AUTHOR && $^O ne 'MSWin32' && $^O ne 'solaris' && $Config{cc} =~ /gcc/i ? (
-        CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c89 -pedantic-errors -Wno-long-long'
-    ) : ())
+    # this is known to NOT work on mingw, solaris and darwin, and we only turn it on for devs
+    ($Module::Install::AUTHOR && $^O ne 'MSWin32' && $^O ne 'solaris' && $^O ne 'darwin' && $Config{cc} =~ /gcc/i ? (
+        CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c99 -pedantic-errors -Wno-long-long '
+    ) : (
+        CCFLAGS => $Config{ccflags} . $extra_ccflags
+    ))
 ;
 
 realclean_files qw/const-c.inc const-xs.inc/;
