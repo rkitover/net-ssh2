@@ -1072,7 +1072,7 @@ PREINIT:
     size_t key_len;
     int type_int;
 PPCODE:
-    if (key_pv = libssh2_session_hostkey(ss->session, &key_len, &type_int)) {
+    if ((key_pv = libssh2_session_hostkey(ss->session, &key_len, &type_int))) {
         XPUSHs(sv_2mortal(newSVpvn(key_pv, key_len)));
         if (GIMME_V != G_ARRAY)
             XSRETURN(1);
@@ -1413,7 +1413,7 @@ PREINIT:
 CODE:
     if (bound_port && SvOK(bound_port)) {
         if (!SvROK(bound_port) && SvTYPE(SvRV(bound_port)) <= SVt_PVNV)
-            croak("%s::listen: bound port must be scalar reference");
+            croak("%s::listen: bound port must be scalar reference", class);
     } else
         bound_port = NULL;
     NEW_LISTENER(libssh2_channel_forward_listen_ex(ss->session,
@@ -1483,7 +1483,7 @@ CODE:
                  ((SSH2_LISTENER*)SvIVX(SvRV(*handle)))->listener;
             } else {
                 croak("%s::poll: invalid handle object in array (%d): %s",
-                 class, package, i);
+                 class, i, package);
             }
         } else if(SvIOK(*handle)) {
             pollfd[i].type = LIBSSH2_POLLFD_SOCKET;
@@ -1937,7 +1937,7 @@ CODE:
     case G_ARRAY:
         EXTEND(SP, 2);
         ST(0) = sv_2mortal(newSVuv(error));
-        if (error >= 0 && error < countof(sftp_error))
+        if (error < countof(sftp_error))
             ST(1) = sv_2mortal(newSVpvf("SSH_FX_%s", sftp_error[error]));
         else
             ST(1) = sv_2mortal(newSVpvf("SSH_FX_UNKNOWN(%lu)", error));
@@ -2191,7 +2191,7 @@ net_fi_write(SSH2_FILE* fi, SV* buffer)
 PREINIT:
     const char* pv_buffer;
     STRLEN len_buffer;
-    size_t count;
+    ssize_t count;
 CODE:
     clear_error(fi->sf->ss);
     pv_buffer = SvPV(buffer, len_buffer);
@@ -2332,11 +2332,11 @@ CODE:
         STRLEN len_tmp;
 
         if (!SvROK(ST(i + 4)) || SvTYPE(SvRV(ST(i + 4))) != SVt_PVHV)
-            croak("%s::add: attribute %d is not hash", class, i);
+            croak("%s::add: attribute %lu is not hash", class, i);
         hv = (HV*)SvRV(ST(i + 4));
 
         if (!(tmp = hv_fetch(hv, "name", 4, 0/*lval*/)) || !*tmp)
-            croak("%s::add: attribute %d missing name", class, i);
+            croak("%s::add: attribute %lu missing name", class, i);
         attrs[i].name = SvPV(*tmp, len_tmp);
         attrs[i].name_len = len_tmp;
 
