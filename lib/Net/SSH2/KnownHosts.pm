@@ -13,6 +13,13 @@ Net::SSH2::KnownHosts - SSH 2 knownhosts object
 
 =head1 SYNOPSIS
 
+  #####################################################################
+  #                                                                   #
+  # WARNING: The API provided by Net::SSH2::KnownHosts is             #
+  # experimental and could change in future versions of the module!!! #
+  #                                                                   #
+  #####################################################################
+
   my $kh = $ssh2->known_hosts;
 
   my $ok = eval {
@@ -55,6 +62,13 @@ Net::SSH2::KnownHosts - SSH 2 knownhosts object
   }
 
 =head1 DESCRIPTION
+
+  #####################################################################
+  #                                                                   #
+  # WARNING: The API provided by Net::SSH2::KnownHosts is             #
+  # experimental and could change in future versions of the module!!! #
+  #                                                                   #
+  #####################################################################
 
 The C<knownhosts> object allows one to manipulate the entries in the
 C<known_host> file usually located at C<~/.ssh/known_hosts> and which
