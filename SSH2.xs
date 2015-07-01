@@ -1224,7 +1224,7 @@ CODE:
 #endif
 
 void
-net_ss_auth_publickey(SSH2* ss, SV* username, const char* publickey, \
+net_ss_auth_publickey(SSH2* ss, SV* username, SV* publickey, \
  const char* privatekey, SV* passphrase = NULL)
 PREINIT:
     const char* pv_username;
@@ -1232,8 +1232,9 @@ PREINIT:
 CODE:
     clear_error(ss);
     pv_username = SvPV(username, len_username);
+
     XSRETURN_IV(!libssh2_userauth_publickey_fromfile_ex(ss->session,
-     pv_username, len_username, publickey, privatekey,
+     pv_username, len_username, default_string(publickey), privatekey,
      default_string(passphrase)));
 
 void
