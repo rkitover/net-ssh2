@@ -60,7 +60,8 @@ unless ($host) {
     print <<TEST;
 
 To test the connection capabilities of Net::SSH2, we need a test site running
-a secure shell server daemon.  Enter 'localhost' to use this host.
+a secure shell server daemon.  Enter 'localhost' or '127.0.0.1' to use this
+host over IPv4. Enter '::1' to use this host over IPv6.
 
 TEST
     print "Select host [ENTER to skip]: ";
@@ -71,7 +72,7 @@ SKIP: { # SKIP-server
 skip '- no server daemon available', 62 unless $host;
 ok($ssh2->connect($host), "connect to $host");
 
-isa_ok($ssh2->sock, 'IO::Socket::INET', '->sock isa IO::Socket::INET');
+isa_ok($ssh2->sock, 'IO::Socket::IP', '->sock isa IO::Socket::IP');
 
 # (8) server methods
 for my $type(qw(kex hostkey crypt_cs crypt_sc mac_cs mac_sc comp_cs comp_sc)) {

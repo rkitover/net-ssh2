@@ -246,8 +246,8 @@ sub connect {
     $opts{Timeout} ||= 30;
 
     if (@_ == 2) {
-        require IO::Socket::INET;
-        $sock = IO::Socket::INET->new(
+        require IO::Socket::IP;
+        $sock = IO::Socket::IP->new(
             PeerHost => $_[0],
             PeerPort => $_[1],
             Timeout => $opts{Timeout},
@@ -663,7 +663,7 @@ returns (code, error name, error string).
 
 =head2 sock
 
-Returns a reference to the underlying L<IO::Socket::INET> object, or C<undef> if
+Returns a reference to the underlying L<IO::Socket::IP> object, or C<undef> if
 not yet connected.
 
 =head2 trace
