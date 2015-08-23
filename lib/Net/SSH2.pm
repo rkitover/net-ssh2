@@ -300,7 +300,7 @@ sub _auth_methods {
         'publickey'     => {
             ssh    => 'publickey',
             method => \&auth_publickey,
-            params => [qw(username publickey privatekey password?)],
+            params => [qw(username publickey privatekey passphrase?)],
         },
         'keyboard'      => {
             ssh    => 'keyboard-interactive',
@@ -337,6 +337,7 @@ sub _auth_rank {
     ];
 }
 
+my $password_when_you_mean_passphrase_warned;
 sub auth {
     my ($self, %p) = @_;
     my $rank = delete $p{rank} || $self->_auth_rank;
@@ -356,6 +357,12 @@ sub auth {
             my $p = $param;
             my $opt = $p =~ s/\?$//;
             my $pseudo = $p =~ s/^_//;
+
+            if ($p eq 'passphrase' and not exists $p{$p} and exists $p{password}) {
+                $p = 'password';
+                $password_when_you_mean_passphrase_warned++
+                    or carp "Using the key 'password' to refer to a passphrase is obsolete. Use 'passphrase' instead";
+            }
             next TYPE if not $opt and not exists $p{$p};
             next if $pseudo;     # don't push pseudos
             push @pass, $p{$p};  # if it's optional, store undef
@@ -938,11 +945,11 @@ no callback is provided, LIBSSH2_ERROR_PASSWORD_EXPIRED is returned.
 
 Prompts the user for the password interactively using Term::ReadKey.
 
-=head2 auth_publickey ( username, public key, private key [, password ] )
+=head2 auth_publickey ( username, public key, private key [, passphrase ] )
 
 Note that public key and private key are names of files containing the keys!
 
-Authenticate using keys and an optional password.
+Authenticate using keys and an optional passphrase.
 
 =head2 auth_hostbased ( username, public key, private key, hostname,
  [, local username [, password ]] )
@@ -994,6 +1001,8 @@ for the password interactively.
 =item publickey
 
 =item privatekey
+
+=item passphrase
 
 As in the methods, publickey and privatekey are filenames.
 
