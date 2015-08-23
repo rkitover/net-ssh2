@@ -284,13 +284,11 @@ sub connect {
 
 sub _auth_methods {
     return {
-        ((version())[1]||0 >= 0x010203 ? (
-            'agent' => {
-                ssh => 'agent',
-                method => \&auth_agent,
-                params => [qw(username)],
-            },
-        ) : ()),
+        'agent' => {
+            ssh => 'agent',
+            method => \&auth_agent,
+            params => [qw(_fallback username)],
+        },
         'hostbased'     => {
             ssh    => 'hostbased',
             method => \&auth_hostbased,
@@ -330,24 +328,28 @@ sub _auth_methods {
     };
 }
 
+my @rank_default = qw(hostbased publickey keyboard-auto password agent keyboard password-interact none);
+
 sub _auth_rank {
-    return [
-        ((version())[1]||0 >= 0x010203 ? ('agent') : ()),
-        qw(hostbased publickey keyboard-auto keyboard password password-interact none)
-    ];
+    my ($self, $rank) = @_;
+    $rank ||= \@rank_default;
+    my $libver = ($self->version)[1] || 0;
+    return @$rank if $libver > 0x010203;
+    return grep { $_ ne 'agent' } @$rank;
 }
 
 my $password_when_you_mean_passphrase_warned;
 sub auth {
     my ($self, %p) = @_;
-    my $rank = delete $p{rank} || $self->_auth_rank;
+
+    my @rank = $self->_auth_rank(delete $p{rank});
 
     # if fallback is set, interact with the user even when a password
     # is given
-    $p{fallback} = 1 unless defined $p{password};
+    $p{fallback} = 1 unless defined $p{password} or defined $p{passphrase};
 
-    TYPE: for(my $i = 0; $i < @$rank; $i++) {
-        my $type = $rank->[$i];
+    TYPE: for(my $i = 0; $i < @rank; $i++) {
+        my $type = $rank[$i];
         my $data = $self->_auth_methods->{$type};
         confess "unknown authentication method '$type'" unless $data;
 
@@ -361,7 +363,7 @@ sub auth {
             if ($p eq 'passphrase' and not exists $p{$p} and exists $p{password}) {
                 $p = 'password';
                 $password_when_you_mean_passphrase_warned++
-                    or carp "Using the key 'password' to refer to a passphrase is obsolete. Use 'passphrase' instead";
+                    or carp "Using the key 'password' to refer to a passphrase is deprecated. Use 'passphrase' instead";
             }
             next TYPE if not $opt and not exists $p{$p};
             next if $pseudo;     # don't push pseudos
