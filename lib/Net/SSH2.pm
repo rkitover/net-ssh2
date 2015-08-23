@@ -293,7 +293,7 @@ sub _auth_methods {
             ssh    => 'hostbased',
             method => \&auth_hostbased,
             params => [qw(username publickey privatekey
-                       hostname local_username? password?)],
+                       hostname local_username? passphrase?)],
         },
         'publickey'     => {
             ssh    => 'publickey',
@@ -958,9 +958,9 @@ this method C<undef> as the public key argument is acceptable (OpenSSH
 is able to extract the public key from the private one).
 
 =head2 auth_hostbased ( username, public key, private key, hostname,
- [, local username [, password ]] )
+ [, local username [, passphrase ]] )
 
-Host-based authentication using an optional password.  The local username
+Host-based authentication using an optional passphrase.  The local username
 defaults to be the same as the remote username.
 
 =head2 auth_keyboard ( username, password | callback )
