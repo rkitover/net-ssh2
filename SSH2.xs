@@ -1586,13 +1586,15 @@ PREINIT:
     char *exitsignal = NULL;  
 CODE:
     clear_error(ch->ss);
-    RETVAL = NULL;
+    RETVAL;
     libssh2_channel_get_exit_signal(ch->channel, &exitsignal,
         NULL, NULL, NULL, NULL, NULL);
     if (exitsignal) {
         RETVAL = newSVpv(exitsignal, 0);
-        Safefree(exitsignal);
+        libssh2_free(ch->ss->session, exitsignal);
     }
+    else
+        RETVAL = &PL_sv_undef;
 OUTPUT:
     RETVAL
 
