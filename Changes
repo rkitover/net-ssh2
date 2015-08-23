@@ -1,6 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
 0.54
+        - add method auth_password_interact
+        - add fallback option to auth method
         - fix memory leaks
         - on channel read method, when non-blocking mode is set, don't
           call libssh2_channel_read repeatly until the buffer is

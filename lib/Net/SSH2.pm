@@ -303,9 +303,9 @@ sub _auth_methods {
             params => [qw(username publickey privatekey password?)],
         },
         'keyboard'      => {
-            ssh    => 'keyboard-interactive', 
+            ssh    => 'keyboard-interactive',
             method => \&auth_keyboard,
-            params => [qw(_interact username cb_keyboard?)]
+            params => [qw(_interact _fallback username cb_keyboard?)]
         },
         'keyboard-auto' => {
             ssh    => 'keyboard-interactive',
@@ -316,6 +316,11 @@ sub _auth_methods {
             ssh    => 'password',
             method => \&auth_password,
             params => [qw(username password cb_password?)],
+        },
+        'password-interact'  => {
+             ssh    => 'password',
+             method => \&auth_password_interact,
+             params => [qw(_interact _fallback username cb_password?)],
         },
         'none'          => {
             ssh    => 'none',
@@ -328,13 +333,17 @@ sub _auth_methods {
 sub _auth_rank {
     return [
         ((version())[1]||0 >= 0x010203 ? ('agent') : ()),
-        qw(hostbased publickey keyboard keyboard-auto password none)
+        qw(hostbased publickey keyboard-auto keyboard password password-interact none)
     ];
 }
 
 sub auth {
     my ($self, %p) = @_;
     my $rank = delete $p{rank} || $self->_auth_rank;
+
+    # if fallback is set, interact with the user even when a password
+    # is given
+    $p{fallback} = 1 unless defined $p{password};
 
     TYPE: for(my $i = 0; $i < @$rank; $i++) {
         my $type = $rank->[$i];
@@ -356,6 +365,23 @@ sub auth {
         return $type if $data->{method}->($self, @pass) and $self->auth_ok;
     }
     return;  # failure
+}
+
+sub auth_password_interact {
+    my ($self, $username, $cb) = @_;
+    require Term::ReadKey;
+    local $| = 1;
+    my $rc;
+    for (0..2) {
+        print "[user $username] password?\n";
+        Term::ReadKey::ReadMode('noecho');
+        chomp(my $password = Term::ReadKey::ReadLine(0));
+        Term::ReadKey::ReadMode('normal');
+        $rc = $self->auth_password($username, $password, $cb);
+        last if $rc or $self->error != LIBSSH2_ERROR_AUTHENTICATION_FAILED();
+        print "Password authentication failed!\n";
+    }
+    return $rc;
 }
 
 sub scp_get {
@@ -908,6 +934,10 @@ If the password has expired, if a callback code reference was given, it's
 called as C<callback($self, $username)> and should return a password.  If
 no callback is provided, LIBSSH2_ERROR_PASSWORD_EXPIRED is returned.
 
+=head2 auth_password_interact ( username [, callback])
+
+Prompts the user for the password interactively using Term::ReadKey.
+
 =head2 auth_publickey ( username, public key, private key [, password ] )
 
 Note that public key and private key are names of files containing the keys!
@@ -951,9 +981,11 @@ will be supplied if possible.  The parameters are:
 
 =item rank
 
-An optional ranked list of methods to try.  The names should be the names of
-the L<Net::SSH2> C<auth> methods, e.g. 'keyboard' or 'publickey', with the
-addition of 'keyboard-auto' for automated 'keyboard-interactive'.
+An optional ranked list of methods to try.  The names should be the
+names of the L<Net::SSH2> C<auth> methods, e.g. 'keyboard' or
+'publickey', with the addition of 'keyboard-auto' for automated
+'keyboard-interactive' and 'password-interact' that prompts the user
+for the password interactively.
 
 =item username
 
@@ -972,6 +1004,12 @@ As in the methods, publickey and privatekey are filenames.
 =item interact
 
 If this is set to a true value, interactive methods will be considered.
+
+=item fallback
+
+If a password is given but authentication using it fails, the module
+will fall back to ask the user for another password if this
+parameter is set to a true value.
 
 =item cb_keyboard
 
