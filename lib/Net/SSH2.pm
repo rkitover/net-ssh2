@@ -953,7 +953,7 @@ Note that public key and private key are names of files containing the keys!
 
 Authenticate using keys and an optional passphrase.
 
-When libssh2 is compiled using OpenSSL as the crypto backend passing
+When libssh2 is compiled using OpenSSL as the crypto backend, passing
 this method C<undef> as the public key argument is acceptable (OpenSSH
 is able to extract the public key from the private one).
 

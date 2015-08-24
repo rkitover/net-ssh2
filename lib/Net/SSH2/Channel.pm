@@ -213,7 +213,7 @@ inmediately available for read and the size of the initial window.
 
 =head2 window_write
 
-Returns the number of bytes which may be safely writen on the channel
+Returns the number of bytes which may be safely written on the channel
 without blocking. In list context it also returns the size of the
 initial window.
 
