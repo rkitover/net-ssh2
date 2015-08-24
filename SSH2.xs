@@ -1181,6 +1181,8 @@ CODE:
         libssh2_agent_free(agent);
     }
     libssh2_session_set_blocking(ss->session, old_blocking);
+OUTPUT:
+    RETVAL
 
 #else
 
