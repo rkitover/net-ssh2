@@ -218,7 +218,7 @@ sub new {
 
     my $self = $class->_new;
 
-    $self->trace($opts{trace}) if exists $opts{trace};
+    $self->trace($opts{trace}) if defined $opts{trace};
 
     return $self;
 }
@@ -360,7 +360,7 @@ sub auth {
             my $opt = $p =~ s/\?$//;
             my $pseudo = $p =~ s/^_//;
 
-            if ($p eq 'passphrase' and not exists $p{$p} and exists $p{password}) {
+            if ($p eq 'passphrase' and not exists $p{$p} and defined $p{password}) {
                 $p = 'password';
                 $password_when_you_mean_passphrase_warned++
                     or carp "Using the key 'password' to refer to a passphrase is deprecated. Use 'passphrase' instead";
