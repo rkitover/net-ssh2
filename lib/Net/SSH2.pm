@@ -365,9 +365,14 @@ sub auth {
                 $password_when_you_mean_passphrase_warned++
                     or carp "Using the key 'password' to refer to a passphrase is deprecated. Use 'passphrase' instead";
             }
-            next TYPE if not $opt and not exists $p{$p};
-            next if $pseudo;     # don't push pseudos
-            push @pass, $p{$p};  # if it's optional, store undef
+
+            if ($pseudo) {
+                next TYPE unless $p{$p};
+            }
+            else {
+                next TYPE if not $opt and not exists $p{$p};
+                push @pass, $p{$p};  # if it's optional, store undef
+            }
         }
 
         # invoke the authentication method
