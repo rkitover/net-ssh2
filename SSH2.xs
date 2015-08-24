@@ -1154,65 +1154,33 @@ CODE:
 
 #if LIBSSH2_VERSION_NUM >= 0x010203
 
-void
-net_ss_auth_agent(SSH2* ss, SV* username)
+SV *
+net_ss_auth_agent(SSH2* ss, const char* username)
 PREINIT:
-    STRLEN len_username;
-    const char* pv_username;
-    LIBSSH2_AGENT *agent = NULL;
-    int agent_end, rc;
-    struct libssh2_agent_publickey *identity, *prev_identity = NULL;
+    LIBSSH2_AGENT *agent;
+    int old_blocking;
 CODE:
+    RETVAL = &PL_sv_no;
     clear_error(ss);
-    pv_username = SvPV(username, len_username);
-    agent = libssh2_agent_init(ss->session);
-    if(!agent) {
-        XSRETURN_IV(0);
-    }
-    if(libssh2_agent_connect(agent)) {
-        XSRETURN_IV(0);
-    }
-    if(libssh2_agent_list_identities(agent)) {
-        XSRETURN_IV(0);
-    }
-    while(1) {
-        agent_end = libssh2_agent_get_identity(agent, &identity, prev_identity);
-
-        if(agent_end == 1) {
-            /* Reached end, not successfully authenticated. */
-            XSRETURN_IV(0);
+    /* unfortunatelly this can't be make to work on nb mode */
+    old_blocking = libssh2_session_get_blocking(ss->session);
+    libssh2_session_set_blocking(ss->session, 1);
+    if ((agent = libssh2_agent_init(ss->session)) != NULL) {
+        if (libssh2_agent_connect(agent) == LIBSSH2_ERROR_NONE) {
+            if (libssh2_agent_list_identities(agent) == LIBSSH2_ERROR_NONE) {
+                struct libssh2_agent_publickey *identity = NULL;
+                while (libssh2_agent_get_identity(agent, &identity, identity) == 0) {
+                    if (libssh2_agent_userauth(agent, username, identity) == LIBSSH2_ERROR_NONE) {
+                        RETVAL = &PL_sv_yes;
+                        break;
+                    }
+                }
+            }
+            libssh2_agent_disconnect(agent);
         }
-
-        if(agent_end < 0) {
-            /* error */
-            XSRETURN_IV(agent_end);
-        }
-
-        rc = libssh2_agent_userauth(agent, pv_username, identity);
-
-        if (rc == LIBSSH2_ERROR_EAGAIN &&
-            libssh2_session_get_blocking(ss->session) == 0) {
-            XSRETURN_IV(rc);
-        }
-
-        while (rc == LIBSSH2_ERROR_EAGAIN) {
-          rc = libssh2_agent_userauth(agent, pv_username, identity);
-        }
-
-        if(rc >= 0) {
-            /* authenticated */
-            XSRETURN_IV(!rc);
-        }
-
-        prev_identity = identity;
-    }
-
-    if(agent_end) {
-        XSRETURN_IV(agent_end);
-    }
-CLEANUP:
-    if (agent)
         libssh2_agent_free(agent);
+    }
+    libssh2_session_set_blocking(ss->session, old_blocking);
 
 #else
 
