@@ -370,7 +370,7 @@ sub auth {
                 next TYPE unless $p{$p};
             }
             else {
-                next TYPE if not $opt and not exists $p{$p};
+                next TYPE unless $opt or defined $p{$p};
                 push @pass, $p{$p};  # if it's optional, store undef
             }
         }
