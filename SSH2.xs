@@ -373,61 +373,90 @@ static int return_stat_attrs(SV** sp, LIBSSH2_SFTP_ATTRIBUTES* attrs,
 /* wrap a libSSH2 knownhosts object */
 #define NEW_KNOWNHOSTS(create) NEW_ITEM(SSH2_KNOWNHOSTS, knownhosts, create, ss)
 
+static void
+set_cb_data(pTHX_ AV* data) {
+    GV *gv = gv_fetchpv("Net::SSH2::_cb_data", 1, SVt_PV);
+    SV *sv = save_scalar(gv);
+    sv_setsv(sv, sv_2mortal(newRV_inc((SV*)data)));
+}
+
+static AV*
+get_cb_data(pTHX) {
+    SV *sv = get_sv("Net::SSH2::_cb_data", 1);
+    if (SvROK(sv)) {
+        AV *data = (AV*)SvRV(sv);
+        if (SvTYPE(data) == SVt_PVAV)
+            return data;
+    }
+    Perl_croak(aTHX_ "internal error: unexpected structure found for callback data");
+}
+
 /* callback for returning a password via "keyboard-interactive" auth */
 static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_password) {
-    SSH2* ss = (SSH2*)*abstract;
-    const char* pv_password;
-    STRLEN len_password;
-
     if (num_prompts != 1 || prompts[0].echo) {
         int i;
-        for (i = 0; i < num_prompts; ++i)
+        for (i = 0; i < num_prompts; ++i) {
+            responses[i].text = NULL;
             responses[i].length = 0;
-        return;
-     }
+        }
+    }
+    else {
+        /* single prompt, no echo: assume it's a password request */
+        dTHX;
+        AV *cb_data = get_cb_data(aTHX);
+        SV *password = *av_fetch(cb_data, 0, 1);
+        STRLEN len_password;
+        const char* pv_password = SvPV(password, len_password);
 
-    /* single prompt, no echo: assume it's a password request */
-    pv_password = SvPV(ss->sv_tmp, len_password);
-    New(0, responses[0].text, len_password, char);
-    Copy(pv_password, responses[0].text, len_password, char);
-    responses[0].length = len_password;
+        responses[0].text = savepvn(pv_password, len_password);
+        responses[0].length = len_password;
+    }
 }
 
 /* thunk to call perl input-reading function for "keyboard-interactive" auth */
 static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_callback) {
-    SSH2* ss = (SSH2*)*abstract;
-    int i;
+    dTHX; dSP;
+    int count, i;
+    AV *cb_data = get_cb_data(aTHX);
+    SV *cb = *av_fetch(cb_data, 0, 1);
+    SV *self = *av_fetch(cb_data, 1, 1);
+    SV *username = *av_fetch(cb_data, 2, 1);
 
-    dSP; I32 ax; int count;
-    ENTER; SAVETMPS; PUSHMARK(SP);
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
     EXTEND(SP, 4 + num_prompts);
-    PUSHs(*av_fetch((AV*)ss->sv_tmp, 1, 0/*lval*/));
-    PUSHs(*av_fetch((AV*)ss->sv_tmp, 2, 0/*lval*/));
+    PUSHs(self);
+    PUSHs(username);
     PUSHs(sv_2mortal(newSVpvn(name, name_len)));
     PUSHs(sv_2mortal(newSVpvn(instruction, instruction_len)));
     for (i = 0; i < num_prompts; ++i) {
         HV* hv = newHV();
-        responses[i].length = 0;
-        hv_store(hv, "text", 4, newSVpvn(prompts[i].text, prompts[i].length),
-         0/*hash*/);
-        hv_store(hv, "echo", 4, newSViv(prompts[i].echo), 0/*hash*/);
         PUSHs(sv_2mortal(newRV_noinc((SV*)hv)));
+        hv_store(hv, "text", 4, newSVpvn(prompts[i].text, prompts[i].length), 0);
+        hv_store(hv, "echo", 4, newSVuv(prompts[i].echo), 0);
+        responses[i].text = NULL;
+        responses[i].length = 0;
     }
     PUTBACK;
-
-    count = call_sv(*av_fetch((AV*)ss->sv_tmp, 0, 0/*lval*/), G_ARRAY);
-    SPAGAIN; SP -= count; ax = (SP - PL_stack_base) + 1;
-
-    /* translate the returned responses */
-    for (i = 0; i < count; ++i) {
-        STRLEN len_response;
-        const char* pv_response = SvPV(ST(i), len_response);
-        New(0, responses[i].text, len_response, char);
-        Copy(pv_response, responses[i].text, len_response, char);
-        responses[i].length = len_response;
+    count = call_sv(cb, G_ARRAY);
+    SPAGAIN;
+    if (count > num_prompts) {
+        Perl_warn(aTHX_ "Too many responses from callback, %d expected but %d found!",
+                  num_prompts, count);
+        while (count-- > num_prompts)
+            POPs;
     }
-
-    PUTBACK; FREETMPS; LEAVE;
+    while (count-- > 0) {
+        STRLEN len_response;
+        SV *sv = POPs;
+        char *pv_response = SvPV(sv, len_response);
+        responses[count].text = savepvn(pv_response, len_response);
+        responses[count].length = len_response;
+    }
+    PUTBACK;
+    FREETMPS;
+    LEAVE;
 }
 
 /* thunk to call perl password change function for "password" auth */
@@ -1230,54 +1259,42 @@ CODE:
      default_string(passphrase),
      pv_hostname, len_hostname, pv_local_username, len_local_username));
 
-void
+SV *
 net_ss_auth_keyboard(SSH2* ss, SV* username, SV* password = NULL)
 PREINIT:
     const char* pv_username;
     STRLEN len_username;
-    int success;
+    int rc;
+    AV *cb_args;
 CODE:
     clear_error(ss);
     pv_username = SvPV(username, len_username);
 
     /* we either have a password, or a reference to a callback */
-    if (password && SvPOK(password)) {
-        ss->sv_tmp = password;
-        success = !libssh2_userauth_keyboard_interactive_ex(
-         ss->session, pv_username, len_username, cb_kbdint_response_password);
-        ss->sv_tmp = NULL;
-        XSRETURN_IV(success);
+
+    if (!password || !SvOK(password)) {
+        password = sv_2mortal(newRV_inc((SV*)get_cv("Net::SSH2::_cb_kbdint_response_default", 1)));
+        if (!SvOK(password))
+            Perl_croak(aTHX_ "Internal error: unable to retrieve callback");
     }
 
-    /* alright, reference to callback it is */
-    if (!password || !SvOK(password))
-        password = sv_2mortal(newRV_noinc((SV*)get_cv(
-         "Net::SSH2::_cb_kbdint_response_default", 0/*create*/)));
-    if (!SvROK(password) || SvTYPE(SvRV(password)) != SVt_PVCV)
-        croak("%s::auth_keyboard requires password or CODE ref", class);
+    cb_args = (AV*)sv_2mortal((SV*)newAV());
+    av_push(cb_args, newSVsv(password));
+    av_push(cb_args, newSVsv(ST(0))); /*session */
+    av_push(cb_args, newSVsv(username));
+    set_cb_data(aTHX_ cb_args);
 
-    /* set up parameters for callback */
-    {
-        SV* rgsv[3];  /* callback, params... */
-        int i;
-
-			 	rgsv[0] = password;
-				rgsv[1] = ST(0);
-				rgsv[2] = username;
-
-        for (i = 0; i < countof(rgsv); ++i)
-            SvREFCNT_inc(rgsv[i]);
-        ss->sv_tmp = (SV*)av_make(countof(rgsv), rgsv);
-    }
-    SvREFCNT_inc(SvRV(password));
-
-    success = !libssh2_userauth_keyboard_interactive_ex(
-     ss->session, pv_username, len_username, cb_kbdint_response_callback);
-
-    SvREFCNT_dec(SvRV(password));
-    SvREFCNT_dec(ss->sv_tmp);
-    ss->sv_tmp = NULL;
-    XSRETURN_IV(success);
+    if (SvROK(password) && (SvTYPE(SvRV(password)) == SVt_PVCV))
+        rc = libssh2_userauth_keyboard_interactive_ex(ss->session,
+                                                      pv_username, len_username,
+                                                      cb_kbdint_response_callback);
+    else
+        rc = libssh2_userauth_keyboard_interactive_ex(ss->session,
+                                                      pv_username, len_username,
+                                                      cb_kbdint_response_password);
+    RETVAL = (rc < 0 ? &PL_sv_no : &PL_sv_yes);
+OUTPUT:
+    RETVAL
 
 #if LIBSSH2_VERSION_NUM >= 0x010205
 
