@@ -380,13 +380,17 @@ set_cb_data(pTHX_ AV* data) {
     sv_setsv(sv, sv_2mortal(newRV_inc((SV*)data)));
 }
 
-static AV*
-get_cb_data(pTHX) {
+static SV*
+get_cb_data(pTHX_ I32 ix) {
     SV *sv = get_sv("Net::SSH2::_cb_data", 1);
     if (SvROK(sv)) {
         AV *data = (AV*)SvRV(sv);
-        if (SvTYPE(data) == SVt_PVAV)
-            return data;
+        if (SvTYPE(data) == SVt_PVAV) {
+            SV **svp = av_fetch(data, ix, 0);
+            if (svp && *svp)
+                return *svp;
+            Perl_croak(aTHX_ "internal error: unable to fetch callback data slot %d", ix);
+        }
     }
     Perl_croak(aTHX_ "internal error: unexpected structure found for callback data");
 }
@@ -403,8 +407,7 @@ static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_password) {
     else {
         /* single prompt, no echo: assume it's a password request */
         dTHX;
-        AV *cb_data = get_cb_data(aTHX);
-        SV *password = *av_fetch(cb_data, 0, 1);
+        SV *password = get_cb_data(aTHX_ 0);
         STRLEN len_password;
         const char* pv_password = SvPV(password, len_password);
 
@@ -417,10 +420,9 @@ static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_password) {
 static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_callback) {
     dTHX; dSP;
     int count, i;
-    AV *cb_data = get_cb_data(aTHX);
-    SV *cb = *av_fetch(cb_data, 0, 1);
-    SV *self = *av_fetch(cb_data, 1, 1);
-    SV *username = *av_fetch(cb_data, 2, 1);
+    SV *cb = get_cb_data(aTHX_ 0);
+    SV *self = get_cb_data(aTHX_ 1);
+    SV *username = get_cb_data(aTHX_ 2);
 
     ENTER;
     SAVETMPS;
