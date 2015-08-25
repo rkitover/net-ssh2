@@ -463,28 +463,33 @@ static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_callback) {
 
 /* thunk to call perl password change function for "password" auth */
 static LIBSSH2_PASSWD_CHANGEREQ_FUNC(cb_password_change_callback) {
-    SSH2* ss = (SSH2*)*abstract;
+    dTHX; dSP;
+    int count;
+    SV *cb = get_cb_data(aTHX_ 0);
+    SV *self = get_cb_data(aTHX_ 1);
+    SV *username = get_cb_data(aTHX_ 2);
 
-    dSP; I32 ax; int count;
-    ENTER; SAVETMPS; PUSHMARK(SP);
-    XPUSHs(*av_fetch((AV*)ss->sv_tmp, 1, 0/*lval*/));
-    XPUSHs(*av_fetch((AV*)ss->sv_tmp, 2, 0/*lval*/));
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    XPUSHs(self);
+    XPUSHs(username);
     PUTBACK;
-
-    *newpw = NULL;
-    *newpw_len = 0;
-    count = call_sv(*av_fetch((AV*)ss->sv_tmp, 0, 0/*lval*/), G_SCALAR);
-    SPAGAIN; SP -= count; ax = (SP - PL_stack_base) + 1;
-
+    count = call_sv(cb, G_SCALAR);
+    SPAGAIN;
     if (count > 0) {
         STRLEN len_password;
-        const char* pv_password = SvPV(ST(0), len_password);
-        New(0, *newpw, len_password, char);
-        Copy(pv_password, *newpw, len_password, char);
+        const char* pv_password = SvPV(POPs, len_password);
+        *newpw = savepvn(pv_password, len_password);
         *newpw_len = len_password;
     }
-
-    PUTBACK; FREETMPS; LEAVE;
+    else {
+        *newpw = NULL;
+        *newpw_len = 0;
+    }
+    PUTBACK;
+    FREETMPS;
+    LEAVE;
 }
 
 /* thunk to call perl SSH_MSG_IGNORE packet function */
@@ -1142,46 +1147,46 @@ CODE:
     clear_error(ss);
     XSRETURN_IV(libssh2_userauth_authenticated(ss->session));
 
-void
-net_ss_auth_password(SSH2* ss, SV* username, SV* password = NULL, \
- SV* callback = NULL)
+SV *
+net_ss_auth_password(SSH2* ss,                                  \
+                     SV* username, SV* password = &PL_sv_undef, \
+                     SV* callback = &PL_sv_undef)
 PREINIT:
     STRLEN len_username, len_password;
-    const char* pv_username, * pv_password;
-    int i;
+    const char *pv_username, *pv_password;
+    int i, ok;
 CODE:
     clear_error(ss);
-    if (callback && SvOK(callback) &&
-     !(SvROK(callback) && SvTYPE(SvRV(callback)) == SVt_PVCV))
-        croak("%s::auth_password: callback must be CODE ref", class);
     pv_username = SvPV(username, len_username);
 
     /* if we don't have a password, try for an unauthenticated login */
-    if (!password || !SvPOK(password)) {
-        char* auth = libssh2_userauth_list(ss->session,
-         pv_username, len_username);
-        /* This causes a double free segfault
-         * Safefree(auth);
-         */
-        XSRETURN_IV(!auth && libssh2_userauth_authenticated(ss->session));
+    if (!SvPOK(password)) {
+        /* That's how libssh2 tells you authentication 'none' is valid */
+        ok = ((libssh2_userauth_list(ss->session, pv_username, len_username) == NULL) &&
+              libssh2_userauth_authenticated(ss->session));
     }
+    else {
+        if (SvOK(callback)) {
+            if (!(SvROK(callback) && SvTYPE(SvRV(callback)) == SVt_PVCV))
+                Perl_croak(aTHX_ "%s::auth_password: callback must be CODE ref", class);
+            else {
+                AV *cb_args = (AV*)sv_2mortal((SV*)newAV());
+                av_push(cb_args, newSVsv(callback));
+                av_push(cb_args, newSVsv(ST(0))); /*session */
+                av_push(cb_args, newSVsv(username));
+                set_cb_data(aTHX_ cb_args);
+            }
+        }
 
-    /* if we have a callback, setup its parameters */
-    if (callback) {
-        AV* args = (AV*)sv_2mortal((SV*)newAV());
-        av_store(args, 0, newSVsv(callback));
-        av_store(args, 1, newSVsv(ST(0)));
-        av_store(args, 2, newSVsv(username));
-        ss->sv_tmp = (SV*)args;
+        pv_password = SvPV(password, len_password);
+        ok = (libssh2_userauth_password_ex(ss->session,
+                                           pv_username, len_username,
+                                           pv_password, len_password,
+                                           (SvOK(callback) ? cb_password_change_callback : NULL)) >= 0);
     }
-
-    pv_password = SvPV(password, len_password);
-    XSRETURN_IV(!libssh2_userauth_password_ex(ss->session, pv_username,
-     len_username, pv_password, len_password,
-     callback ? cb_password_change_callback : NULL));
-
-    if (callback)
-        ss->sv_tmp = NULL;
+    RETVAL = (ok ? &PL_sv_yes : &PL_sv_no);
+OUTPUT:
+    RETVAL
 
 #if LIBSSH2_VERSION_NUM >= 0x010203
 
