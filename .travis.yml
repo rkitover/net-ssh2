@@ -1,0 +1,16 @@
+language: perl
+perl:
+  - "5.20"
+  - "5.18"
+  - "5.16"
+  - "5.14"
+  - "5.12"
+  - "5.10"
+  - "5.8"
+
+install:
+  - perl .travis/install-libssh2.pl
+  - cpanm Module::Install::CheckLib
+
+script:
+  - perl Makefile.PL lib=libssh2/lib inc=libssh2/include && make test
