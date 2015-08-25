@@ -374,15 +374,15 @@ static int return_stat_attrs(SV** sp, LIBSSH2_SFTP_ATTRIBUTES* attrs,
 #define NEW_KNOWNHOSTS(create) NEW_ITEM(SSH2_KNOWNHOSTS, knownhosts, create, ss)
 
 static void
-set_cb_data(pTHX_ AV* data) {
-    GV *gv = gv_fetchpv("Net::SSH2::_cb_data", 1, SVt_PV);
+set_cb_args(pTHX_ AV* data) {
+    GV *gv = gv_fetchpv("Net::SSH2::_cb_args", 1, SVt_PV);
     SV *sv = save_scalar(gv);
     sv_setsv(sv, sv_2mortal(newRV_inc((SV*)data)));
 }
 
 static SV*
-get_cb_data(pTHX_ I32 ix) {
-    SV *sv = get_sv("Net::SSH2::_cb_data", 1);
+get_cb_arg(pTHX_ I32 ix) {
+    SV *sv = get_sv("Net::SSH2::_cb_args", 1);
     if (SvROK(sv)) {
         AV *data = (AV*)SvRV(sv);
         if (SvTYPE(data) == SVt_PVAV) {
@@ -407,7 +407,7 @@ static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_password) {
     else {
         /* single prompt, no echo: assume it's a password request */
         dTHX;
-        SV *password = get_cb_data(aTHX_ 0);
+        SV *password = get_cb_arg(aTHX_ 0);
         STRLEN len_password;
         const char* pv_password = SvPV(password, len_password);
 
@@ -420,9 +420,9 @@ static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_password) {
 static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_callback) {
     dTHX; dSP;
     int count, i;
-    SV *cb = get_cb_data(aTHX_ 0);
-    SV *self = get_cb_data(aTHX_ 1);
-    SV *username = get_cb_data(aTHX_ 2);
+    SV *cb = get_cb_arg(aTHX_ 0);
+    SV *self = get_cb_arg(aTHX_ 1);
+    SV *username = get_cb_arg(aTHX_ 2);
 
     ENTER;
     SAVETMPS;
@@ -465,9 +465,9 @@ static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_callback) {
 static LIBSSH2_PASSWD_CHANGEREQ_FUNC(cb_password_change_callback) {
     dTHX; dSP;
     int count;
-    SV *cb = get_cb_data(aTHX_ 0);
-    SV *self = get_cb_data(aTHX_ 1);
-    SV *username = get_cb_data(aTHX_ 2);
+    SV *cb = get_cb_arg(aTHX_ 0);
+    SV *self = get_cb_arg(aTHX_ 1);
+    SV *username = get_cb_arg(aTHX_ 2);
 
     ENTER;
     SAVETMPS;
@@ -1174,7 +1174,7 @@ CODE:
                 av_push(cb_args, newSVsv(callback));
                 av_push(cb_args, newSVsv(ST(0))); /*session */
                 av_push(cb_args, newSVsv(username));
-                set_cb_data(aTHX_ cb_args);
+                set_cb_args(aTHX_ cb_args);
             }
         }
 
@@ -1289,7 +1289,7 @@ CODE:
     av_push(cb_args, newSVsv(password));
     av_push(cb_args, newSVsv(ST(0))); /*session */
     av_push(cb_args, newSVsv(username));
-    set_cb_data(aTHX_ cb_args);
+    set_cb_args(aTHX_ cb_args);
 
     if (SvROK(password) && (SvTYPE(SvRV(password)) == SVt_PVCV))
         rc = libssh2_userauth_keyboard_interactive_ex(ss->session,
