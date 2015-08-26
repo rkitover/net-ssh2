@@ -409,9 +409,15 @@ sub scp_get {
     # read and commit blocks until we're finished
     $chan->blocking(1);
     my $mode = $stat{mode} & 0777;
-    my $file = ref $path ? $path
-       : IO::File->new($path, O_WRONLY | O_CREAT | O_TRUNC, $mode);
-    return unless $file;
+    my $file;
+    if (ref $path) {
+        $file = $path;
+    }
+    else {
+        $file = IO::File->new($path, O_WRONLY | O_CREAT | O_TRUNC, $mode);
+        return unless $file;
+        binmode $file;
+    }
 
     for (my ($size, $count) = ($stat{size}); $size > 0; $size -= $count) {
       my $buf = '';
@@ -436,7 +442,15 @@ sub scp_put {
     my ($self, $path, $remote) = @_;
     $remote = basename $path if not defined $remote;
 
-    my $file = ref $path ? $path : IO::File->new($path, O_RDONLY);
+    my $file;
+    if (ref $path) {
+        $file = $path;
+    }
+    else {
+        $file = IO::File->new($path, O_RDONLY);
+        return unless $file;
+        binmode $file;
+    }
     $self->error($!, $!), return unless $file;
     my @stat = $file->stat;
     $self->error($!, $!), return unless @stat;
