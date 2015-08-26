@@ -48,7 +48,7 @@ is($banner, "SSH-2.0-libssh2_$version", "banner is $banner");
 
 # (2) timeout
 is($ssh2->poll(0), 0, 'poll indefinite');
-is($ssh2->poll(250), 0, 'poll 1/4 second');
+is($ssh2->poll(2000), 0, 'poll 2 second');
 
 is($ssh2->sock, undef, '->sock is undef before connect');
 
@@ -222,7 +222,7 @@ $chan = $ssh2->channel();
 ok($chan->exec('ls -d /'), "exec 'ls -d /'");
 $chan->blocking(0);  # don't block, or we'll wait forever
 my @poll = { handle => $chan, events => ['in'] };
-ok($ssh2->poll(250, \@poll), 'got poll response');
+ok($ssh2->poll(2000, \@poll), 'got poll response');
 ok($poll[0]->{revents}->{in}, 'got input event');
 $line = <$chan>;
 chomp $line;
