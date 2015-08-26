@@ -1769,25 +1769,33 @@ CODE:
     debug("- read %d total\n", total);
     XSRETURN_IV(total);
 
-void
+SV *
 net_ch_write(SSH2_CHANNEL* ch, SV* buffer, SV *ext = &PL_sv_undef)
 PREINIT:
     const char* pv_buffer;
-    STRLEN len_buffer;
+    STRLEN len_buffer, offset = 0;
     int count;
 CODE:
     clear_error(ch->ss);
     pv_buffer = SvPV(buffer, len_buffer);
-    do {
-        count = libssh2_channel_write_ex(ch->channel, XLATEXT,
-         pv_buffer, len_buffer);
-        if (count < 0 && LIBSSH2_ERROR_EAGAIN != count)
-            XSRETURN_EMPTY;
-        if (LIBSSH2_ERROR_EAGAIN == count
-                && libssh2_session_get_blocking(ch->ss->session) == 0)
-            XSRETURN_IV(LIBSSH2_ERROR_EAGAIN);
-    } while (LIBSSH2_ERROR_EAGAIN == count);
-    XSRETURN_IV(count);
+    while (offset < len_buffer) {
+        int count = libssh2_channel_write_ex(ch->channel, XLATEXT,
+                                             pv_buffer + offset,
+                                             len_buffer - offset);
+        if (count >= 0)
+            offset += count;
+        else if (!((count == LIBSSH2_ERROR_EAGAIN) &&
+                   libssh2_session_get_blocking(ch->ss->session)))
+            break;
+    }
+    if (offset)
+        RETVAL = newSVuv(offset);
+    else if (count ==  LIBSSH2_ERROR_EAGAIN)
+        RETVAL = newSViv(LIBSSH2_ERROR_EAGAIN);
+    else
+        RETVAL = &PL_sv_undef;
+OUTPUT:
+    RETVAL
 
 #if LIBSSH2_VERSION_NUM >= 0x010100
 

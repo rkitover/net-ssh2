@@ -193,6 +193,11 @@ Attempts to write the buffer to the channel.  Returns number of bytes written,
 undef on failure.  If ext is present and set, writes to the extended data
 channel (stderr).
 
+In case the write operation would block and non-blocking mode is
+active then it returns LIBSSH2_ERROR_AGAIN without setting the global
+session error (yes, that's quite ugly, but it is how the underlaying
+libssh2 works).
+
 =head2 flush ( [ ext ] )
 
 Flushes the channel; if ext is present and set, flushes extended data channel.
