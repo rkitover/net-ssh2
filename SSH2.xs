@@ -1774,7 +1774,7 @@ net_ch_write(SSH2_CHANNEL* ch, SV* buffer, SV *ext = &PL_sv_undef)
 PREINIT:
     const char* pv_buffer;
     STRLEN len_buffer, offset = 0;
-    int count;
+    int count = 0;
 CODE:
     clear_error(ch->ss);
     pv_buffer = SvPV(buffer, len_buffer);
@@ -1788,7 +1788,7 @@ CODE:
                    libssh2_session_get_blocking(ch->ss->session)))
             break;
     }
-    if (offset)
+    if (offset || (count == 0)) /* yes, zero is a valid value */
         RETVAL = newSVuv(offset);
     else if (count ==  LIBSSH2_ERROR_EAGAIN)
         RETVAL = newSViv(LIBSSH2_ERROR_EAGAIN);
