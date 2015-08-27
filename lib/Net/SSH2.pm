@@ -210,6 +210,19 @@ our @EXPORT_OK = @{$EXPORT_TAGS{all}};
 
 our $VERSION = '0.53';
 
+# load IO::Socket::IP when available, otherwise fallback to IO::Socket::INET.
+
+my $socket_class = do {
+    local ($SIG{__DIE__}, $SIG{__WARN__}, $@, $!);
+    eval {
+        require IO::Socket::IP;
+        'IO::Socket::IP' && undef;
+    }
+} || do {
+    require IO::Socket::INET;
+    'IO::Socket::INET'
+};
+
 # methods
 
 sub new {
@@ -246,8 +259,7 @@ sub connect {
     $opts{Timeout} ||= 30;
 
     if (@_ == 2) {
-        require IO::Socket::IP;
-        $sock = IO::Socket::IP->new(
+        $sock = $socket_class->new(
             PeerHost => $_[0],
             PeerPort => $_[1],
             Timeout => $opts{Timeout},
@@ -717,8 +729,9 @@ returns (code, error name, error string).
 
 =head2 sock
 
-Returns a reference to the underlying L<IO::Socket::IP> object, or C<undef> if
-not yet connected.
+Returns a reference to the underlying L<IO::Socket> object (usually a
+derived class as L<IO::Socket::IP> or L<IO::Socket::INET>), or
+C<undef> if not yet connected.
 
 =head2 trace
 
@@ -911,6 +924,11 @@ Accepts a handle over which to conduct the SSH 2 protocol.  The handle may be:
 =item an integer file descriptor
 
 =item a host name and port
+
+In order to handle IPv6 addresses the optional module
+L<IO::Socket::IP> needs to be installed (otherwise the module will use
+the IPv4 only core module L<IO::Socket::INET> to establish the
+connection).
 
 =back
 
