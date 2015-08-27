@@ -15,7 +15,8 @@ my @ignore = (qw(libssh SFTP sftp cbc hmac sha aes publickey diffie
                  dh dir dss fx fxf hostkey iff lowercased knownhosts
                  pty readfile realpath revents rsa shost tcpip
                  writefile writeline redistributions TCP hup md
-                 privatekey ripemd secsh setstat zlib), "Fandi\xf1o");
+                 privatekey ripemd secsh setstat zlib Kitover),
+                 "Fandi\xf1o");
 
 local $ENV{LC_ALL} = 'C';
 add_stopwords(@ignore);
