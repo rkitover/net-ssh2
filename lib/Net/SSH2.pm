@@ -1,5 +1,7 @@
 package Net::SSH2;
 
+our $VERSION = '0.54_01';
+
 use 5.006;
 use strict;
 use warnings;
@@ -207,8 +209,6 @@ our %EXPORT_TAGS = (
 );
 
 our @EXPORT_OK = @{$EXPORT_TAGS{all}};
-
-our $VERSION = '0.53';
 
 # load IO::Socket::IP when available, otherwise fallback to IO::Socket::INET.
 
