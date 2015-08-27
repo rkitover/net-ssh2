@@ -1232,13 +1232,15 @@ L<http://www.ietf.org/html.charters/secsh-charter.html>.
 
 L<Net::SSH::Perl>.
 
-=head1 AUTHOR
-
-David B. Robins, E<lt>dbrobins@cpan.orgE<gt>
-
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2005 - 2010 by David B. Robins; all rights reserved.
+Copyright (C) 2005 - 2010 by David B. Robins (dbrobins@cpan.org)
+
+Copyright (C) 2010 - 2014 by Rafael Kitover (rkitover@cpan.org)
+
+Copyright (C) 2011 - 2015 by Salvador Fandi&ntilde;o (salva@cpan.org)
+
+All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.0 or,
