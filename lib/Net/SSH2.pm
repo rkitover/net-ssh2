@@ -1230,7 +1230,11 @@ LibSSH2 documentation at L<http://www.libssh2.org>.
 IETF Secure Shell (secsh) working group at
 L<http://www.ietf.org/html.charters/secsh-charter.html>.
 
-L<Net::SSH::Perl>.
+L<Net::SSH::Any> and L<Net::SFTP::Foreign> integrate nicely with Net::SSH2.
+
+Other Perl modules related to SSH you may find interesting:
+L<Net::OpenSSH>, L<Net::SSH::Perl>, L<Net::OpenSSH::Parallel>,
+L<Net::OpenSSH::Compat>.
 
 =head1 COPYRIGHT AND LICENSE
 
