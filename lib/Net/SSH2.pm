@@ -216,7 +216,7 @@ my $socket_class = do {
     local ($SIG{__DIE__}, $SIG{__WARN__}, $@, $!);
     eval {
         require IO::Socket::IP;
-        'IO::Socket::IP' && undef;
+        'IO::Socket::IP';
     }
 } || do {
     require IO::Socket::INET;
@@ -394,11 +394,12 @@ sub auth {
 }
 
 my $term_readkey_unavailable_warned;
+my $term_readkey_loaded;
 sub _load_term_readkey {
-    do {
+    return 1 if $term_readkey_loaded ||= do {
         local ($@, $!, $SIG{__DIE__}, $SIG{__WARN__});
         eval { require Term::ReadKey; 1 }
-    } and return 1;
+    };
 
     carp "Unable to load Term::ReadKey, will not ask for passwords at the console!"
         unless $term_readkey_unavailable_warned++;

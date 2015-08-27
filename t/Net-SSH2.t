@@ -81,9 +81,9 @@ for my $type(qw(kex hostkey crypt_cs crypt_sc mac_cs mac_sc comp_cs comp_sc)) {
 }
 
 # (2) hostkey hash
-my $md5 = $ssh2->hostkey('md5');
+my $md5 = $ssh2->hostkey_hash('md5');
 is(length $md5, 16, 'have MD5 hostkey hash');
-my $sha1 = $ssh2->hostkey('sha1');
+my $sha1 = $ssh2->hostkey_hash('sha1');
 is(length $sha1, 20, 'have SHA1 hostkey hash');
 
 # (3) authentication methods
