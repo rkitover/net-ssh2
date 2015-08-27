@@ -111,7 +111,7 @@ The available key formats are as follow:
     LIBSSH2_KNOWNHOST_KEYENC_RAW
     LIBSSH2_KNOWNHOST_KEYENC_BASE64
 
-Fnally, the available key types are as follow:
+Finally, the available key types are as follow:
 
     LIBSSH2_KNOWNHOST_KEY_RSA1
     LIBSSH2_KNOWNHOST_KEY_SSHRSA
@@ -156,7 +156,7 @@ to the L<readfile> method:
 
 =head2 writeline (hostname, port, key, key_type|host_format|key_format)
 
-Searchs the entry matching the given parameters (as described in the
+Searches the entry matching the given parameters (as described in the
 L</check> method) and formats it into a line in the known_hosts
 format.
 

@@ -273,7 +273,7 @@ sub connect {
         $fd = Win32API::File::FdGetOsFHandle($fd);
     }
 
-    # enable compression when requested and if the underlaying libssh2
+    # enable compression when requested and if the underlying libssh2
     # supports it
     $self->flag(COMPRESS => 1)
         if $opts{Compress} and ($self->version)[1] >= 0x010200;
@@ -955,8 +955,8 @@ Returns true iff the session is authenticated.
 
 =head2 auth_password ( username [, password [, callback ]] )
 
-Authenticate using a password (PasswordAuthentication must be enabled in
-sshd_config or equivalent for this to work.)
+Authenticate using a password (C<PasswordAuthentication> must be
+enabled in C<sshd_config> or equivalent for this to work.)
 
 If the password has expired, if a callback code reference was given, it's
 called as C<callback($self, $username)> and should return a password.  If
@@ -1093,7 +1093,7 @@ Send a keepalive message if needed.
 On failure returns undef. On success returns how many seconds you can
 sleep after this call before you need to call it again.
 
-Note that the underlaying libssh2 function C<libssh2_keepalive_send>
+Note that the underlying libssh2 function C<libssh2_keepalive_send>
 can not recover from EAGAIN errors. If this method fails with such
 error, the SSH connection may become corrupted.
 
@@ -1112,7 +1112,7 @@ to the remote SSH server as the origin of the connection. They default
 to 127.0.0.1:22.
 
 Note that this method does B<not> open a new port on the local machine
-and forwards incomming connections to the remote side.
+and forwards incoming connections to the remote side.
 
 =head2 listen ( port [, host [, bound port [, queue size ]]] )
 

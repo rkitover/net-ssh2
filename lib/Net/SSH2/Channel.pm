@@ -195,7 +195,7 @@ channel (stderr).
 
 In case the write operation would block and non-blocking mode is
 active then it returns LIBSSH2_ERROR_AGAIN without setting the global
-session error (yes, that's quite ugly, but it is how the underlaying
+session error (yes, that's quite ugly, but it is how the underlying
 libssh2 works).
 
 =head2 flush ( [ ext ] )
@@ -214,7 +214,7 @@ Returns the number of bytes which the remote end may send without
 overflowing the window limit.
 
 In list context it also returns the number of bytes that are
-inmediately available for read and the size of the initial window.
+immediately available for read and the size of the initial window.
 
 =head2 window_write
 
