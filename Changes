@@ -1,9 +1,19 @@
 Revision history for Perl extension Net::SSH2.
 
-0.54
-        - add method auth_password_interact
+0.54_01  2015-08-27
+        - on auth method use key passphrase instead of password to
+          refer to the private key passphrase - using password will be
+          deprecated in future releases and is now warned
+        - add support for IPv6 via IO::Socket::IP (patch submitted by
+          Baldur Kristinsson)
+        - use binmode when transferring data from/to the local
+          filesystem in SCP methods
+        - add support for password-interact authentication
         - add fallback option to auth method
-        - fix memory leaks
+        - allow undef as the publickey path (patch submitted by Yuni
+          Kim)
+        - on channel write method, when blocking mode is set, call
+          libssh2_channel_write repeatly until the buffer is empty
         - on channel read method, when non-blocking mode is set, don't
           call libssh2_channel_read repeatly until the buffer is
           filled
@@ -14,6 +24,12 @@ Revision history for Perl extension Net::SSH2.
           "receive_window_adjust"
         - add "Compress" option into "connect" method
         - add "flags" method
+        - exit_signal was generating SIGSEGV
+        - improve callback handling
+        - several documentation clarifications added
+        - fix several memory leaks
+        - fix several file descriptor leaks
+        - Lots of other minor tweaks
 
 0.53  2013-09-01 06:05:17
         - add support for ldargs, and LIBSSH2_LIB, LIBSSH2_INCLUDE,
