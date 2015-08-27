@@ -17,3 +17,4 @@
 ^\.travis.yml
 ^\.travis/
 ^\.gitignore
+^t/pod-spell.t
