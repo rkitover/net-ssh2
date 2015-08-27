@@ -1104,8 +1104,15 @@ See L<Net::SSH2::Channel>.
 
 =head2 tcpip ( host, port [, shost, sport ] )
 
-Creates a TCP connection from the remote host to the given host:port, returning
-a new channel.  Binds to shost:sport (default 127.0.0.1:22).
+Creates a TCP connection from the remote host to the given host:port,
+returning a new channel.
+
+The C<shost> and C<sport> arguments are merely informative and passed
+to the remote SSH server as the origin of the connection. They default
+to 127.0.0.1:22.
+
+Note that this method does B<not> open a new port on the local machine
+and forwards incomming connections to the remote side.
 
 =head2 listen ( port [, host [, bound port [, queue size ]]] )
 
