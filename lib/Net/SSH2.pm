@@ -393,16 +393,29 @@ sub auth {
     return;  # failure
 }
 
+my $term_readkey_unavailable_warned;
+sub _load_term_readkey {
+    do {
+        local ($@, $!, $SIG{__DIE__}, $SIG{__WARN__});
+        eval { require Term::ReadKey; 1 }
+    } and return 1;
+
+    carp "Unable to load Term::ReadKey, will not ask for passwords at the console!"
+        unless $term_readkey_unavailable_warned++;
+    return;
+}
+
 sub auth_password_interact {
     my ($self, $username, $cb) = @_;
-    require Term::ReadKey;
+    _load_term_readkey or return;
     local $| = 1;
     my $rc;
     for (0..2) {
         print "[user $username] password?\n";
         Term::ReadKey::ReadMode('noecho');
-        chomp(my $password = Term::ReadKey::ReadLine(0));
+        my $password = Term::ReadKey::ReadLine(0);
         Term::ReadKey::ReadMode('normal');
+        chomp $password;
         $rc = $self->auth_password($username, $password, $cb);
         last if $rc or $self->error != LIBSSH2_ERROR_AUTHENTICATION_FAILED();
         print "Password authentication failed!\n";
@@ -555,7 +568,7 @@ sub poll {
 
 sub _cb_kbdint_response_default {
     my ($self, $user, $name, $instr, @prompt) = @_;
-    require Term::ReadKey;
+    _load_term_readkey or return;
 
     local $| = 1;
     my $prompt = "[user $user] ";

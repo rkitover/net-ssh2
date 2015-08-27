@@ -101,13 +101,14 @@ is_deeply(\@auth, [$ssh2->auth_list($user)], 'list matches comma-separated');
 ok(!$ssh2->auth_ok, 'not authenticated yet');
 
 # (2) authenticate
-@auth = $pass ? (password => $pass) : (interact => 1);
+@auth = (password => $pass) if $pass;
 if($^O =~ /MSWin32/i && !$pass) { # interact probably failed to set $pass on Win32
   @auth = win32_auth();
 }
 my $type = $ssh2->auth(username => $user, @auth,
-  publickey  => "$ENV{HOME}/.ssh/id_dsa.pub",
-  privatekey => "$ENV{HOME}/.ssh/id_dsa");
+                       publickey  => "$ENV{HOME}/.ssh/id_dsa.pub",
+                       privatekey => "$ENV{HOME}/.ssh/id_dsa",
+                       interact => 1 );
 ok($type, "authenticated via: $type");
 SKIP: { # SKIP-auth
 skip '- failed to authenticate with server', 37 unless $ssh2->auth_ok;
@@ -265,6 +266,7 @@ sub win32_auth {
   else {
     Term::ReadKey::ReadMode('noecho');
     $pass = Term::ReadKey::ReadLine(0);
+    Term::ReadKey::ReadMode('echo');
   }
   chomp($pass);
   return (password => $pass);
