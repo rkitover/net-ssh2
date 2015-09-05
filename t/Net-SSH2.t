@@ -64,7 +64,7 @@ a secure shell server daemon.  Enter 'localhost' or '127.0.0.1' to use this
 host over IPv4. Enter '::1' to use this host over IPv6.
 
 TEST
-    print "Select host [ENTER to skip]: ";
+    print "Hostname or IP address [ENTER to skip]: ";
     chomp($host = <STDIN>);
     print "\n";
 }
