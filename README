@@ -28,7 +28,7 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  libSSH2 (http://www.libssh2.org; tested with 0.11 and 0.12)
+  libSSH2 (http://www.libssh2.org; recommended to use version 1.6.0 or later)
   OpenSSL (http://www.openssl.org)
   zlib (optional; http://www.zlib.net)
 
