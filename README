@@ -15,22 +15,38 @@ ssh binaries, and never should have got the namespace.)  Net::SSH2 is a
 new start, with few dependencies and all the functionality of the SSH
 protocol, version 2, at your disposal.
 
+
+MODULE DEPENDENCIES
+
+To install modules that Net::SSH2 depends upon type the following:
+
+   cpanm Module::Install Module::Install::CheckLib IO::Scalar Term::ReadKey
+
+
+DEPENDENCIES
+
+This module also requires these libraries:
+
+   libSSH2 (http://www.libssh2.org; recommended to use version 1.6.0 or later)
+   OpenSSL (http://www.openssl.org)
+   zlib (optional; http://www.zlib.net)
+
+To install dependencies:
+
+Debian:   sudo aptitude install libssh2-1-dev
+OpenSUSE: sudo zypper in libssh2-1 libssh2-devel
+OS X homebrew: brew install libssh2
+
+
 INSTALLATION
 
-To install this module type the following:
+To install Net::SSH2 type the following:
 
    perl Makefile.PL
    make
    make test
    make install
 
-DEPENDENCIES
-
-This module requires these other modules and libraries:
-
-  libSSH2 (http://www.libssh2.org; recommended to use version 1.6.0 or later)
-  OpenSSL (http://www.openssl.org)
-  zlib (optional; http://www.zlib.net)
 
 BUGS/FEATURE REQUESTS
 
