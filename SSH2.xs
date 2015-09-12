@@ -1788,9 +1788,9 @@ CODE:
     clear_error(ch->ss);
     pv_buffer = SvPV(buffer, len_buffer);
     while (offset < len_buffer) {
-        int count = libssh2_channel_write_ex(ch->channel, XLATEXT,
-                                             pv_buffer + offset,
-                                             len_buffer - offset);
+        count = libssh2_channel_write_ex(ch->channel, XLATEXT,
+                                         pv_buffer + offset,
+                                         len_buffer - offset);
         if (count >= 0)
             offset += count;
         else if (!((count == LIBSSH2_ERROR_EAGAIN) &&
