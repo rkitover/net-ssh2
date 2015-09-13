@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.54_02  2015-09-13
+        - channel write method was concealing errors
+        - several doc improvements (patches by Jason Lewis)
+
 0.54_01  2015-08-27
         - on auth method use key passphrase instead of password to
           refer to the private key passphrase - using password will be
