@@ -7,14 +7,6 @@ with all of the key exchanges, ciphers, and compression of libssh2.
 At present, libssh2 requires OpenSSL (http://www.openssl.org) and can
 optionally use zlib for compression (http://www.zlib.net).
 
-The Net::SSH::Perl modules are showing signs of age; with the requirement
-to be compatible with SSH versions 1 and 2, support of newer features such
-as channels is difficult; it also has many dependencies, some of which
-are hard to build (e.g. Math::Pari).  (Net::SSH is just a wrapper around the
-ssh binaries, and never should have got the namespace.)  Net::SSH2 is a
-new start, with few dependencies and all the functionality of the SSH
-protocol, version 2, at your disposal.
-
 
 MODULE DEPENDENCIES
 
@@ -56,10 +48,9 @@ and please provide your name to be credited in the changelog and an email
 address for verification/discussion.
 
 The ssh-sftp-perl-users mailing list
-(http://lists.sourceforge.net/lists/listinfo/ssh-sftp-perl-users), while set up
-for Net::SSH::Perl (which I also maintain), is also an appropriate place to
-post questions or comments about Net::SSH2; if volume gets too high, a separate
-list will be created.
+(http://lists.sourceforge.net/lists/listinfo/ssh-sftp-perl-users),
+while set up for Net::SSH::Perl, is also an appropriate place to post
+questions or comments about Net::SSH2.
 
 
 TESTING
@@ -95,7 +86,13 @@ requiring open/read/write/close).
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2005-2008 by David B. Robins; all rights reserved.
+Copyright (C) 2005-2008 by David B. Robins.
+
+Copyright (C) 2010 - 2015 by Rafael Kitover (rkitover@cpan.org).
+
+Copyright (C) 2011 - 2015 by Salvador Fandi&ntilde;o (salva@cpan.org).
+
+All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.0 or,
