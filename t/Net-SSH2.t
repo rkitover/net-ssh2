@@ -96,15 +96,15 @@ unless ($user) {
 }
 my $auth = $ssh2->auth_list($user);
 ok($auth, "authenticate: $auth");
-my @auth = split /,/, $auth;
-is_deeply(\@auth, [$ssh2->auth_list($user)], 'list matches comma-separated');
+my @auth_methods = split /,/, $auth;
+is_deeply(\@auth_methods, [$ssh2->auth_list($user)], 'list matches comma-separated');
 ok(!$ssh2->auth_ok, 'not authenticated yet');
 
 # (2) authenticate
-@auth = (password => $pass) if $pass;
-if($^O =~ /MSWin32/i && !$pass) { # interact probably failed to set $pass on Win32
-  @auth = win32_auth();
-}
+my @auth = ((defined $pass)     ? (password => $pass) :
+            ($^O =~ /MSWin32/i) ? win32_auth()        :
+            ());
+
 my $type = $ssh2->auth(username => $user, @auth,
                        publickey  => "$ENV{HOME}/.ssh/id_dsa.pub",
                        privatekey => "$ENV{HOME}/.ssh/id_dsa",
