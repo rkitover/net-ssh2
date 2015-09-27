@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.55  2015-09-27
+        - rerelease as stable
+        - fix errors in test script
+
 0.54_02  2015-09-13
         - channel write method was concealing errors
         - several doc improvements (patches by Jason Lewis)
