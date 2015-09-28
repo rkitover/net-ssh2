@@ -16,7 +16,7 @@ my @ignore = (qw(libssh SFTP sftp cbc hmac sha aes publickey diffie
                  pty readfile realpath revents rsa shost tcpip
                  writefile writeline redistributions TCP hup md
                  privatekey ripemd secsh setstat zlib Kitover
-                 pipelining),
+                 pipelining perlish),
                  "Fandi\xf1o");
 
 local $ENV{LC_ALL} = 'C';
