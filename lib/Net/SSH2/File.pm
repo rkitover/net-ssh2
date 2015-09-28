@@ -139,6 +139,10 @@ Returns the current file pointer offset.
 
 L<Net::SSH2::SFTP>.
 
+Check L<Net::SFTP::Foreign> for a high level, perlish and easy to use
+SFTP client module. It can work on top of Net::SSH2 via the
+L<Net::SFTP::Foreign::Backend::Net_SSH2> backend module.
+
 =head1 COPYRIGHT AND LICENSE
 
 Copyright (C) 2005, 2006 by David B. Robins E<lt>dbrobins@cpan.orgE<gt>;

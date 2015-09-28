@@ -94,6 +94,10 @@ Resolve a filename's path; returns the resolved path, or undef on error.
 
 L<Net::SSH2>.
 
+Check L<Net::SFTP::Foreign> for a high level, perlish and easy to use
+SFTP client module. It can work on top of Net::SSH2 via the
+L<Net::SFTP::Foreign::Backend::Net_SSH2> backend module.
+
 =head1 AUTHOR
 
 David B. Robins, E<lt>dbrobins@cpan.orgE<gt>
