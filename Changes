@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.56
+        - improves docs for Net::SFTP::File::write method (#rt58911
+          reported by Salvatore Bonaccorso).
+
 0.55  2015-09-27
         - rerelease as stable
         - fix errors in test script
