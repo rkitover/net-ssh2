@@ -267,7 +267,7 @@ sub win32_auth {
   else {
     Term::ReadKey::ReadMode('noecho');
     $pass = Term::ReadKey::ReadLine(0);
-    Term::ReadKey::ReadMode('echo');
+    Term::ReadKey::ReadMode('normal');
   }
   chomp($pass);
   return (password => $pass);
