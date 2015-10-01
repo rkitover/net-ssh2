@@ -150,21 +150,22 @@ is($stat{name}, $dir, 'directory name matches');
 # (4) SCP
 my $remote = "$dir/".basename($0);
 ok($ssh2->scp_put($0, $remote), "put $0 to remote");
+
 SKIP: { # SKIP-scalar
-eval { require IO::Scalar };
-skip '- IO::Scalar required', 2 if $@;
-my $check = IO::Scalar->new;
-ok($ssh2->scp_get($remote, $check), "get $remote from remote");
-SKIP: { # SKIP-slurp
-eval { require File::Slurp };
-skip '- File::Slurp required', 1 if $@;
-if($^O =~ /MSWin32/i) {
-  is(${$check->sref}, File::Slurp::read_file($0, binmode => ':raw'), 'files match');
-}
-else {
-  is(${$check->sref}, File::Slurp::read_file($0), 'files match');
-}
-} # SKIP-slurp
+    eval { require IO::Scalar };
+    skip '- IO::Scalar required', 2 if $@;
+    my $check = IO::Scalar->new;
+    ok($ssh2->scp_get($remote, $check), "get $remote from remote");
+ SKIP: { # SKIP-slurp
+        eval { require File::Slurp };
+        skip '- File::Slurp required', 1 if $@;
+        if($^O =~ /MSWin32/i) {
+            is(${$check->sref}, File::Slurp::read_file($0, binmode => ':raw'), 'files match');
+        }
+        else {
+            is(${$check->sref}, File::Slurp::read_file($0), 'files match');
+        }
+    } # SKIP-slurp
 } # SKIP-scalar
 
 # (3) rename
