@@ -998,7 +998,7 @@ no callback is provided, LIBSSH2_ERROR_PASSWORD_EXPIRED is returned.
 
 Prompts the user for the password interactively using Term::ReadKey.
 
-=head2 auth_publickey ( username, public key, private key [, passphrase ] )
+=head2 auth_publickey ( username, publickey_path, privatekey_path [, passphrase ] )
 
 Note that public key and private key are names of files containing the keys!
 
@@ -1008,13 +1008,15 @@ When libssh2 is compiled using OpenSSL as the crypto backend, passing
 this method C<undef> as the public key argument is acceptable (OpenSSH
 is able to extract the public key from the private one).
 
-=head2 auth_publickey_from_string ( username, public key, private key [, passphrase ] )
+=head2 auth_publickey_frommemory ( username, publickey_blob, privatekey_blob [, passphrase ] )
 
-Note that public key and private key are blobs containing the keys!
+Authenticate using the given public/private key and an optional
+passphrase. The keys must be PEM encoded.
 
-Authenticate using keys and an optional passphrase.
+This method requires libssh2 1.6.0 or later compiled with the OpenSSL
+backend.
 
-=head2 auth_hostbased ( username, public key, private key, hostname,
+=head2 auth_hostbased ( username, publickey, privatekey, hostname,
  [, local username [, passphrase ]] )
 
 Host-based authentication using an optional passphrase.  The local username

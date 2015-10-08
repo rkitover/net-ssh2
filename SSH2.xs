@@ -1243,8 +1243,10 @@ CODE:
      pv_username, len_username, default_string(publickey), privatekey,
      default_string(passphrase)));
 
+#if LIBSSH2_VERSION_NUM >= 0x010600
+
 void
-net_ss_auth_publickey_from_string(SSH2* ss, SV* username, SV* publickey, \
+net_ss_auth_publickey_frommemory(SSH2* ss, SV* username, SV* publickey, \
  SV* privatekey, SV* passphrase = NULL)
 PREINIT:
     const char *pv_username, *pv_publickey, *pv_privatekey;
@@ -1260,6 +1262,8 @@ CODE:
      pv_privatekey, len_privatekey,
      default_string(passphrase)));
 
+#endif
+    
 void
 net_ss_auth_hostbased(SSH2* ss, SV* username, const char* publickey, \
  const char* privatekey, SV* hostname, SV* local_username = NULL, \
