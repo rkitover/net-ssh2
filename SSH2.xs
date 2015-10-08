@@ -1244,6 +1244,23 @@ CODE:
      default_string(passphrase)));
 
 void
+net_ss_auth_publickey_from_string(SSH2* ss, SV* username, SV* publickey, \
+ SV* privatekey, SV* passphrase = NULL)
+PREINIT:
+    const char *pv_username, *pv_publickey, *pv_privatekey;
+    STRLEN len_username, len_publickey, len_privatekey;
+CODE:
+    clear_error(ss);
+    pv_username = SvPV(username, len_username);
+    pv_publickey = SvPV(publickey, len_publickey);
+    pv_privatekey = SvPV(privatekey, len_privatekey);
+
+    XSRETURN_IV(!libssh2_userauth_publickey_frommemory(ss->session,
+     pv_username, len_username, pv_publickey, len_publickey,
+     pv_privatekey, len_privatekey,
+     default_string(passphrase)));
+
+void
 net_ss_auth_hostbased(SSH2* ss, SV* username, const char* publickey, \
  const char* privatekey, SV* hostname, SV* local_username = NULL, \
  SV* passphrase = NULL)

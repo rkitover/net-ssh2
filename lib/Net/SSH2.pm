@@ -1008,6 +1008,12 @@ When libssh2 is compiled using OpenSSL as the crypto backend, passing
 this method C<undef> as the public key argument is acceptable (OpenSSH
 is able to extract the public key from the private one).
 
+=head2 auth_publickey_from_string ( username, public key, private key [, passphrase ] )
+
+Note that public key and private key are blobs containing the keys!
+
+Authenticate using keys and an optional passphrase.
+
 =head2 auth_hostbased ( username, public key, private key, hostname,
  [, local username [, passphrase ]] )
 
