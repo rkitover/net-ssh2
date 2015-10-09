@@ -1095,6 +1095,23 @@ L<auth_password> callback.
 
 =back
 
+For historical reasons and in order to maintain backward compatibility
+with older versions of the module, when the C<password> argument is
+given, it is also used as the passphrase (and a deprecation warning
+generated).
+
+In order to avoid that behaviour the C<passphrase> argument must be
+also passed (it could be C<undef>). For instance:
+
+  $ssh2->auth(username => $user,
+              privatekey => $privatekey_path,
+              publickey => $publickey_path,
+              password => $password,
+              passphrase => undef);
+
+This work around will be removed in a not too distant future version
+of the module.
+
 =head2 flag (key, value)
 
 Sets the given session flag.
