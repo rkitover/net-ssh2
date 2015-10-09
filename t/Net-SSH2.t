@@ -13,7 +13,7 @@ use Fcntl ':mode';
 #########################
 
 # to speed up testing, set host, user and pass here
-my ($host, $user, $pass) = qw();
+my ($host, $user, $password, $passphrase) = qw();
 
 # (1) use module
 BEGIN { use_ok('Net::SSH2', ':all') };
@@ -101,16 +101,26 @@ is_deeply(\@auth_methods, [$ssh2->auth_list($user)], 'list matches comma-separat
 ok(!$ssh2->auth_ok, 'not authenticated yet');
 
 # (2) authenticate
-my @auth = ((defined $pass)     ? (password => $pass) :
-            ($^O =~ /MSWin32/i) ? win32_auth()        :
-            ());
+my $type;
+if (defined $ENV{HOME}) {
+    for my $key (qw(dsa rsa)) {
+        if ($ssh2->auth_publickey($user,
+                                  "$ENV{HOME}/.ssh/id_$key.pub",
+                                  "$ENV{HOME}/.ssh/id_$key",
+                                  $passphrase)) {
+            $type = 'pubkey';
+            last;
+        }
+    }
+}
 
-my $type = $ssh2->auth(username => $user, @auth,
-                       publickey  => "$ENV{HOME}/.ssh/id_dsa.pub",
-                       privatekey => "$ENV{HOME}/.ssh/id_dsa",
-                       passphrase => undef,
-                       interact => 1 );
-ok($type, "authenticated via: $type");
+unless ($type) {
+    $type = $ssh2->auth(username => $user,
+                        password => $password,
+                        interact => 1);
+}
+
+ok($type, "authenticated");
 SKIP: { # SKIP-auth
 skip '- failed to authenticate with server', 37 unless $ssh2->auth_ok;
 pass('authenticated successfully');
@@ -257,18 +267,3 @@ ok($ssh2->disconnect('leaving'), 'sent disconnect message');
 
 # vim:filetype=perl
 
-sub win32_auth {
-  eval{require Term::ReadKey;};
-  print "\n  NOTE: The password you are about to enter\n  will be printed to the console." if $@;
-  print "\n  To avoid this, either install Term::ReadKey\n  or assign the correct value to \$pass" if $@;
-  print "\n  at the beginning of this test script." if $@;
-  print "\nEnter password: ";
-  if($@) {$pass = <STDIN>}
-  else {
-    Term::ReadKey::ReadMode('noecho');
-    $pass = Term::ReadKey::ReadLine(0);
-    Term::ReadKey::ReadMode('normal');
-  }
-  chomp($pass);
-  return (password => $pass);
-}

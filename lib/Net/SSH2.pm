@@ -1046,8 +1046,10 @@ a ranked list of methods you want considered (defaults to all).  It will
 remove any unsupported methods or methods for which it doesn't have parameters
 (e.g. if you don't give it a public key, it can't use publickey or hostkey),
 and try the rest, returning whichever one succeeded or a false value if they
-all failed.  If a parameter is passed with an undef value, a default value
-will be supplied if possible.  The parameters are:
+all failed. If a parameter is passed with an undef value, a default value
+will be supplied if possible.
+
+The parameters are:
 
 =over 4
 
