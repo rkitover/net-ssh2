@@ -1,6 +1,11 @@
 Revision history for Perl extension Net::SSH2.
 
-0.56
+0.56  2015-10-9
+        - add support for auth_publickey_frommemory method (patch by
+          Adam Osuchowski)
+        - several documentation improvements
+        - fix broken test, rsa were not used for authentication
+          (#rt107382 reported by sisyphus)
         - fix broken test, sock method can return both IO::Socket::IP
           and IO::Socket::INET objects (#rt107381 reported by
           sisyphus)
