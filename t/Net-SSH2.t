@@ -22,6 +22,8 @@ BEGIN { use_ok('Net::SSH2', ':all') };
 my $ssh2 = Net::SSH2->new();
 isa_ok($ssh2, 'Net::SSH2', 'new session');
 ok(!$ssh2->error(), 'error state clear');
+#$ssh2->trace(-1);
+
 ok($ssh2->banner('SSH TEST'), 'set banner');
 is(LIBSSH2_ERROR_SOCKET_NONE(), -1, 'LIBSSH2_* constants');
 
