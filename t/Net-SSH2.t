@@ -108,6 +108,7 @@ my @auth = ((defined $pass)     ? (password => $pass) :
 my $type = $ssh2->auth(username => $user, @auth,
                        publickey  => "$ENV{HOME}/.ssh/id_dsa.pub",
                        privatekey => "$ENV{HOME}/.ssh/id_dsa",
+                       passphrase => undef,
                        interact => 1 );
 ok($type, "authenticated via: $type");
 SKIP: { # SKIP-auth
