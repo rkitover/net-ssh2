@@ -72,7 +72,7 @@ SKIP: { # SKIP-server
 skip '- no server daemon available', 62 unless $host;
 ok($ssh2->connect($host), "connect to $host");
 
-isa_ok($ssh2->sock, 'IO::Socket::IP', '->sock isa IO::Socket::IP');
+isa_ok($ssh2->sock, 'IO::Socket', '->sock isa IO::Socket');
 
 # (8) server methods
 for my $type(qw(kex hostkey crypt_cs crypt_sc mac_cs mac_sc comp_cs comp_sc)) {

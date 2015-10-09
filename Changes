@@ -1,6 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
 0.56
+        - fix broken test, sock method can return both IO::Socket::IP
+          and IO::Socket::INET objects (#rt107381 reported by
+          sisyphus)
         - improves docs for Net::SFTP::File::write method (#rt58911
           reported by Salvatore Bonaccorso).
 
