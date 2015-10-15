@@ -233,21 +233,24 @@ sub new {
     my $self = $class->_new;
 
     $self->trace($opts{trace}) if defined $opts{trace};
+    $self->timeout($opts{timeout}) if defined $opts{timeout};
 
     return $self;
 }
 
+my $connect_opts_warned;
+my $connect_fd_warned;
 sub connect {
     my $self = shift;
     croak "Net::SSH2::connect: not enough parameters" if @_ < 1;
-
-    my $wantarray = wantarray;
 
     # try to connect, or get a file descriptor
     my ($fd, $sock);
     if (@_ == 1) {
         $sock = shift;
         if ($sock =~ /^\d{1,10}$/) {
+            $connect_fd_warned++ or
+                croak "passing a file descriptor number to connect is deprecated";
             $fd = $sock;
         } elsif(ref $sock) {
             # handled below
@@ -256,22 +259,23 @@ sub connect {
         }
     }
 
-    my %opts = splice @_, 2 if @_ >= 4;
-    $opts{Timeout} ||= 30;
+    my %opts = splice @_, 2;
+    if (%opts) {
+        $connect_opts_warned++ or
+            carp "passing options to connect is deprectated";
+        $self->timeout($opts{Timeout}) if $opts{Timeout};
+        $self->compress($opts{Compress}) if $opts{Compress};
+    }
 
     if (@_ == 2) {
-        $sock = $socket_class->new(
-            PeerHost => $_[0],
-            PeerPort => $_[1],
-            Timeout => $opts{Timeout},
-        );
-
-        if (not $sock) {
-            if (not defined $wantarray) {
-                croak "Net::SSH2: failed to connect to $_[0]:$_[1]: $!"
-            } else {
-                return; # to support ->connect ... or die
-            }
+        my $timeout = $self->timeout;
+        $sock = $socket_class->new( PeerHost => $_[0],
+                                    PeerPort => $_[1],
+                                    Timeout => $timeout );
+        unless ($sock) {
+            croak "Net::SSH2: failed to connect to $_[0]:$_[1]: $!"
+                unless defined wantarray;
+            return; # to support ->connect ... or die
         }
 
         $sock->sockopt(SO_LINGER, pack('SS', 0, 0));

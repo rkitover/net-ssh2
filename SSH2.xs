@@ -85,7 +85,7 @@ static const char *const xs_libssh2_error[] = {
     "METHOD_NOT_SUPPORTED",
     "INVAL",
     "INVALID_POLL_TYPE",
-	"PUBLICKEY_PROTOCOL",
+    "PUBLICKEY_PROTOCOL",
     "EAGAIN"
 };
 
@@ -133,8 +133,6 @@ typedef struct SSH2 {
     SV* sv_ss;  /* NB: not set until callback() called */
     SV* socket;
     SV* sv_tmp;
-    int errcode;
-    SV* errmsg;
     SV* rgsv_cb[LIBSSH2_CALLBACK_X11 + 1];
 } SSH2;
 
@@ -216,19 +214,6 @@ LIBSSH2_REALLOC_FUNC(local_realloc) {
 }
 LIBSSH2_FREE_FUNC(local_free) {
     Safefree(ptr);
-}
-
-/* set Net:SSH2-specific error message */
-static void set_error(SSH2* ss, int errcode, const char* errmsg) {
-    ss->errcode = errcode;
-    if (ss->errmsg)
-        SvREFCNT_dec(ss->errmsg);
-    ss->errmsg = errmsg ? newSVpv(errmsg, 0) : NULL;
-}    
-
-/* clear our local error flag */
-static void clear_error(SSH2* ss) {
-    set_error(ss, LIBSSH2_ERROR_NONE, NULL/*errmsg*/);
 }
 
 /* split a string at commas and push each substring onto the perl stack */
@@ -755,17 +740,16 @@ static void openssl_threads_init(void)
 
 static void
 croak_last_error(SSH2 *ss, const char *klass, const char *method) {
-    char *errmsg;
-    if ((ss->errcode != LIBSSH2_ERROR_NONE) && (ss->errmsg != NULL))
-        errmsg = SvPV_nolen(ss->errmsg);
-    else {
-        if (libssh2_session_last_error(ss->session, &errmsg, NULL, 0) == LIBSSH2_ERROR_NONE)
-            croak("Internal error: croak_last_error called but there was no error!");
-    }
-    croak("%s::%s: %s", klass, method, errmsg);
+    char *errmsg = NULL;
+    int err = libssh2_session_last_error(ss->session, &errmsg, NULL, 0);
+    croak("%s::%s: %s (%d)", klass, method, errmsg, err);
 }
 
 #define CROAK_LAST_ERROR(session, method) (croak_last_error((session), class, (method)))
+
+#if LIBSSH2_VERSION_NUM < 0x010601
+#define libssh2_session_set_last_error(ss, errcode, errmsg)   0
+#endif
 
 /* perl module exports */
 
@@ -822,8 +806,6 @@ CODE:
         Safefree(RETVAL);
         XSRETURN_EMPTY;
     }
-    clear_error(RETVAL);
-
     debug("Net::SSH2: created new object 0x%x\n", RETVAL);
 OUTPUT:
     RETVAL
@@ -853,10 +835,15 @@ CODE:
 
 #if LIBSSH2_VERSION_NUM >= 0x010209
 
-void
-net_ss_timeout(SSH2* ss, long timeout)
+SV *
+net_ss_timeout(SSH2* ss, long timeout = 0)
 CODE:
-    libssh2_session_set_timeout(ss->session, timeout);
+    if (items > 1)
+        libssh2_session_set_timeout(ss->session, timeout);
+    timeout = libssh2_session_get_timeout(ss->session);
+    RETVAL = (timeout > 0 ? newSVuv(timeout) : &PL_sv_undef);
+OUTPUT:
+    RETVAL
 
 #else
 
@@ -867,18 +854,19 @@ CODE:
 
 #endif
 
-void
-net_ss_blocking(SSH2* ss, SV* blocking)
+SV*
+net_ss_blocking(SSH2* ss, SV* blocking = &PL_sv_undef)
 CODE:
-    clear_error(ss);
-    libssh2_session_set_blocking(ss->session, SvTRUE(blocking));
-    XSRETURN_IV(1);
+    if (items > 1)
+        libssh2_session_set_blocking(ss->session, SvTRUE(blocking));
+    RETVAL = (libssh2_session_get_blocking(ss->session) ? &PL_sv_yes : &PL_sv_no);
+OUTPUT:
+    RETVAL
 
 void
 net_ss_DESTROY(SSH2* ss)
 CODE:
     debug("%s::DESTROY object 0x%x\n", class, ss);
-    clear_error(ss);
     libssh2_session_free(ss->session);
     SvREFCNT_dec(ss->socket);
     Safefree(ss);
@@ -911,8 +899,7 @@ net_ss_banner(SSH2* ss, SV* banner)
 PREINIT:
     int success;
     SV* sv_banner;
-CODE:
-    clear_error(ss);
+PPCODE:
     sv_banner = newSVsv(banner);
     sv_insert(sv_banner, 0/*offset*/, 0/*len*/, "SSH-2.0-", 8);
     success = !libssh2_banner_set(ss->session, SvPV_nolen(sv_banner));
@@ -920,51 +907,36 @@ CODE:
     XSRETURN_IV(success);
 
 void
-net_ss_error(SSH2* ss, ...)
+net_ss_error(SSH2* ss)
 PREINIT:
-    SV* errmsg;
     int errcode;
-CODE:
-    if (items == 3) {
-        set_error(ss, SvIV(ST(1)), SvPV_nolen(ST(2)));
-        XSRETURN_EMPTY;
-    } else if(items != 1)
-        croak("%s::error: too many arguments", class);
-
-    /* if we have a local error, take it, else use libSSH2's value */
-    if (ss->errcode != LIBSSH2_ERROR_NONE && ss->errmsg != NULL) {
-        errcode = ss->errcode;
-        errmsg = SvREFCNT_inc(ss->errmsg);
-    } else {
-        char* errstr;
-        int errlen;
-        errcode = libssh2_session_last_error(
-         ss->session, &errstr, &errlen, 0/*want_buf*/);
-        errmsg = errstr ? newSVpvn(errstr, errlen) : NULL;
-    }
-
-    if (errcode == LIBSSH2_ERROR_NONE && errmsg == NULL)
-        XSRETURN_EMPTY;
-    switch (GIMME_V) {
-    case G_SCALAR:
-        XSRETURN_IV(errcode);
-    case G_ARRAY: {
-        SV* code;
+    SV *errcode_sv;
+    char* errstr;
+    int errlen;
+PPCODE:
+    errcode = libssh2_session_last_error(ss->session, &errstr, &errlen, 0);
+    if(GIMME_V == G_ARRAY) {
+        if (errcode == LIBSSH2_ERROR_NONE)
+            XSRETURN_EMPTY;
         EXTEND(SP, 3);
         ST(0) = sv_2mortal(newSViv(errcode));
-        if (errcode < 0) {
-            code = (-errcode < countof(xs_libssh2_error)) ? 
-             newSVpvf("LIBSSH2_ERROR_%s", xs_libssh2_error[-errcode]) :
-             newSVpvf("LIBSSH2_ERROR_UNKNOWN(%d)", errcode);
-        } else if(errcode > 0)
-            code = newSVpv(Strerror(errcode), 0);
+        if ((-errcode > 0) && (-errcode < countof(xs_libssh2_error)))
+            errcode_sv = newSVpvf("LIBSSH2_ERROR_%s", xs_libssh2_error[-errcode]);
         else
-            code = newSVpvn("", 0);  /* possibly set via set_error */
-        ST(1) = sv_2mortal(code);
-        ST(2) = sv_2mortal(errmsg);
+            errcode_sv = newSVpvf("LIBSSH2_ERROR_UNKNOWN(%d)", errcode);
+        ST(1) = sv_2mortal(errcode_sv);
+        ST(2) = (errstr ? sv_2mortal(newSVpvn(errstr, errlen)) : &PL_sv_undef);
         XSRETURN(3);
     }
-    }
+    else
+        XSRETURN_IV(errcode);
+
+int
+net_ss__set_error(SSH2 *ss, int errcode = 0, const char *errmsg = NULL)
+CODE:
+    RETVAL = libssh2_session_set_last_error(ss->session, errcode, errmsg);
+OUTPUT:
+    RETVAL
 
 void
 net_ss_method(SSH2* ss, SV* method_type, ...)
@@ -974,7 +946,6 @@ PREINIT:
     SV* prefs;
     STRLEN len;
 PPCODE:
-    clear_error(ss);
     if (!iv_constant_sv("LIBSSH2_METHOD_", method_type, &type))
         croak("%s::method: unknown method type: %s",
          class, SvPV_nolen(method_type));
@@ -1011,7 +982,6 @@ PREINIT:
     IV flag_iv;
     int success;
 PPCODE:
-    clear_error(ss);
     if (!iv_constant_sv("LIBSSH2_FLAG_", flag, &flag_iv))
         croak("%s::method: unknown flag: %s", class, SvPV_nolen(flag));
     success = libssh2_session_flag(ss->session, (int)flag_iv, value);
@@ -1031,7 +1001,6 @@ net_ss_callback(SSH2* ss, SV* type, SV* callback = NULL)
 PREINIT:
     IV i_type;
 CODE:
-    clear_error(ss);
     if (callback && !SvOK(callback))
         callback = NULL;
     if (callback && !(SvROK(callback) && SvTYPE(SvRV(callback)) == SVt_PVCV))
@@ -1056,7 +1025,6 @@ net_ss__startup(SSH2* ss, int socket, SV *store)
 PREINIT:
     int success;
 CODE:
-    clear_error(ss);
     success = !libssh2_session_startup(ss->session, socket);
     if (success && store) {
         ss->socket = SvREFCNT_inc(SvRV(store));
@@ -1076,11 +1044,9 @@ OUTPUT:
 
 void
 net_ss_disconnect(SSH2* ss, const char* description = "", \
- int reason = SSH_DISCONNECT_BY_APPLICATION, const char *lang = "")
+                  int reason = SSH_DISCONNECT_BY_APPLICATION, const char *lang = "")
 CODE:
-    clear_error(ss);
-    XSRETURN_IV(!libssh2_session_disconnect_ex(
-     ss->session, reason, description, lang));
+    XSRETURN_IV(!libssh2_session_disconnect_ex(ss->session, reason, description, lang));
 
 void
 net_ss_hostkey_hash(SSH2* ss, SV* hash_type)
@@ -1089,7 +1055,6 @@ PREINIT:
     const char* hash;
     static STRLEN rglen[] = { 16/*MD5*/, 20/*SHA1*/ };
 PPCODE:
-    clear_error(ss);
     if (!iv_constant_sv("LIBSSH2_HOSTKEY_HASH_", hash_type, &type) ||
      type < 1 || type > countof(rglen)) {
         croak("%s::hostkey: unknown hostkey hash: %s",
@@ -1128,7 +1093,6 @@ PREINIT:
     STRLEN len_username = 0;
     int count = 1;
 PPCODE:
-    clear_error(ss);
     if (username && SvPOK(username))
         pv_username = SvPV(username, len_username);
     auth = libssh2_userauth_list(ss->session, pv_username, len_username);
@@ -1144,7 +1108,6 @@ PPCODE:
 void
 net_ss_auth_ok(SSH2* ss)
 CODE:
-    clear_error(ss);
     XSRETURN_IV(libssh2_userauth_authenticated(ss->session));
 
 SV *
@@ -1156,7 +1119,6 @@ PREINIT:
     const char *pv_username, *pv_password;
     int i, ok;
 CODE:
-    clear_error(ss);
     pv_username = SvPV(username, len_username);
 
     /* if we don't have a password, try for an unauthenticated login */
@@ -1197,7 +1159,6 @@ PREINIT:
     int old_blocking;
 CODE:
     RETVAL = &PL_sv_no;
-    clear_error(ss);
     /* unfortunatelly this can't be make to work on nb mode */
     old_blocking = libssh2_session_get_blocking(ss->session);
     libssh2_session_set_blocking(ss->session, 1);
@@ -1235,7 +1196,6 @@ PREINIT:
     const char* pv_username;
     STRLEN len_username;
 CODE:
-    clear_error(ss);
     pv_username = SvPV(username, len_username);
 
     XSRETURN_IV(!libssh2_userauth_publickey_fromfile_ex(ss->session,
@@ -1271,7 +1231,6 @@ PREINIT:
     const char* pv_username, * pv_hostname, * pv_local_username;
     STRLEN len_username, len_hostname, len_local_username;
 CODE:
-    clear_error(ss);
     pv_username = SvPV(username, len_username);
     pv_hostname = SvPV(hostname, len_hostname);
 
@@ -1294,7 +1253,6 @@ PREINIT:
     int rc;
     AV *cb_args;
 CODE:
-    clear_error(ss);
     pv_username = SvPV(username, len_username);
 
     /* we either have a password, or a reference to a callback */
@@ -1364,7 +1322,6 @@ PREINIT:
     const char* pv_channel_type;
     STRLEN len_channel_type;
 CODE:
-    clear_error(ss);
     if (channel_type)
         pv_channel_type = SvPV(channel_type, len_channel_type);
     else {
@@ -1410,7 +1367,6 @@ net_ss__scp_get(SSH2* ss, const char* path, HV* stat = NULL)
 PREINIT:
     struct stat st;
 CODE:
-    clear_error(ss);
     NEW_CHANNEL(libssh2_scp_recv(ss->session, path, &st));
     if (stat) {
         hv_clear(stat);
@@ -1430,7 +1386,6 @@ SSH2_CHANNEL*
 net_ss__scp_put(SSH2* ss, const char* path, int mode, size_t size, \
     long mtime = 0, long atime = 0)
 CODE:
-    clear_error(ss);
     NEW_CHANNEL(libssh2_scp_send_ex(ss->session,
      path, mode, size, mtime, atime));
 OUTPUT:
@@ -1491,18 +1446,15 @@ PREINIT:
     LIBSSH2_POLLFD* pollfd;
     int i, count, changed;
 CODE:
-    clear_error(ss);
     count = av_len(event) + 1;
     debug("%s::poll: timeout = %d, array[%d]\n", class, timeout, count);
     if (!count)  /* some architectures return null for malloc(0) */
         XSRETURN_IV(0);
 
     New(0, pollfd, count, LIBSSH2_POLLFD);
+    if (!pollfd)
+        Perl_croak(aTHX_ "Out of memory!");
 
-    if (!pollfd) {
-        set_error(ss, 0, "out of memory allocating pollfd structures");
-        XSRETURN_EMPTY;
-    }
     for (i = 0; i < count; ++i) {
         SV* sv = *av_fetch(event, i, 0/*lval*/), ** handle, ** events;
         HV* hv;
@@ -1567,7 +1519,6 @@ CODE:
 SSH2_SFTP*
 net_ss_sftp(SSH2* ss)
 CODE:
-    clear_error(ss);
     NEW_SFTP(libssh2_sftp_init(ss->session));
 OUTPUT:
     RETVAL
@@ -1575,7 +1526,6 @@ OUTPUT:
 SSH2_PUBLICKEY*
 net_ss_public_key(SSH2* ss)
 CODE:
-    clear_error(ss);
     NEW_PUBLICKEY(libssh2_publickey_init(ss->session));
 OUTPUT:
     RETVAL
@@ -1592,7 +1542,6 @@ void
 net_ch_DESTROY(SSH2_CHANNEL* ch)
 CODE:
     debug("%s::DESTROY\n", class);
-    clear_error(ch->ss);
     libssh2_channel_free(ch->channel);
     SvREFCNT_dec(ch->sv_ss);
     Safefree(ch);
@@ -1610,7 +1559,6 @@ PREINIT:
     const char* pv_key, * pv_value;
     STRLEN len_key, len_value;
 CODE:
-    clear_error(ch->ss);
     for (i = 1; i < items; i += 2) {
         if (i + 1 == items)
             croak("%s::setenv: key without value", class);
@@ -1628,7 +1576,6 @@ net_ch_exit_signal(SSH2_CHANNEL* ch)
 PREINIT:
     char *exitsignal = NULL;  
 CODE:
-    clear_error(ch->ss);
     RETVAL;
     libssh2_channel_get_exit_signal(ch->channel, &exitsignal,
         NULL, NULL, NULL, NULL, NULL);
@@ -1653,38 +1600,32 @@ CODE:
 void
 net_ch_blocking(SSH2_CHANNEL* ch, SV* blocking)
 CODE:
-    clear_error(ch->ss);
     libssh2_channel_set_blocking(ch->channel, SvTRUE(blocking));
     XSRETURN_IV(1);
 
 void
 net_ch_eof(SSH2_CHANNEL* ch)
 CODE:
-   clear_error(ch->ss);
    XSRETURN_IV(libssh2_channel_eof(ch->channel));
 
 void
 net_ch_send_eof(SSH2_CHANNEL* ch)
 CODE:
-    clear_error(ch->ss);
     XSRETURN_IV(!libssh2_channel_send_eof(ch->channel));
 
 void
 net_ch_close(SSH2_CHANNEL* ch)
 CODE:
-    clear_error(ch->ss);
     XSRETURN_IV(!libssh2_channel_close(ch->channel));
 
 void
 net_ch_wait_closed(SSH2_CHANNEL* ch)
 CODE:
-    clear_error(ch->ss);
     XSRETURN_IV(!libssh2_channel_wait_closed(ch->channel));
 
 void
 net_ch_exit_status(SSH2_CHANNEL* ch)
 CODE:
-    clear_error(ch->ss);
     XSRETURN_IV(libssh2_channel_get_exit_status(ch->channel));
 
 #if LIBSSH2_VERSION_MAJOR >= 1
@@ -1787,7 +1728,6 @@ PREINIT:
     int count, total = 0;
 CODE:
     debug("%s::read(size = %d, ext = %d)\n", class, size, SvTRUE(ext));
-    clear_error(ch->ss);
     SvPOK_on(buffer);
     pv_buffer = sv_grow(buffer, size + 1/*NUL*/);  /* force PV */
 
@@ -1834,7 +1774,6 @@ CODE:
              report the number of bytes written.
           b. if no data was written, report the error.
     */
-    clear_error(ch->ss);
     pv_buffer = SvPV(buffer, len_buffer);
     while (offset < len_buffer) {
         count = libssh2_channel_write_ex(ch->channel, XLATEXT,
@@ -1842,16 +1781,17 @@ CODE:
                                          len_buffer - offset);
         if (count >= 0)
             offset += count;
-        else if (!((count == LIBSSH2_ERROR_EAGAIN) &&
-                   libssh2_session_get_blocking(ch->ss->session)))
+        else if ((count != LIBSSH2_ERROR_EAGAIN) ||
+                 !libssh2_session_get_blocking(ch->ss->session))
             break;
     }
     if (offset || (count == 0)) /* yes, zero is a valid value */
         RETVAL = newSVuv(offset);
-    else if (count ==  LIBSSH2_ERROR_EAGAIN)
-        RETVAL = newSViv(LIBSSH2_ERROR_EAGAIN);
-    else
+    else {
+        if (count == LIBSSH2_ERROR_EAGAIN)
+            libssh2_session_set_last_error(ch->ss->session, LIBSSH2_ERROR_EAGAIN, "Operation would block");
         RETVAL = &PL_sv_undef;
+    }
 OUTPUT:
     RETVAL
 
@@ -1931,7 +1871,6 @@ net_ch_flush(SSH2_CHANNEL* ch, SV *ext = &PL_sv_undef)
 PREINIT:
     int count;
 CODE:
-    clear_error(ch->ss);
     count = libssh2_channel_flush_ex(ch->channel, XLATEXT);
     if (count < 0)
         XSRETURN_EMPTY;
@@ -1949,7 +1888,6 @@ void
 net_ls_DESTROY(SSH2_LISTENER* ls)
 CODE:
     debug("%s::DESTROY\n", class);
-    clear_error(ls->ss);
     libssh2_channel_forward_cancel(ls->listener);
     SvREFCNT_dec(ls->sv_ss);
     Safefree(ls);
@@ -1959,7 +1897,6 @@ net_ls_accept(SSH2_LISTENER* ls)
 PREINIT:
     SSH2* ss;
 CODE:
-    clear_error(ss = ls->ss);
     NEW_CHANNEL(libssh2_channel_forward_accept(ls->listener));
 OUTPUT:
     RETVAL
@@ -1976,7 +1913,6 @@ void
 net_sf_DESTROY(SSH2_SFTP* sf)
 CODE:
     debug("%s::DESTROY\n", class);
-    clear_error(sf->ss);
     libssh2_sftp_shutdown(sf->sftp);
     debug("%s::DESTROY freeing session\n", class);
     SvREFCNT_dec(sf->sv_ss);
@@ -2022,7 +1958,6 @@ PREINIT:
     const char* pv_file;
     STRLEN len_file;
 CODE:
-    clear_error(sf->ss);
     pv_file = SvPV(file, len_file);
     
     /* map POSIX O_* to LIBSSH2_FXF_* (can't assume they're the same) */
@@ -2049,7 +1984,6 @@ PREINIT:
     const char* pv_dir;
     STRLEN len_dir;
 CODE:
-    clear_error(sf->ss);
     pv_dir = SvPV(dir, len_dir);
     NEW_DIR(libssh2_sftp_open_ex(sf->sftp, (char*)pv_dir, len_dir,
      0/*flags*/, 0/*mode*/, LIBSSH2_SFTP_OPENDIR));
@@ -2062,7 +1996,6 @@ PREINIT:
     const char* pv_file;
     STRLEN len_file;
 CODE:
-    clear_error(sf->ss);
     pv_file = SvPV(file, len_file);
     XSRETURN_IV(!libssh2_sftp_unlink_ex(sf->sftp, (char*)pv_file, len_file));
 
@@ -2074,7 +2007,6 @@ PREINIT:
     const char* pv_old, * pv_new;
     STRLEN len_old, len_new;
 CODE:
-    clear_error(sf->ss);
     pv_old = SvPV(old, len_old);
     pv_new = SvPV(new, len_new);
     XSRETURN_IV(!libssh2_sftp_rename_ex(sf->sftp,
@@ -2086,7 +2018,6 @@ PREINIT:
     const char* pv_dir;
     STRLEN len_dir;
 CODE:
-    clear_error(sf->ss);
     pv_dir = SvPV(dir, len_dir);
     XSRETURN_IV(!libssh2_sftp_mkdir_ex(sf->sftp, (char*)pv_dir, len_dir, mode));
 
@@ -2096,7 +2027,6 @@ PREINIT:
     const char* pv_dir;
     STRLEN len_dir;
 CODE:
-    clear_error(sf->ss);
     pv_dir = SvPV(dir, len_dir);
     XSRETURN_IV(!libssh2_sftp_rmdir_ex(sf->sftp, (char*)pv_dir, len_dir));
 
@@ -2108,7 +2038,6 @@ PREINIT:
     int success;
     LIBSSH2_SFTP_ATTRIBUTES attrs;
 PPCODE:
-    clear_error(sf->ss);
     pv_path = SvPV(path, len_path);
     success = !libssh2_sftp_stat_ex(sf->sftp, (char*)pv_path, len_path,
      follow ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT, &attrs);
@@ -2124,7 +2053,6 @@ PREINIT:
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     int i;
 CODE:
-    clear_error(sf->ss);
     pv_path = SvPV(path, len_path);
     Zero(&attrs, 1, LIBSSH2_SFTP_ATTRIBUTES);
 
@@ -2153,7 +2081,6 @@ PREINIT:
     const char* pv_path, * pv_target;
     STRLEN len_path, len_target;
 CODE:
-    clear_error(sf->ss);
     pv_path = SvPV(path, len_path);
     pv_target = SvPV(target, len_target);
     XSRETURN_IV(!libssh2_sftp_symlink_ex(sf->sftp,
@@ -2168,7 +2095,6 @@ PREINIT:
     STRLEN len_path;
     int count;
 CODE:
-    clear_error(sf->ss);
     pv_path = SvPV(path, len_path);
     link = newSV(MAXPATHLEN + 1);
     SvPOK_on(link);
@@ -2195,7 +2121,6 @@ PREINIT:
     STRLEN len_path;
     int count;
 CODE:
-    clear_error(sf->ss);
     pv_path = SvPV(path, len_path);
     real = newSV(MAXPATHLEN + 1);
     SvPOK_on(real);
@@ -2225,7 +2150,6 @@ void
 net_fi_DESTROY(SSH2_FILE* fi)
 CODE:
     debug("%s::DESTROY\n", class);
-    clear_error(fi->sf->ss);
     libssh2_sftp_close_handle(fi->handle);
     SvREFCNT_dec(fi->sv_sf);
     Safefree(fi);
@@ -2236,7 +2160,6 @@ PREINIT:
     char* pv_buffer;
     int count;
 CODE:
-    clear_error(fi->sf->ss);
     SvPOK_on(buffer);
     pv_buffer = sv_grow(buffer, size + 1/*NUL*/);  /* force PV */
     pv_buffer[size] = '\0';
@@ -2256,7 +2179,6 @@ PREINIT:
     STRLEN len_buffer;
     ssize_t count;
 CODE:
-    clear_error(fi->sf->ss);
     pv_buffer = SvPV(buffer, len_buffer);
     count = libssh2_sftp_write(fi->handle, pv_buffer, len_buffer);
     if (count < 0)
@@ -2268,7 +2190,6 @@ net_fi_stat(SSH2_FILE* fi)
 PREINIT:
     LIBSSH2_SFTP_ATTRIBUTES attrs;
 PPCODE:
-    clear_error(fi->sf->ss);
     if (libssh2_sftp_fstat(fi->handle, &attrs))
         XSRETURN_EMPTY;
     XSRETURN_STAT_ATTRS(NULL/*name*/);
@@ -2279,7 +2200,6 @@ PREINIT:
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     int i;
 CODE:
-    clear_error(fi->sf->ss);
     Zero(&attrs, 1, LIBSSH2_SFTP_ATTRIBUTES);
 
     /* read key/value pairs; cf. hv_from_attrs */
@@ -2303,14 +2223,12 @@ CODE:
 void
 net_fi_seek(SSH2_FILE* fi, size_t offset)
 CODE:
-    clear_error(fi->sf->ss);
     libssh2_sftp_seek(fi->handle, offset);
     XSRETURN(1);
 
 void
 net_fi_tell(SSH2_FILE* fi)
 CODE:
-    clear_error(fi->sf->ss);
     XSRETURN_UV(libssh2_sftp_tell(fi->handle));
         
 #undef class
@@ -2325,7 +2243,6 @@ void
 net_di_DESTROY(SSH2_DIR* di)
 CODE:
     debug("%s::DESTROY\n", class);
-    clear_error(di->sf->ss);
     libssh2_sftp_close_handle(di->handle);
     SvREFCNT_dec(di->sv_sf);
     Safefree(di);
@@ -2338,7 +2255,6 @@ PREINIT:
     int count;
     LIBSSH2_SFTP_ATTRIBUTES attrs;
 PPCODE:
-    clear_error(di->sf->ss);
     buffer = newSV(MAXPATHLEN + 1);
     SvPOK_on(buffer);
     pv_buffer = SvPVX(buffer);
@@ -2365,7 +2281,6 @@ void
 net_pk_DESTROY(SSH2_PUBLICKEY* pk)
 CODE:
     debug("%s::DESTROY\n", class);
-    clear_error(pk->ss);
     libssh2_publickey_shutdown(pk->pkey);
     SvREFCNT_dec(pk->sv_ss);
     Safefree(pk);
@@ -2379,16 +2294,14 @@ PREINIT:
     unsigned long num_attrs, i;
     libssh2_publickey_attribute *attrs;
 CODE:
-    clear_error(pk->ss);
     pv_name = SvPV(name, len_name);
     pv_blob = SvPV(blob, len_blob);
 
     num_attrs = items - 4;
     New(0, attrs, num_attrs, libssh2_publickey_attribute);
-    if (!attrs) {
-        set_error(pk->ss, 0, "out of memory allocating attribute structures");
-        XSRETURN_EMPTY;
-    }
+    if (!attrs)
+        Perl_croak(aTHX_ "Out of memory!");
+
     for (i = 0; i < num_attrs; ++i) {
         HV* hv;
         SV** tmp;
@@ -2428,7 +2341,6 @@ PREINIT:
     const char* pv_name, * pv_blob;
     STRLEN len_name, len_blob;
 CODE:
-    clear_error(pk->ss);
     pv_name = SvPV(name, len_name);
     pv_blob = SvPV(blob, len_blob);
     XSRETURN_IV(!libssh2_publickey_remove_ex(pk->pkey,
@@ -2492,7 +2404,6 @@ void
 net_kh_DESTROY(SSH2_KNOWNHOSTS *kh)
 CODE:
     debug("%s::DESTROY\n", class);
-    clear_error(kh->ss);
     libssh2_knownhost_free(kh->knownhosts);
     SvREFCNT_dec(kh->sv_ss);
     Safefree(kh);
@@ -2502,7 +2413,6 @@ net_kh_readfile(SSH2_KNOWNHOSTS *kh, const char *filename)
 PREINIT:
     int n;
 CODE:
-    clear_error(kh->ss);
     n = libssh2_knownhost_readfile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
     if (n >= 0)
         XSRETURN_IV(n);
@@ -2514,7 +2424,6 @@ net_kh_writefile(SSH2_KNOWNHOSTS *kh, const char *filename)
 PREINIT:
     int rc;
 PPCODE:
-    clear_error(kh->ss);
     rc = libssh2_knownhost_writefile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
     if (rc == LIBSSH2_ERROR_NONE) {
         XPUSHs(&PL_sv_yes);
@@ -2530,7 +2439,6 @@ PREINIT:
     STRLEN key_len, comment_len;
     const char *key_pv, *comment_pv;
 CODE:
-    clear_error(kh->ss);
     key_pv = SvPV_const(key, key_len);
     if (SvOK(comment))
         comment_pv = SvPV_const(comment, comment_len);
@@ -2560,7 +2468,6 @@ PREINIT:
     const char *key_pv;
     UV port_uv;
 CODE:
-    clear_error(kh->ss);
     key_pv = SvPV_const(key, key_len);
     port_uv = (SvOK(port) ? SvUV(port) : 0);
 #if LIBSSH2_VERSION_NUM >= 0x010206
@@ -2603,7 +2510,6 @@ PREINIT:
     SV *buffer;
     struct libssh2_knownhost *entry = NULL;
 PPCODE:
-    clear_error(kh->ss);
     key_pv = SvPV_const(key, key_len);
     port_uv = (SvOK(port) ? SvUV(port) : 0);
 #if LIBSSH2_VERSION_NUM >= 0x010206
@@ -2616,10 +2522,8 @@ PPCODE:
                                  key_pv, key_len, typemask, &entry);
 #endif
     if ((rc != LIBSSH2_KNOWNHOST_CHECK_MATCH) || !entry) {
-#if LIBSSH2_VERSION_NUM >= 0x010403
-        set_error(kh->ss, LIBSSH2_ERROR_KNOWN_HOSTS, "matching host key not found");        
-#else
-        set_error(kh->ss, LIBSSH2_ERROR_SOCKET_NONE, "matching host key not found");
+#if LIBSSH2_VERSION_NUM >= 0x010601
+        libssh2_session_set_last_error(kh->ss->session, LIBSSH2_ERROR_KNOWN_HOSTS, "matching host key not found");
 #endif
     }
     else {
