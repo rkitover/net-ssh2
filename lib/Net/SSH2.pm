@@ -13,6 +13,7 @@ use AutoLoader;
 use Socket;
 use IO::File;
 use File::Basename;
+use Errno;
 
 use base 'Exporter';
 
@@ -429,38 +430,50 @@ sub scp_get {
     $path = basename $remote if not defined $path;
 
     my %stat;
-    my $chan = $self->_scp_get($remote, \%stat);
-    return unless $chan;
+    $self->blocking(1);
+    my $chan = $self->_scp_get($remote, \%stat) or return;
 
     # read and commit blocks until we're finished
-    $chan->blocking(1);
-    my $mode = $stat{mode} & 0777;
     my $file;
     if (ref $path) {
         $file = $path;
     }
     else {
+        my $mode = $stat{mode} & 0777;
         $file = IO::File->new($path, O_WRONLY | O_CREAT | O_TRUNC, $mode);
-        return unless $file;
+        unless ($file) {
+            $self->_set_error(LIBSSH2_ERROR_FILE(), "Unable to open local file: $!");
+            return;
+        }
         binmode $file;
     }
 
-    for (my ($size, $count) = ($stat{size}); $size > 0; $size -= $count) {
-      my $buf = '';
-      my $block = ($size > 8192) ? 8192 : $size;
-      $count = $chan->read($buf, $block);
-      return unless defined $count;
-      $self->error(0, "read $block bytes but only got $count"), return
-       unless $count == $block;
-      $self->error(0, "error writing $count bytes to file"), return
-       unless $file->syswrite($buf, $count) == $count;
+    my $size = $stat{size};
+    while ($size > 0) {
+        my $bytes_read = $chan->read(my($buf), (($size > 40000 ? 40000 : $size)));
+        if ($bytes_read) {
+            $size -= $bytes_read;
+            while (length $buf) {
+                my $bytes_written = $file->syswrite($buf, length $buf);
+                if ($bytes_written) {
+                    substr $buf, 0, $bytes_written, '';
+                }
+                elsif ($! != Errno::EAGAIN() &&
+                       $! != Errno::EINTR()) {
+                    $self->_set_error(LIBSSH2_ERROR_FILE(), "Unable to write to local file: $!");
+                    return;
+                }
+            }
+        }
+        elsif (!defined($bytes_read) and
+               $self->error != LIBSSH2_ERROR_EAGAIN()) {
+            return;
+        }
     }
 
     # process SCP acknowledgment and send same
-    my $eof;
-    $chan->read($eof, 1);
+    $chan->read(my $eof, 1);
     $chan->write("\0");
-    undef $chan;  # close
     return 1;
 }
 
@@ -474,41 +487,53 @@ sub scp_put {
     }
     else {
         $file = IO::File->new($path, O_RDONLY);
-        return unless $file;
+        unless ($file) {
+            $self->_set_error(LIBSSH2_ERROR_FILE(), "Unable to open local file: $!");
+            return;
+        }
         binmode $file;
     }
-    $self->error($!, $!), return unless $file;
+
     my @stat = $file->stat;
-    $self->error($!, $!), return unless @stat;
+    unless (@stat) {
+        $self->_set_error(LIBSSH2_ERROR_FILE(), "Unable to stat local file: $!");
+        return;
+    }
 
     my $mode = $stat[2] & 0777;  # mask off extras such as S_IFREG
-    my $chan = $self->_scp_put($remote, $mode, @stat[7, 8, 9]);
-    return unless $chan;
-    $chan->blocking(1);
+    $self->blocking(1);
+    my $chan = $self->_scp_put($remote, $mode, @stat[7, 8, 9]) or return;
 
     # read and transmit blocks until we're finished
-    for (my ($size, $count) = ($stat[7]); $size > 0; $size -= $count) {
-      my $buf;
-      my $block = ($size > 8192) ? 8192 : $size;
-      $count = $file->sysread($buf, $block);
-      $self->error($!, $!), return unless defined $count;
-      $self->error(0, "want $block, have $count"), return
-       unless $count == $block;
-      die 'sysread mismatch' unless length $buf == $count;
-      my $wrote = 0;
-      while ($wrote >= 0 && $wrote < $count) {
-        my $wr = $chan->write($buf);
-        last if $wr < 0;
-        $wrote += $wr;
-        $buf = substr $buf, $wr;
-      }
-      $self->error(0, "error writing $count bytes to channel"), return
-       unless $wrote == $count;
+    my $size = $stat[7];
+    while ($size > 0) {
+        my $bytes_read = $file->sysread(my($buf), ($size > 32768 ? 32768 : $size));
+        if ($bytes_read) {
+            $size -= $bytes_read;
+            while (length $buf) {
+                my $bytes_written = $chan->write($buf);
+                if (defined $bytes_written) {
+                    substr($buf, 0, $bytes_written, '');
+                }
+                elsif ($chan->error != LIBSSH2_ERROR_EAGAIN()) {
+                    return;
+                }
+            }
+        }
+        elsif (defined $bytes_read) {
+            $self->_set_error(LIBSSH2_ERROR_FILE(), "Unexpected end of local file");
+            return;
+        }
+        elsif ($! != Errno::EAGAIN() and
+               $! != Errno::EINTR()) {
+            $self->_set_error(LIBSSH2_ERROR_FILE(), "Unable to read local file: $!");
+            return;
+        }
     }
 
     # send/receive SCP acknowledgement
     $chan->write("\0");
-    return $chan->read((my $eof), 1) || undef;
+    return $chan->read(my($eof), 1) || undef;
 }
 
 my %Event;
