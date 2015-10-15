@@ -240,6 +240,7 @@ sub new {
 
 my $connect_opts_warned;
 my $connect_fd_warned;
+my $connect_void_warned;
 sub connect {
     my $self = shift;
     croak "Net::SSH2::connect: not enough parameters" if @_ < 1;
@@ -250,7 +251,7 @@ sub connect {
         $sock = shift;
         if ($sock =~ /^\d{1,10}$/) {
             $connect_fd_warned++ or
-                croak "passing a file descriptor number to connect is deprecated";
+                carp "passing a file descriptor number to connect is deprecated";
             $fd = $sock;
         } elsif(ref $sock) {
             # handled below
@@ -264,39 +265,51 @@ sub connect {
         $connect_opts_warned++ or
             carp "passing options to connect is deprectated";
         $self->timeout($opts{Timeout}) if $opts{Timeout};
-        $self->compress($opts{Compress}) if $opts{Compress};
+        if ($opts{Compress} and
+            ($self->version)[1] >= 0x10500) {
+            $self->flag(COMPRESS => 1);
+        }
     }
 
     if (@_ == 2) {
         my $timeout = $self->timeout;
+        my $blocking = $self->blocking;
         $sock = $socket_class->new( PeerHost => $_[0],
                                     PeerPort => $_[1],
+                                    Blocking => $blocking,
                                     Timeout => $timeout );
         unless ($sock) {
-            croak "Net::SSH2: failed to connect to $_[0]:$_[1]: $!"
-                unless defined wantarray;
-            return; # to support ->connect ... or die
+            $self->_set_error(LIBSSH2_ERROR_SOCKET_NONE(), "Unable to connect to remote host: $!");
+            goto error;
         }
 
         $sock->sockopt(SO_LINGER, pack('SS', 0, 0));
     }
 
     # get a file descriptor
-    $fd ||= fileno($sock);
-    croak "Net::SSH2::connect: can't get file descriptor for $sock"
-     unless defined $fd;
+    unless (defined $fd) {
+        $fd = fileno($sock);
+        unless (defined $fd) {
+            $self->_set_error(LIBSSH2_ERROR_SOCKET_NONE(), "Unable to get file descriptor from socket: $!");
+            goto error;
+        }
+    }
+
     if ($^O eq 'MSWin32') {
         require Win32API::File;
         $fd = Win32API::File::FdGetOsFHandle($fd);
     }
 
-    # enable compression when requested and if the underlying libssh2
-    # supports it
-    $self->flag(COMPRESS => 1)
-        if $opts{Compress} and ($self->version)[1] >= 0x010200;
-
     # pass it in, do protocol
     return $self->_startup($fd, $sock);
+
+ error:
+    unless (defined wantarray) {
+        $connect_void_warned++ or
+            carp "calling connect in void context is deprecated";
+        croak "Net::SSH2: failed to connect to $_[0]:$_[1]: $!"
+    }
+    return;
 }
 
 sub _auth_methods {
@@ -668,7 +681,7 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
 
   my $ssh2 = Net::SSH2->new();
 
-  $ssh2->connect('example.com') or die $!;
+  $ssh2->connect('example.com') or die $ssh2->error;
 
   if ($ssh2->auth_keyboard('fizban')) {
       my $chan = $ssh2->channel();
