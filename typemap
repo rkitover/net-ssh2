@@ -13,12 +13,34 @@ TYPEMAP
     SSH2_PUBLICKEY*   O_PUBLICKEY
     SSH2_KNOWNHOSTS*  O_KNOWNHOSTS
 
+    SSH2_RC       T_SSH2_RC
+    SSH2_ERROR    T_SSH2_ERROR
+    SSH2_NERROR   T_SSH2_NERROR
+    SSH2_BYTES    T_SSH2_BYTES
+    SSH2_BYTES64  T_SSH2_BYTES64
+
 OUTPUT
 T_PV
     sv_setpv((SV*)$arg, $var);
 
 T_AVREF
     $arg = newRV((SV*)$var);
+
+T_SSH2_BYTES
+    $arg = ( (($var) < 0) ? &PL_sv_undef : newSVuv($var) );
+
+T_SSH2_BYTES64
+#if (IVSIZE >= 8)
+    $arg = ( (($var) < 0) ? &PL_sv_undef : newSVuv($var) );
+#else
+    $arg = ( (($var) < 0) ? &PL_sv_undef : newSVnv($var) );
+#endif
+
+T_SSH2_RC
+    $arg = (($var) ? &PL_sv_yes : &PL_sv_undef);
+
+T_SSH2_NERROR
+    $arg = ( (($var) < 0) ? &PL_sv_undef : &PL_sv_yes );
 
 O_SESSION
     sv_setref_pv($arg, "Net::SSH2", (void *)$var);

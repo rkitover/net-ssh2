@@ -241,6 +241,12 @@ sub new {
     return $self;
 }
 
+sub method {
+    my $self = shift;
+    my $method_type = shift;
+    $self->_method($method_type => (@_ ? join(',', @_) : ()));
+}
+
 my $connect_opts_warned;
 my $connect_fd_warned;
 my $connect_void_warned;

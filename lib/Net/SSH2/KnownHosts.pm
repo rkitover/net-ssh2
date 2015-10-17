@@ -80,14 +80,11 @@ The methods currently supported are as follows:
 
 Populates the object with the entries in the given file.
 
-This method dies when some error happens. On success it returns the
-number or entries read.
+It returns the number or entries read or undef on failure.
 
 =head2 writefile (filename)
 
 Saves the known host entries to the given file.
-
-This method dies when some error happens.
 
 =head2 add (hostname, salt, key, comment, key_type|host_format|key_format)
 
@@ -100,7 +97,7 @@ The C<host_format> argument specifies the format of the given host:
     LIBSSH2_KNOWNHOST_TYPE_CUSTOM - another hash
 
 If C<SHA1> is selected as host format, the salt must be provided to
-the salt argument. This too base64 encoded.
+the salt argument in base64 format.
 
 The SHA-1 hash is what OpenSSH can be told to use in known_hosts
 files. If a custom type is used, salt is ignored and you must provide
@@ -119,11 +116,9 @@ Finally, the available key types are as follow:
 
 The comment argument may be undef.
 
-This method dies when some error happens.
-
 =head2 check (hostname, port, key, key_type|host_format|key_format)
 
-Check a host and its associated key against the collection of known hosts.
+Checks a host and its associated key against the collection of known hosts.
 
 The C<key_type|host_format|key_format> argument has the same meaning
 as in the L</add> method.
@@ -140,8 +135,6 @@ Returns:
 =head2 readline (string)
 
 Read a known_hosts entry from the given string.
-
-This method dies when some error happens.
 
 For instance, the following piece of code is more or less equivalent
 to the L<readfile> method:
@@ -160,7 +153,7 @@ Searches the entry matching the given parameters (as described in the
 L</check> method) and formats it into a line in the known_hosts
 format.
 
-This method dies when some error happens.
+This method returns undef when some error happens.
 
 This method should be considered experimental, the interface may
 change.
@@ -171,7 +164,7 @@ L<Net::SSH2>, L<sshd(8)>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2013 Salvador FandiE<ntilde>o; all rights reserved.
+Copyright (C) 2013-2015 Salvador FandiE<ntilde>o; all rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.0 or,
