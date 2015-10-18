@@ -114,13 +114,25 @@ distribution.
 EOF
 
 if (!$lib && !$inc) {
+    checklibs( lib => 'ssh2',
+               header => 'libssh2.h',
+               libpath => [@search_libs],
+               incpath => [@search_incs] );
 
-    checklibs
-        lib => 'ssh2',
-        header => 'libssh2.h',
-        libpath => [@search_libs],
-        incpath => [@search_incs],
-    ;
+    unless ($win32) {
+        if ($use_gcrypt) {
+            checklibs( lib => 'gcrypt',
+                       header => 'gcrypt.h',
+                       libpath => [@search_libs],
+                       incpath => [@search_incs] );
+        }
+        else {
+            checklibs( lib => 'ssl',
+                      header => 'openssl/crypto.h',
+                      libpath => [@search_libs],
+                      incpath => [@search_incs] );
+        }
+    }
 
     $lib = (join ' ', map "-L$_", @search_libs) . " -lssh2 $extra_libs";
     $inc =  join ' ', map "-I$_", @search_incs;
