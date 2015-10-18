@@ -888,22 +888,19 @@ CODE:
     net_ss_debug_out = SvIV(debug) & 1;  /* allow for future flags */
 
 void
-net_ss_version(SV* name = NULL)
-CODE:
-    switch (GIMME_V) {
-    case G_SCALAR:
-        XSRETURN_PV(LIBSSH2_VERSION);
-    case G_ARRAY:
-        EXTEND(SP, 3);
-        ST(0) = sv_2mortal(newSVpv(LIBSSH2_VERSION, 0));
+net_ss_version(...)
+PPCODE:
+    EXTEND(SP, 3);
+    ST(0) = sv_2mortal(newSVpv(LIBSSH2_VERSION, 0));
+    if (GIMME_V != G_ARRAY)
+        XSRETURN(1);
 #ifdef LIBSSH2_VERSION_NUM
-        ST(1) = sv_2mortal(newSVuv(LIBSSH2_VERSION_NUM));
+    ST(1) = sv_2mortal(newSVuv(LIBSSH2_VERSION_NUM));
 #else
-        ST(1) = &PL_sv_undef;
+    ST(1) = &PL_sv_undef;
 #endif
-        ST(2) = sv_2mortal(newSVpv(LIBSSH2_SSH_DEFAULT_BANNER, 0));
-        XSRETURN(3);
-    }
+    ST(2) = sv_2mortal(newSVpv(LIBSSH2_SSH_DEFAULT_BANNER, 0));
+    XSRETURN(3);
 
 SSH2_NERROR
 net_ss_banner(SSH2* ss, SV* banner)
