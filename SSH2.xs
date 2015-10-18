@@ -130,6 +130,7 @@ static const char *const sftp_error[] = {
 typedef int SSH2_RC; /* for converting true/false to 1/undef */
 typedef int SSH2_BYTES; /* for functions returning a byte count or a negative number to signal an error */
 typedef libssh2_uint64_t SSH2_BYTES64; /* the same for 64bit numbers */
+typedef int SSH2_ERROR; /* for returning SSH2 error numbers */
 typedef int SSH2_NERROR; /* for converting SSH2 error code to boolean just indicating success or failure */
 
 /* Net::SSH2 object */
@@ -912,30 +913,29 @@ CODE:
 OUTPUT:
     RETVAL
 
-void
+SSH2_ERROR
 net_ss_error(SSH2* ss)
 PREINIT:
-    int errcode;
-    SV *errcode_sv;
     char* errstr;
     int errlen;
-PPCODE:
-    errcode = libssh2_session_last_error(ss->session, &errstr, &errlen, 0);
+CODE:
+    RETVAL = libssh2_session_last_error(ss->session, &errstr, &errlen, 0);
     if(GIMME_V == G_ARRAY) {
-        if (errcode == LIBSSH2_ERROR_NONE)
+        SV *errcode_sv;
+        if (RETVAL == LIBSSH2_ERROR_NONE)
             XSRETURN_EMPTY;
         EXTEND(SP, 3);
-        ST(0) = sv_2mortal(newSViv(errcode));
-        if ((-errcode > 0) && (-errcode < countof(xs_libssh2_error)))
-            errcode_sv = newSVpvf("LIBSSH2_ERROR_%s", xs_libssh2_error[-errcode]);
+        ST(0) = sv_2mortal(newSViv(RETVAL));
+        if ((-RETVAL > 0) && (-RETVAL < countof(xs_libssh2_error)))
+            errcode_sv = newSVpvf("LIBSSH2_ERROR_%s", xs_libssh2_error[-RETVAL]);
         else
-            errcode_sv = newSVpvf("LIBSSH2_ERROR_UNKNOWN(%d)", errcode);
+            errcode_sv = newSVpvf("LIBSSH2_ERROR_UNKNOWN(%d)", RETVAL);
         ST(1) = sv_2mortal(errcode_sv);
         ST(2) = (errstr ? sv_2mortal(newSVpvn(errstr, errlen)) : &PL_sv_undef);
         XSRETURN(3);
     }
-    else
-        XSRETURN_IV(errcode);
+OUTPUT:
+    RETVAL
 
 int
 net_ss__set_error(SSH2 *ss, int errcode = 0, const char *errmsg = NULL)

@@ -39,6 +39,9 @@ T_SSH2_BYTES64
 T_SSH2_RC
     $arg = (($var) ? &PL_sv_yes : &PL_sv_undef);
 
+T_SSH2_ERROR
+    $arg = newSViv($var);
+
 T_SSH2_NERROR
     $arg = ( (($var) < 0) ? &PL_sv_undef : &PL_sv_yes );
 
