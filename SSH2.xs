@@ -937,12 +937,10 @@ CODE:
 OUTPUT:
     RETVAL
 
-int
+void
 net_ss__set_error(SSH2 *ss, int errcode = 0, const char *errmsg = NULL)
 CODE:
-    RETVAL = libssh2_session_set_last_error(ss->session, errcode, errmsg);
-OUTPUT:
-    RETVAL
+    libssh2_session_set_last_error(ss->session, errcode, errmsg);
 
 SSH2_NERROR
 net_ss__method(SSH2* ss, SV* method_type, SV *prefs = &PL_sv_undef)
