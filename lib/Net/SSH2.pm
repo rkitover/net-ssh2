@@ -1,6 +1,6 @@
 package Net::SSH2;
 
-our $VERSION = '0.55';
+our $VERSION = '0.56';
 
 use 5.006;
 use strict;
@@ -998,7 +998,7 @@ no callback is provided, LIBSSH2_ERROR_PASSWORD_EXPIRED is returned.
 
 Prompts the user for the password interactively using Term::ReadKey.
 
-=head2 auth_publickey ( username, public key, private key [, passphrase ] )
+=head2 auth_publickey ( username, publickey_path, privatekey_path [, passphrase ] )
 
 Note that public key and private key are names of files containing the keys!
 
@@ -1008,7 +1008,15 @@ When libssh2 is compiled using OpenSSL as the crypto backend, passing
 this method C<undef> as the public key argument is acceptable (OpenSSH
 is able to extract the public key from the private one).
 
-=head2 auth_hostbased ( username, public key, private key, hostname,
+=head2 auth_publickey_frommemory ( username, publickey_blob, privatekey_blob [, passphrase ] )
+
+Authenticate using the given public/private key and an optional
+passphrase. The keys must be PEM encoded.
+
+This method requires libssh2 1.6.0 or later compiled with the OpenSSL
+backend.
+
+=head2 auth_hostbased ( username, publickey, privatekey, hostname,
  [, local username [, passphrase ]] )
 
 Host-based authentication using an optional passphrase.  The local username
@@ -1038,8 +1046,10 @@ a ranked list of methods you want considered (defaults to all).  It will
 remove any unsupported methods or methods for which it doesn't have parameters
 (e.g. if you don't give it a public key, it can't use publickey or hostkey),
 and try the rest, returning whichever one succeeded or a false value if they
-all failed.  If a parameter is passed with an undef value, a default value
-will be supplied if possible.  The parameters are:
+all failed. If a parameter is passed with an undef value, a default value
+will be supplied if possible.
+
+The parameters are:
 
 =over 4
 
@@ -1086,6 +1096,23 @@ L<auth_keyboard> callback.
 L<auth_password> callback.
 
 =back
+
+For historical reasons and in order to maintain backward compatibility
+with older versions of the module, when the C<password> argument is
+given, it is also used as the passphrase (and a deprecation warning
+generated).
+
+In order to avoid that behaviour the C<passphrase> argument must be
+also passed (it could be C<undef>). For instance:
+
+  $ssh2->auth(username => $user,
+              privatekey => $privatekey_path,
+              publickey => $publickey_path,
+              password => $password,
+              passphrase => undef);
+
+This work around will be removed in a not too distant future version
+of the module.
 
 =head2 flag (key, value)
 

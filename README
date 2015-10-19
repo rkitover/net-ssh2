@@ -25,7 +25,7 @@ This module also requires these libraries:
 
 To install dependencies:
 
-Debian:   sudo aptitude install libssh2-1-dev
+Debian:   sudo aptitude install libssh2-1-dev libssl-dev
 OpenSUSE: sudo zypper in libssh2-1 libssh2-devel
 OS X homebrew: brew install libssh2
 
