@@ -1,5 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
+        - add support for Mac Homebrew and its keg-only OpenSSL
+
 0.56  2015-10-9
         - add support for auth_publickey_frommemory method (patch by
           Adam Osuchowski)
