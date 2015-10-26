@@ -227,13 +227,16 @@ my $socket_class = do {
 # methods
 
 sub new {
-    my $class = shift;
-    my %opts  = @_;
-
+    my ($class, %opts) = @_;
     my $self = $class->_new;
 
-    $self->trace($opts{trace}) if defined $opts{trace};
-    $self->timeout($opts{timeout}) if defined $opts{timeout};
+    for (qw(trace timeout)) {
+        $self->$_($opts{$_}) if defined $opts{$_}
+    }
+    $self->flag(COMPRESS => $opts{compress})
+        if defined $opts{compress} and (version())[1] >= 0x10500;
+    $self->flag(SIGPIPE => $opts{sigpipe})
+        if defined $opts{sigpipe};
 
     return $self;
 }
