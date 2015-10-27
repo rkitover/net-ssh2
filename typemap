@@ -49,22 +49,7 @@ O_SESSION
     sv_setref_pv($arg, "Net::SSH2", (void *)$var);
 
 O_CHANNEL
-    {
-    GV* gv = (GV*)newSVrv($arg, "Net::SSH2::Channel");
-    IO* io = (IO*)newSV(0);
-    const char* name = form("_GEN_%ld", (long)net_ch_gensym++);
-    SvUPGRADE((SV*)gv, SVt_PVGV);
-    SvUPGRADE((SV*)io, SVt_PVIO);
-    gv_init(gv, gv_stashpv("Net::SSH2::Channel", 0/*create*/),
-     name, strlen(name), 0/*multi*/);
-    GvSV(gv) = newSViv(PTR2IV($var));
-    GvIOp(gv) = io;
-    if (PERL_VERSION > 6) {
-      sv_magic((SV*)io, newRV((SV*)gv), PERL_MAGIC_tiedscalar, Nullch, 0);
-    } else {
-      sv_magic((SV*)gv, newRV((SV*)gv), PERL_MAGIC_tiedscalar, Nullch, 0);
-    }
-    }
+    wrap_tied_into($arg, "Net::SSH2::Channel", (void *)$var);
 
 O_LISTENER
     sv_setref_pv($arg, "Net::SSH2::Listener", (void *)$var);
@@ -73,22 +58,7 @@ O_SFTP
     sv_setref_pv($arg, "Net::SSH2::SFTP", (void *)$var);
 
 O_FILE
-    {
-    GV* gv = (GV*)newSVrv($arg, "Net::SSH2::File");
-    IO* io = (IO*)newSV(0);
-    const char* name = form("_GEN_%ld", (long)net_fi_gensym++);
-    SvUPGRADE((SV*)gv, SVt_PVGV);
-    SvUPGRADE((SV*)io, SVt_PVIO);
-    gv_init(gv, gv_stashpv("Net::SSH2::File", 0/*create*/),
-     name, strlen(name), 0/*multi*/);
-    GvSV(gv) = newSViv(PTR2IV($var));
-    GvIOp(gv) = io;
-    if (PERL_VERSION > 6) {
-      sv_magic((SV*)io, newRV((SV*)gv), PERL_MAGIC_tiedscalar, Nullch, 0);
-    } else {
-      sv_magic((SV*)gv, newRV((SV*)gv), PERL_MAGIC_tiedscalar, Nullch, 0);
-    }
-    }
+    wrap_tied_into($arg, "Net::SSH2::File", (void *)$var);
 
 O_DIR
     sv_setref_pv($arg, "Net::SSH2::Dir", (void *)$var);
