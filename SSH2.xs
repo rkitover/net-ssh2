@@ -139,6 +139,9 @@ typedef IV SSH2_CALLBACK;     /* LIBSSH2_CALLBACK_ constants */
 typedef IV SSH2_HOSTKEY_HASH; /* LIBSSH2_HOSTKEY_HASH_ constants */
 typedef IV SSH2_CHANNEL_EXTENDED_DATA; /* SSH2_CHANNEL_EXTENDED_DATA_ constants */
 
+typedef char * SSH2_CHARP;         /* string that can not be NULL */
+typedef char * SSH2_CHARP_OR_NULL; /* string that can be NULL */
+
 /* Net::SSH2 object */
 typedef struct SSH2 {
     LIBSSH2_SESSION* session;
@@ -303,11 +306,6 @@ static int push_hv(SV** sp, HV* hv) {
     }
     SvREFCNT_dec(hv);
     return keys * 2;
-}
-
-/* return NULL if undef or NULL, else return string */
-static const char* default_string(SV* sv) {
-    return (sv && SvPOK(sv)) ? SvPVbyte_nolen(sv) : NULL;
 }
 
 static IV
@@ -994,12 +992,12 @@ OUTPUT:
     RETVAL
 
 void
-net_ss__set_error(SSH2 *ss, int errcode = 0, const char *errmsg = NULL)
+net_ss__set_error(SSH2 *ss, int errcode = 0, SSH2_CHARP_OR_NULL errmsg = NULL)
 CODE:
     libssh2_session_set_last_error(ss->session, errcode, errmsg);
 
 SSH2_NERROR
-net_ss__method(SSH2* ss, SSH2_METHOD type, SV *prefs = &PL_sv_undef)
+net_ss__method(SSH2* ss, SSH2_METHOD type, SSH2_CHARP_OR_NULL prefs = NULL)
 CODE:
     /* if there are no other parameters, return the current value */
     if (items == 2) {
@@ -1009,7 +1007,7 @@ CODE:
         XSRETURN_PV(method);
     }
     RETVAL = libssh2_session_method_pref(ss->session,
-                                         (int)type, SvPVbyte_nolen(prefs));
+                                         (int)type, prefs);
 OUTPUT:
     RETVAL
 
@@ -1072,8 +1070,8 @@ OUTPUT:
     RETVAL
 
 SSH2_NERROR
-net_ss_disconnect(SSH2* ss, const char* description = "",       \
-                  int reason = SSH_DISCONNECT_BY_APPLICATION, const char *lang = "")
+net_ss_disconnect(SSH2* ss, SSH2_CHARP description = "",       \
+                  int reason = SSH_DISCONNECT_BY_APPLICATION, SSH2_CHARP lang = "")
 CODE:
     RETVAL = libssh2_session_disconnect_ex(ss->session, reason, description, lang);
 OUTPUT:
@@ -1220,8 +1218,8 @@ CODE:
 #endif
 
 SSH2_NERROR
-net_ss_auth_publickey(SSH2* ss, SV* username, SV* publickey, \
- const char* privatekey, SV* passphrase = NULL)
+net_ss_auth_publickey(SSH2* ss, SV* username, SSH2_CHARP_OR_NULL publickey, \
+                      SSH2_CHARP privatekey, SSH2_CHARP_OR_NULL passphrase = NULL);
 PREINIT:
     const char* pv_username;
     STRLEN len_username;
@@ -1229,8 +1227,8 @@ CODE:
     pv_username = SvPVbyte(username, len_username);
     RETVAL = libssh2_userauth_publickey_fromfile_ex(ss->session,
                                                     pv_username, len_username,
-                                                    default_string(publickey), privatekey,
-                                                    default_string(passphrase));
+                                                    publickey, privatekey,
+                                                    passphrase);
 OUTPUT:
     RETVAL
 
@@ -1238,26 +1236,27 @@ OUTPUT:
 
 void
 net_ss_auth_publickey_frommemory(SSH2* ss, SV* username, SV* publickey, \
- SV* privatekey, SV* passphrase = NULL)
+                                 SV* privatekey, SSH2_CHARP_OR_NULL passphrase = NULL)
 PREINIT:
     const char *pv_username, *pv_publickey, *pv_privatekey;
     STRLEN len_username, len_publickey, len_privatekey;
 CODE:
-    pv_username = SvPV(username, len_username);
-    pv_publickey = SvPV(publickey, len_publickey);
-    pv_privatekey = SvPV(privatekey, len_privatekey);
+    pv_username = SvPVbyte(username, len_username);
+    pv_publickey = SvPVbyte(publickey, len_publickey);
+    pv_privatekey = SvPVbyte(privatekey, len_privatekey);
 
     XSRETURN_IV(!libssh2_userauth_publickey_frommemory(ss->session,
-     pv_username, len_username, pv_publickey, len_publickey,
-     pv_privatekey, len_privatekey,
-     default_string(passphrase)));
+                                                       pv_username, len_username, pv_publickey, len_publickey,
+                                                       pv_privatekey, len_privatekey,
+                                                       passphrase));
 
 #endif
     
 SSH2_NERROR
-net_ss_auth_hostbased(SSH2* ss, SV* username, const char* publickey,                   \
-                      const char* privatekey, SV* hostname, SV* local_username = NULL, \
-                      SV* passphrase = NULL)
+net_ss_auth_hostbased(SSH2* ss, SV* username, const char* publickey, \
+                      const char* privatekey, SV* hostname,          \
+                      SV* local_username = &PL_sv_undef,             \
+                      SSH2_CHARP_OR_NULL passphrase = NULL)
 PREINIT:
     const char* pv_username, * pv_hostname, * pv_local_username;
     STRLEN len_username, len_hostname, len_local_username;
@@ -1265,15 +1264,16 @@ CODE:
     pv_username = SvPVbyte(username, len_username);
     pv_hostname = SvPVbyte(hostname, len_hostname);
 
-    if (!local_username || !SvPOK(local_username)) {
+    if (SvPOK(local_username)) {
+        pv_local_username = SvPVbyte(local_username, len_local_username);
+    }
+    else {
         pv_local_username = pv_username;
         len_local_username = len_username;
-    } else
-        pv_local_username = SvPVbyte(local_username, len_local_username);
-
+    }
     RETVAL = libssh2_userauth_hostbased_fromfile_ex(ss->session,
                                                     pv_username, len_username, publickey, privatekey,
-                                                    default_string(passphrase),
+                                                    passphrase,
                                                     pv_hostname, len_hostname,
                                                     pv_local_username, len_local_username);
 OUTPUT:
@@ -2133,14 +2133,14 @@ OUTPUT:
 SSH2_NERROR
 net_sf_symlink(SSH2_SFTP* sf, SV* path, SV* target)
 PREINIT:
-    const char *pv_path, *pv_target;
+    char *pv_path, *pv_target;
     STRLEN len_path, len_target;
 CODE:
     pv_path = SvPVbyte(path, len_path);
     pv_target = SvPVbyte(target, len_target);
     RETVAL = libssh2_sftp_symlink_ex(sf->sftp,
                                      pv_path, len_path,
-                                     (char*)pv_target, len_target,
+                                     pv_target, len_target,
                                      LIBSSH2_SFTP_SYMLINK);
 OUTPUT:
     RETVAL
@@ -2472,21 +2472,21 @@ CODE:
     Safefree(kh);
 
 SSH2_BYTES
-net_kh_readfile(SSH2_KNOWNHOSTS *kh, const char *filename)
+net_kh_readfile(SSH2_KNOWNHOSTS *kh, SSH2_CHARP filename)
 CODE:
     RETVAL = libssh2_knownhost_readfile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
 OUTPUT:
     RETVAL
 
 SSH2_NERROR
-net_kh_writefile(SSH2_KNOWNHOSTS *kh, const char *filename)
+net_kh_writefile(SSH2_KNOWNHOSTS *kh, SSH2_CHARP filename)
 CODE:
     RETVAL = libssh2_knownhost_writefile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
 OUTPUT:
     RETVAL
 
 SSH2_NERROR
-net_kh_add(SSH2_KNOWNHOSTS *kh, const char *host, const char *salt, SV *key, SV *comment, int typemask)
+net_kh_add(SSH2_KNOWNHOSTS *kh, SSH2_CHARP host, SSH2_CHARP salt, SV *key, SV *comment, int typemask)
 PREINIT:
     STRLEN key_len, comment_len;
     const char *key_pv, *comment_pv;
@@ -2509,7 +2509,7 @@ OUTPUT:
     RETVAL
 
 int
-net_kh_check(SSH2_KNOWNHOSTS *kh, const char *host, SV *port, SV *key, int typemask)
+net_kh_check(SSH2_KNOWNHOSTS *kh, SSH2_CHARP host, SV *port, SV *key, int typemask)
 PREINIT:
     STRLEN key_len;
     const char *key_pv;
@@ -2521,7 +2521,7 @@ CODE:
     RETVAL = libssh2_knownhost_checkp(kh->knownhosts, host, port_uv,
                                       key_pv, key_len, typemask, NULL);
 #else
-    if ((port != 0) && (port != 22))
+    if ((port_uv != 0) && (port_uv != 22))
         croak("libssh2 version 1.2.6 is required when using a custom TCP port");
     RETVAL = libssh2_knownhost_check(kh->knownhosts, host,
                                      key_pv, key_len, typemask, NULL);
@@ -2541,7 +2541,7 @@ OUTPUT:
     RETVAL
 
 SV *
-net_kh_writeline(SSH2_KNOWNHOSTS *kh, const char *host, SV *port, SV *key, int typemask)
+net_kh_writeline(SSH2_KNOWNHOSTS *kh, SSH2_CHARP host, SV *port, SV *key, int typemask)
 PREINIT:
     int rc;
     STRLEN key_len;
