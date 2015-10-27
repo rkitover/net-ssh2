@@ -133,6 +133,12 @@ typedef libssh2_uint64_t SSH2_BYTES64; /* the same for 64bit numbers */
 typedef int SSH2_ERROR; /* for returning SSH2 error numbers */
 typedef int SSH2_NERROR; /* for converting SSH2 error code to boolean just indicating success or failure */
 
+typedef IV SSH2_METHOD;       /* LIBSSH2_METHOD_ constants */
+typedef IV SSH2_FLAG;         /* LIBSSH2_FLAG_ constants */
+typedef IV SSH2_CALLBACK;     /* LIBSSH2_CALLBACK_ constants */
+typedef IV SSH2_HOSTKEY_HASH; /* LIBSSH2_HOSTKEY_HASH_ constants */
+typedef IV SSH2_CHANNEL_EXTENDED_DATA; /* SSH2_CHANNEL_EXTENDED_DATA_ constants */
+
 /* Net::SSH2 object */
 typedef struct SSH2 {
     LIBSSH2_SESSION* session;
@@ -304,29 +310,35 @@ static const char* default_string(SV* sv) {
     return (sv && SvPOK(sv)) ? SvPVbyte_nolen(sv) : NULL;
 }
 
-/* return an integer constant from an SV name or value */
-static int iv_constant_sv(const char *prefix, SV* c_sv, IV* piv) {
-    int ret = 1;
+static IV
+sv2iv_constant_or_croak(const char *name, SV *sv) {
+    if (SvIOK(sv) || looks_like_number(sv))
+        return SvIV(sv);
+    else {
+        STRLEN len;
+        char *pv = SvPVbyte(sv, len);
+        int type, i;
+        IV value;
+        for (i = 0; i < len; i++) {
+            if (isLOWER(pv[i])) {
+                sv = sv_2mortal(newSVpvn(pv, len));
+                pv = SvPVX(sv);
+                for (; i < len; i++)
+                    pv[i] = toUPPER(pv[i]);
+                break;
+            }
+        }
+        type = constant(aTHX_ pv, len, &value);
+        if (type == PERL_constant_NOTFOUND) {
+            sv = sv_2mortal(newSVpvf("LIBSSH2_%s_%s", name, pv));
+            pv = SvPVbyte(sv, len);
+            type = constant(aTHX_ SvPV_nolen(sv), len, &value);
+        }
+        if (type == PERL_constant_ISIV)
+            return value;
 
-    /* accept type as constant, constant without prefix, or numeric value */
-    if (SvIOK(c_sv)) {
-        *piv = SvIV(c_sv);
-    } else {
-        SV *sv = newSVsv(c_sv);
-        char* str = SvPVbyte_nolen(sv), * p;
-        const char* pv;
-        STRLEN len = strlen(prefix);
-
-        for (p = str; *p; ++p)
-            *p = toUPPER(*p);
-        if (strncmp(str, prefix, len))
-            sv_insert(sv, 0/*offset*/, 0/*replace*/, (char*)prefix, len);
-        pv = SvPVbyte(sv, len);
-	    if (constant(aTHX_ pv, len, piv) != PERL_constant_ISIV)
-            ret = 0;
-        SvREFCNT_dec(sv);
+        croak("Invalid constant of type LIBSSH2_%s (%s)", name, pv);
     }
-    return ret;
 }
 
 /* create a hash from an SFTP attributes structure */
@@ -987,15 +999,8 @@ CODE:
     libssh2_session_set_last_error(ss->session, errcode, errmsg);
 
 SSH2_NERROR
-net_ss__method(SSH2* ss, SV* method_type, SV *prefs = &PL_sv_undef)
-PREINIT:
-    IV type;
-    int i;
-    STRLEN len;
+net_ss__method(SSH2* ss, SSH2_METHOD type, SV *prefs = &PL_sv_undef)
 CODE:
-    if (!iv_constant_sv("LIBSSH2_METHOD_", method_type, &type))
-        croak("%s::method: unknown method type: %s",
-              class, SvPVbyte_nolen(method_type));
     /* if there are no other parameters, return the current value */
     if (items == 2) {
         const char *method = libssh2_session_methods(ss->session, (int)type);
@@ -1011,14 +1016,9 @@ OUTPUT:
 #if LIBSSH2_VERSION_NUM >= 0x010200
 
 SSH2_NERROR
-net_ss_flag(SSH2* ss, SV* flag, int value)
-PREINIT:
-    IV flag_iv;
-    int success;
+net_ss_flag(SSH2* ss, SSH2_FLAG flag, int value)
 CODE:
-    if (!iv_constant_sv("LIBSSH2_FLAG_", flag, &flag_iv))
-        croak("%s::method: unknown flag: %s", class, SvPVbyte_nolen(flag));
-    RETVAL = libssh2_session_flag(ss->session, (int)flag_iv, value);
+    RETVAL = libssh2_session_flag(ss->session, (int)flag, value);
 OUTPUT:
     RETVAL
 
@@ -1032,27 +1032,22 @@ CODE:
 #endif
 
 SSH2_RC
-net_ss_callback(SSH2* ss, SV* type, SV* callback = NULL)
-PREINIT:
-    IV i_type;
+net_ss_callback(SSH2* ss, SSH2_CALLBACK type, SV* callback = NULL)
 CODE:
     if (callback && !SvOK(callback))
         callback = NULL;
     if (callback && !(SvROK(callback) && SvTYPE(SvRV(callback)) == SVt_PVCV))
         croak("%s::callback: callback must be CODE ref", class);
-    if (!iv_constant_sv("LIBSSH2_CALLBACK_", type, &i_type))
-        croak("%s::callback: invalid callback type: %s",
-         class, SvPVbyte_nolen(callback));
-    if (i_type < 0 || i_type >= countof(msg_cb))
+    if (type < 0 || type >= countof(msg_cb))
         croak("%s::callback: don't know how to handle: %s",
-         class, SvPVbyte_nolen(callback));
+              class, SvPVbyte_nolen(callback));
 
     ss->sv_ss = SvRV(ST(0));  /* don't keep a reference, just store it */
-    SvREFCNT_dec(ss->rgsv_cb[i_type]);
+    SvREFCNT_dec(ss->rgsv_cb[type]);
     libssh2_session_callback_set(ss->session,
-     i_type, callback ? cb_as_void_ptr(msg_cb[i_type]) : NULL);
+     type, callback ? cb_as_void_ptr(msg_cb[type]) : NULL);
     SvREFCNT_inc(callback);
-    ss->rgsv_cb[i_type] = callback;
+    ss->rgsv_cb[type] = callback;
     RETVAL = 1;
 OUTPUT:
     RETVAL
@@ -1085,16 +1080,14 @@ OUTPUT:
     RETVAL
 
 void
-net_ss_hostkey_hash(SSH2* ss, SV* hash_type)
+net_ss_hostkey_hash(SSH2* ss, SSH2_HOSTKEY_HASH type)
 PREINIT:
-    IV type;
     const char* hash;
     static STRLEN rglen[] = { 16/*MD5*/, 20/*SHA1*/ };
 PPCODE:
-    if (!iv_constant_sv("LIBSSH2_HOSTKEY_HASH_", hash_type, &type) ||
-        type < 1 || type > countof(rglen)) {
-        croak("%s::hostkey: unknown hostkey hash: %s",
-              class, SvPVbyte_nolen(hash_type));
+    if (type < 1 || type > countof(rglen)) {
+        croak("%s::hostkey: unknown hostkey hash: %d",
+              class, (int)type);
     }
     if ((hash = (const char*)libssh2_hostkey_hash(ss->session, type))) {
         PUSHs(sv_2mortal(newSVpvn(hash, rglen[type-1])));
@@ -1759,14 +1752,9 @@ OUTPUT:
     RETVAL
 
 int
-net_ch_ext_data(SSH2_CHANNEL* ch, SV* mode)
-PREINIT:
-    IV i_mode;
+net_ch_ext_data(SSH2_CHANNEL* ch, SSH2_CHANNEL_EXTENDED_DATA mode)
 CODE:
-    if (!iv_constant_sv("LIBSSH2_CHANNEL_EXTENDED_DATA_", mode, &i_mode))
-        croak("%s::ext_data: unknown extended data mode: %s",
-              class, SvPVbyte_nolen(mode));
-    libssh2_channel_handle_extended_data(ch->channel, i_mode);
+    libssh2_channel_handle_extended_data(ch->channel, (int)mode);
     RETVAL = 1;
 OUTPUT:
     RETVAL

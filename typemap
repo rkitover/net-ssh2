@@ -19,6 +19,12 @@ TYPEMAP
     SSH2_BYTES    T_SSH2_BYTES
     SSH2_BYTES64  T_SSH2_BYTES64
 
+    SSH2_METHOD  T_SSH2_METHOD
+    SSH2_FLAG    T_SSH2_FLAG
+    SSH2_CALLBACK T_SSH2_CALLBACK
+    SSH2_HOSTKEY_HASH T_SSH2_HOSTKEY_HASH
+    SSH2_CHANNEL_EXTENDED_DATA T_SSH2_CHANNEL_EXTENDED_DATA
+
 OUTPUT
 T_PV
     sv_setpv((SV*)$arg, $var);
@@ -102,3 +108,18 @@ O_PUBLICKEY
 
 O_KNOWNHOSTS
     $var = INT2PTR($type, unwrap($arg, \"$Package\", \"$func_name\"));
+
+T_SSH2_METHOD
+    $var = sv2iv_constant_or_croak(\"METHOD\", $arg);
+
+T_SSH2_FLAG
+    $var = sv2iv_constant_or_croak(\"FLAG\", $arg);
+
+T_SSH2_CALLBACK
+    $var = sv2iv_constant_or_croak(\"CALLBACK\", $arg);
+
+T_SSH2_HOSTKEY_HASH
+    $var = sv2iv_constant_or_croak(\"HOSTKEY_HASH\", $arg);
+
+T_SSH2_CHANNEL_EXTENDED_DATA
+    $var = sv2iv_constant_or_croak(\"CHANNEL_EXTENDED_DATA\", $arg);
