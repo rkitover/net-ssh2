@@ -1234,7 +1234,7 @@ OUTPUT:
 
 #if LIBSSH2_VERSION_NUM >= 0x010600
 
-void
+SSH2_NERROR
 net_ss_auth_publickey_frommemory(SSH2* ss, SV* username, SV* publickey, \
                                  SV* privatekey, SSH2_CHARP_OR_NULL passphrase = NULL)
 PREINIT:
@@ -1245,10 +1245,12 @@ CODE:
     pv_publickey = SvPVbyte(publickey, len_publickey);
     pv_privatekey = SvPVbyte(privatekey, len_privatekey);
 
-    XSRETURN_IV(!libssh2_userauth_publickey_frommemory(ss->session,
-                                                       pv_username, len_username, pv_publickey, len_publickey,
-                                                       pv_privatekey, len_privatekey,
-                                                       passphrase));
+    RETVAL = libssh2_userauth_publickey_frommemory(ss->session,
+                                                   pv_username, len_username, pv_publickey, len_publickey,
+                                                   pv_privatekey, len_privatekey,
+                                                   passphrase);
+OUTPUT:
+    RETVAL
 
 #endif
     
