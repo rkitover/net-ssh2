@@ -240,6 +240,29 @@ static int split_comma(SV** sp, const char* str) {
     return i;
 }
 
+static IV
+unwrap(SV *sv, const char *pkg, const char *method) {
+    if (SvROK(sv) && sv_isa(sv, pkg)) {
+        SV *inner = SvRV(sv);
+        if (SvIOK(inner))
+            return SvIVX(inner);
+    }
+    croak("%s::%s: invalid object %s", pkg, method, SvPV_nolen(sv));
+}
+
+static IV
+unwrap_tied(SV *sv, const char *pkg, const char *method) {
+    if (SvROK(sv) && sv_isa(sv, pkg)) {
+        SV *gv = SvRV(sv);
+        if (SvTYPE(gv) == SVt_PVGV) {
+            SV *inner = GvSV((GV*)gv);
+            if (inner && SvIOK(inner))
+                return SvIVX(inner);
+        }
+    }
+    croak("%s::%s: invalid object %s", pkg, method, SvPV_nolen(sv));
+}
+
 /* push a hash of values onto the return stack, for '%hash = func()' */
 static int push_hv(SV** sp, HV* hv) {
     I32 keys = hv_iterinit(hv);

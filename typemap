@@ -110,49 +110,25 @@ T_AVREF
         croak(\"$var is not an array reference\");
 
 O_SESSION
-    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
-        $var = ($type)SvIV((SV*)SvRV($arg));
-    else
-        croak(\"${Package}::$func_name() - invalid session object\");
+    $var = INT2PTR($type, unwrap($arg, \"$Package\", \"$func_name\"));
 
 O_CHANNEL
-    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVGV))
-        $var = ($type)SvIVX(GvSV((GV*)SvRV($arg)));
-    else
-        croak(\"${Package}::$func_name() - invalid channel object\");
+    $var = INT2PTR($type, unwrap_tied($arg, \"$Package\", \"$func_name\"));
 
 O_LISTENER
-    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
-        $var = ($type)SvIV((SV*)SvRV($arg));
-    else
-        croak(\"${Package}::$func_name() - invalid listener object\");
+    $var = INT2PTR($type, unwrap($arg, \"$Package\", \"$func_name\"));
 
 O_SFTP
-    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
-        $var = ($type)SvIV((SV*)SvRV($arg));
-    else
-        croak(\"${Package}::$func_name() - invalid SFTP object\");
+    $var = INT2PTR($type, unwrap($arg, \"$Package\", \"$func_name\"));
 
 O_FILE
-    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVGV))
-        $var = ($type)SvIVX(GvSV((GV*)SvRV($arg)));
-    else
-        croak(\"${Package}::$func_name() - invalid SFTP file object\");
+    $var = INT2PTR($type, unwrap_tied($arg, \"$Package\", \"$func_name\"));
 
 O_DIR
-    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
-        $var = ($type)SvIV((SV*)SvRV($arg));
-    else
-        croak(\"${Package}::$func_name() - invalid SFTP directory object\");
+    $var = INT2PTR($type, unwrap($arg, \"$Package\", \"$func_name\"));
 
 O_PUBLICKEY
-    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
-        $var = ($type)SvIV((SV*)SvRV($arg));
-    else
-        croak(\"${Package}::$func_name() - invalid public key object\");
+    $var = INT2PTR($type, unwrap($arg, \"$Package\", \"$func_name\"));
 
 O_KNOWNHOSTS
-    if(sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG))
-        $var = ($type)SvIV((SV*)SvRV($arg));
-    else
-        croak(\"${Package}::$func_name() - invalid knownhost object\");
+    $var = INT2PTR($type, unwrap($arg, \"$Package\", \"$func_name\"));
