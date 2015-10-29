@@ -1,7 +1,6 @@
 use inc::Module::Install 0.91;
 use Cwd;
 use Config;
-use Module::Install::CheckLib ();
 
 # override library and include directories here if desired
 my $lib = $ENV{LIBSSH2_LIB} || '';
