@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.57_02  2015-10-29
+        - Module::Install::CheckLib was missing
+
 0.57_01  2015-10-26
         - reimplement scp_put and scp_get methods fixing several issues
         - add support for Mac Homebrew and its keg-only OpenSSL
