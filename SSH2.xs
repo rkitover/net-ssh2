@@ -1212,7 +1212,6 @@ CODE:
                     }
                 }
             }
-            libssh2_agent_disconnect(agent);
         }
         libssh2_agent_free(agent);
     }
