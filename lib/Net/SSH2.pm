@@ -766,6 +766,9 @@ default banner text (e.g. "SSH-2.0-libssh2_0.18.0-20071110").
 Returns the last error code; returns false if no error.  In list context,
 returns (code, error name, error string).
 
+Note that the returned error value is only meaningful after some other
+method indicates an error by returning false.
+
 =head2 sock
 
 Returns a reference to the underlying L<IO::Socket> object (usually a
