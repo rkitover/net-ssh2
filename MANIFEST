@@ -1,6 +1,8 @@
 BUILDING.WIN32
 Changes
 example/read.pl
+example/rt58911.pl
+example/rt80011.pl
 fallback/const-c.inc
 fallback/const-xs.inc
 inc/Devel/CheckLib.pm
