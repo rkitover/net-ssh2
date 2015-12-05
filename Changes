@@ -1,5 +1,11 @@
 Revision history for Perl extension Net::SSH2.
 
+0.57_03  2015-12-5
+        - remove MYMETA.* from distribution (fixes #rt108717, reported
+          by Alexandr Ciornii)
+        - workaround bug in libssh2_agent_disconnect (fixes #28,
+          reported by Tore Anderson)
+
 0.57_02  2015-10-29
         - Module::Install::CheckLib was missing
 
