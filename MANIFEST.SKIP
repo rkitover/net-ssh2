@@ -10,6 +10,7 @@
 \.old\z
 \.bak\z
 \.tar\.gz\z
+\~\z
 ^pm_to_blib\z
 ^Makefile\z
 ^const-c\.inc\z
@@ -18,3 +19,5 @@
 ^\.travis/
 ^\.gitignore
 ^t/pod-spell.t
+^MYMETA\.
+^00.*\.patch\z
