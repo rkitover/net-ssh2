@@ -1,6 +1,6 @@
 package Net::SSH2;
 
-our $VERSION = '0.57_03';
+our $VERSION = '0.58';
 
 use 5.006;
 use strict;
