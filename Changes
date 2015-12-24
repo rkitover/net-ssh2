@@ -1,7 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
 0.58  2015-12-20
-        - rereleas as stable
+        - rereleased as stable
 
 0.57_03  2015-12-5
         - remove MYMETA.* from distribution (fixes #rt108717, reported
