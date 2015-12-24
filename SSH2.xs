@@ -959,12 +959,12 @@ PPCODE:
     XSRETURN(3);
 
 SSH2_NERROR
-net_ss_banner(SSH2* ss, SV* banner)
+net_ss_banner(SSH2* ss, SSH2_CHARP banner)
 PREINIT:
-    SV* sv_banner;
+    SV* full_banner;
 CODE:
-    sv_banner = sv_2mortal(newSVpvf("SSH-2.0-%s", SvPVbyte_nolen(banner)));
-    RETVAL = libssh2_banner_set(ss->session, SvPVbyte_nolen(sv_banner));
+    full_banner = sv_2mortal(newSVpvf("SSH-2.0-%s", banner));
+    RETVAL = libssh2_banner_set(ss->session, SvPVbyte_nolen(full_banner));
 OUTPUT:
     RETVAL
 
@@ -1182,7 +1182,7 @@ OUTPUT:
 #if LIBSSH2_VERSION_NUM >= 0x010203
 
 SV *
-net_ss_auth_agent(SSH2* ss, const char* username)
+net_ss_auth_agent(SSH2* ss, SSH2_CHARP username)
 PREINIT:
     LIBSSH2_AGENT *agent;
     int old_blocking;
@@ -1371,7 +1371,7 @@ OUTPUT:
 #if LIBSSH2_VERSION_NUM >= 0x10601
 
 SSH2_CHANNEL*
-net_ss__scp_get(SSH2* ss, const char* path, HV* stat = NULL)
+net_ss__scp_get(SSH2* ss, SSH2_CHARP path, HV* stat = NULL)
 PREINIT:
     libssh2_struct_stat st;
 CODE:
@@ -1395,7 +1395,7 @@ OUTPUT:
 #else
 
 SSH2_CHANNEL*
-net_ss__scp_get(SSH2* ss, const char* path, HV* stat = NULL)
+net_ss__scp_get(SSH2* ss, SSH2_CHARP path, HV* stat = NULL)
 PREINIT:
     struct stat st;
 CODE:
@@ -1415,7 +1415,7 @@ OUTPUT:
 #endif
 
 SSH2_CHANNEL*
-net_ss__scp_put(SSH2* ss, const char* path, int mode, size_t size, \
+net_ss__scp_put(SSH2* ss, SSH2_CHARP path, int mode, size_t size, \
     long mtime = 0, long atime = 0)
 CODE:
     NEW_CHANNEL(libssh2_scp_send_ex(ss->session,
@@ -1424,8 +1424,8 @@ OUTPUT:
     RETVAL
 
 SSH2_CHANNEL*
-net_ss_tcpip(SSH2* ss, const char* host, int port, \
-             const char* shost = "127.0.0.1", int sport = 22)
+net_ss_tcpip(SSH2* ss, SSH2_CHARP host, int port, \
+             SSH2_CHARP shost = "127.0.0.1", int sport = 22)
 CODE:
     NEW_CHANNEL(libssh2_channel_direct_tcpip_ex(ss->session,
                                                 (char*)host, port,
