@@ -877,16 +877,16 @@ OUTPUT:
     RETVAL
 
 void
-net_ss_trace(SSH2* ss, SV* bitmask)
+net_ss_trace(SSH2* ss, IV bitmask)
 CODE:
-    libssh2_trace(ss->session, SvIV(bitmask));
+    libssh2_trace(ss->session, bitmask);
 
 #if LIBSSH2_VERSION_MAJOR >= 1
 
-SV*
+IV
 net_ss_block_directions(SSH2* ss)
 CODE:
-    RETVAL = newSViv((IV)libssh2_session_block_directions(ss->session));
+    RETVAL = libssh2_session_block_directions(ss->session);
 OUTPUT:
     RETVAL
 
@@ -938,9 +938,9 @@ CODE:
     Safefree(ss);
 
 void
-net_ss_debug(SV*, SV* debug)
+net_ss_debug(SV*, IV debug)
 CODE:
-    net_ss_debug_out = SvIV(debug) & 1;  /* allow for future flags */
+    net_ss_debug_out = debug & 1;  /* allow for future flags */
 
 void
 net_ss_version(...)
