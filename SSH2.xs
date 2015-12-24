@@ -132,6 +132,7 @@ typedef int SSH2_BYTES; /* for functions returning a byte count or a negative nu
 typedef libssh2_uint64_t SSH2_BYTES64; /* the same for 64bit numbers */
 typedef int SSH2_ERROR; /* for returning SSH2 error numbers */
 typedef int SSH2_NERROR; /* for converting SSH2 error code to boolean just indicating success or failure */
+typedef int SSH2_BOOL; /* for yes/no responses */
 
 typedef IV SSH2_METHOD;       /* LIBSSH2_METHOD_ constants */
 typedef IV SSH2_FLAG;         /* LIBSSH2_FLAG_ constants */
@@ -920,12 +921,12 @@ CODE:
 
 #endif
 
-SV*
-net_ss_blocking(SSH2* ss, SV* blocking = &PL_sv_undef)
+SSH2_BOOL
+net_ss_blocking(SSH2* ss, SSH2_BOOL blocking = 0)
 CODE:
     if (items > 1)
-        libssh2_session_set_blocking(ss->session, SvTRUE(blocking));
-    RETVAL = (libssh2_session_get_blocking(ss->session) ? &PL_sv_yes : &PL_sv_no);
+        libssh2_session_set_blocking(ss->session, blocking);
+    RETVAL = libssh2_session_get_blocking(ss->session);
 OUTPUT:
     RETVAL
 

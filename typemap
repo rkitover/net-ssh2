@@ -18,6 +18,7 @@ TYPEMAP
     SSH2_NERROR   T_SSH2_NERROR
     SSH2_BYTES    T_SSH2_BYTES
     SSH2_BYTES64  T_SSH2_BYTES64
+    SSH2_BOOL     T_SSH2_BOOL
 
     SSH2_METHOD  T_SSH2_METHOD
     SSH2_FLAG    T_SSH2_FLAG
@@ -44,6 +45,9 @@ T_SSH2_BYTES64
 #else
     $arg = ( (($var) < 0) ? &PL_sv_undef : newSVnv($var) );
 #endif
+
+T_SSH2_BOOL
+    $arg = (($var) ? &PL_sv_yes : &PL_sv_no);
 
 T_SSH2_RC
     $arg = (($var) ? &PL_sv_yes : &PL_sv_undef);
@@ -111,6 +115,9 @@ O_PUBLICKEY
 
 O_KNOWNHOSTS
     $var = INT2PTR($type, unwrap($arg, \"$Package\", \"$func_name\"));
+
+T_SSH2_BOOL
+    $var = SvTRUE($arg);
 
 T_SSH2_METHOD
     $var = sv2iv_constant_or_croak(\"METHOD\", $arg);
