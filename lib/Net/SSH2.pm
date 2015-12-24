@@ -647,6 +647,12 @@ sub hostkey {
     shift->hostkey_hash(@_);
 }
 
+sub auth_list {
+    my $auth = shift->_auth_list(@_);
+    return unless defined $auth;
+    wantarray ? split(/,/, $auth) : $auth
+}
+
 # mechanics
 
 sub AUTOLOAD {

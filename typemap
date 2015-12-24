@@ -58,6 +58,9 @@ T_SSH2_ERROR
 T_SSH2_NERROR
     $arg = ( (($var) < 0) ? &PL_sv_undef : &PL_sv_yes );
 
+T_SSH2_CHARP_OR_NULL
+    $arg = ($var ? &PL_sv_undef : sv_2mortal(newSVpv($var, 0)));
+
 O_SESSION
     sv_setref_pv($arg, "Net::SSH2", (void *)$var);
 
