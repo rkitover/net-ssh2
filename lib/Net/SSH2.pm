@@ -7,8 +7,8 @@ use strict;
 use warnings;
 use Carp;
 
-require Exporter;
-use AutoLoader;
+use Alien::OpenSSL;
+use Alien::Libssh2;
 
 use Socket;
 use IO::File;
