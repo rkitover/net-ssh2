@@ -22,9 +22,12 @@ sub alien_libs {
   unless (defined $alien_libs) {
     if ($self->use_alien) {
       require Alien::Libssh2::ConfigData;
-      my $use_gcrypt = Alien::Libssh2::ConfigData->config('use_gcrypt');
-      $alien_libs = ['Alien::Libssh2',
-                     ($use_gcrypt ? 'Alien::Libgcrypt' : 'Alien::OpenSSL')];
+      my $cbe = Alien::Libssh2::ConfigData->config('crypto_backend');
+      $alien_libs = [ 'Alien::Libssh2',
+                      ( ($cbe eq 'gcrypt')  ? 'Alien::Libgcrypt' :
+                        ($cbe eq 'openssl') ? 'Alien::OpenSSL'   :
+                        ($cbe eq 'wincng')  ?  ()                :
+                        croak "unsupported libssh2 crypto backend $cbe" ) ];
     }
     else {
       $alien_libs = [];
