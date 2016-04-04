@@ -10,6 +10,7 @@ use warnings;
 use Carp;
 
 __PACKAGE__->add_property(use_alien => 1);
+__PACKAGE__->add_property('crypto_backend');
 
 sub in_Build_PL {
   my $self = shift;
@@ -22,6 +23,8 @@ sub auto_require {
   my $self = shift;
   $self->SUPER::auto_require(@_);
 
+  my $cbe = $self->crypto_backend;
+
   my @alien_libs;
   my $use_alien = $self->use_alien;
   $self->log_verbose("use_alien: $use_alien\n");
@@ -32,12 +35,23 @@ sub auto_require {
       return;
     }
 
-    my $cbe = Alien::Libssh2::ConfigData->config('crypto_backend');
+    my $libssh2_cbe = Alien::Libssh2::ConfigData->config('crypto_backend');
+    $cbe //= $libssh2_cbe;
+    $cbe eq $libssh2_cbe or croak "user selected crypto backend ($cbe) doesn't match the one for the libssh2 ($libssh2_cbe)";
+
     my $alien_libssh2_libs = Alien::Libssh2::ConfigData->config('alien_libs');
     push @alien_libs, 'Alien::Libssh2';
     push @alien_libs, grep defined, @$alien_libssh2_libs
       if $alien_libssh2_libs;
   }
+  else {
+    $cbe //= "openssl";
+  }
+
+  $self->log_verbose("crypto_backend: $cbe\n");
+  $self->crypto_backend($cbe);
+  $self->config_data(crypto_backend => $cbe);
+
   $self->log_verbose("alien_libs: @alien_libs\n");
   $self->config_data(alien_libs => \@alien_libs);
   ()
@@ -82,8 +96,15 @@ sub extra_flags {
   \@flags;
 }
 
-sub extra_compiler_flags { shift->extra_flags('compiler', 'cflags') }
 sub extra_linker_flags   { shift->extra_flags('linker',   'libs'  ) }
+
+sub extra_compiler_flags {
+  my $self = shift;
+  my $flags = $self->extra_flags('compiler', 'cflags');
+  my $CBE = uc $self->crypto_backend;
+  push @$flags, "-DUSE_$CBE";
+  return $flags;
+}
 
 EOC
 
