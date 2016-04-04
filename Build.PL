@@ -16,26 +16,32 @@ sub in_Build_PL {
   $self->{action} and $self->{action} eq 'Build_PL'
 }
 
-sub alien_libs {
+sub alien_libs { @{shift->config_data('alien_libs') || []} }
+
+sub auto_require {
   my $self = shift;
-  my $alien_libs = $self->config_data('alien_libs');
-  unless (defined $alien_libs) {
-    if ($self->use_alien) {
-      require Alien::Libssh2::ConfigData;
-      my $cbe = Alien::Libssh2::ConfigData->config('crypto_backend');
-      $alien_libs = [ 'Alien::Libssh2',
-                      ( ($cbe eq 'gcrypt')  ? 'Alien::Libgcrypt' :
-                        ($cbe eq 'openssl') ? 'Alien::OpenSSL'   :
-                        ($cbe eq 'wincng')  ?  ()                :
-                        croak "unsupported libssh2 crypto backend $cbe" ) ];
+  $self->SUPER::auto_require(@_);
+
+  my @alien_libs;
+  my $use_alien = $self->use_alien;
+  $self->log_verbose("use_alien: $use_alien\n");
+  if ($self->use_alien) {
+    $self->_add_prereq(configure_requires => 'Alien::Libssh2');
+    unless (eval "require Alien::Libssh2::ConfigData; 1") {
+      print "Can't configure the module without 'Alien::Libssh2'.\nInstall that module and rerun 'perl Build.PL'!!!\n\n";
+      return;
     }
-    else {
-      $alien_libs = [];
-    }
-    $self->config_data(alien_libs => $alien_libs);
+
+    my $cbe = Alien::Libssh2::ConfigData->config('crypto_backend');
+    my $alien_libssh2_libs = Alien::Libssh2::ConfigData->config('alien_libs');
+    push @alien_libs, 'Alien::Libssh2';
+    push @alien_libs, grep defined, @$alien_libssh2_libs
+      if $alien_libssh2_libs;
   }
-  return @$alien_libs;
-} 
+  $self->log_verbose("alien_libs: @alien_libs\n");
+  $self->config_data(alien_libs => \@alien_libs);
+  ()
+}
 
 sub alien_libs_and_load {
   my $self = shift;
@@ -61,31 +67,29 @@ sub new {
   return $self;
 }
 
-sub extra_compiler_flags {
-  my $self = shift;
-  my @all = $self->SUPER::extra_compiler_flags;
-  unless ($self->in_Build_PL) {
-    push @all, $_->cflags for $self->alien_libs_and_load;
+sub extra_flags {
+  my ($self, $key, $method) = @_;
+  my $super_method = "SUPER::extra_${key}_flags";
+  my @flags = @{$self->$super_method || []};
+  my @alien_libs = $self->alien_libs;
+  print "alien_libs: @alien_libs\n";
+  for my $lib ($self->alien_libs) {
+    eval "require $lib; 1" or die $@;
+    push @flags, $self->split_like_shell($lib->$method)
   }
-  join ' ', @all;
+  use Data::Dumper;
+  print Dumper [$key, @flags];
+  \@flags;
 }
 
-sub extra_linker_flags {
-  my $self = shift;
-  my @all = $self->SUPER::extra_linker_flags;
-  unless ($self->in_Build_PL) {
-    push @all, $_->libs for $self->alien_libs_and_load;
-  }
-  join ' ', @all;
-}
+sub extra_compiler_flags { shift->extra_flags('compiler', 'cflags') }
+sub extra_linker_flags   { shift->extra_flags('linker',   'libs'  ) }
 
 EOC
 
-my $builder = $class->new(module_name => 'Net::SSH2',
-                          license => 'perl',
-                          #extra_compiler_flags => join(' ', map $_->cflags, @alien),
-                          #extra_linker_flags => join(' ', map $_->libs, @alien),
-                         );
+my $builder = $class->new( module_name => 'Net::SSH2',
+                           license => 'perl',
+                           build_requires => { "Module::Build" => "0.42_17" } );
 
 $builder->create_build_script;
 
