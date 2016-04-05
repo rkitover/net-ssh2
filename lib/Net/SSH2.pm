@@ -7,8 +7,10 @@ use strict;
 use warnings;
 use Carp;
 
-use Alien::OpenSSL;
+#use Alien::OpenSSL;
 use Alien::Libssh2;
+
+BEGIN { warn "dynamic libs: '".join("', '", Alien::Libssh2->dynamic_libs)."'" }
 
 use Socket;
 use IO::File;

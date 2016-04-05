@@ -102,7 +102,7 @@ sub extra_compiler_flags {
   my $self = shift;
   my $flags = $self->extra_flags('compiler', 'cflags');
   my $CBE = uc $self->crypto_backend;
-  push @$flags, "-DUSE_$CBE";
+  push @$flags, "-DUSE_$CBE=1";
   return $flags;
 }
 
@@ -110,7 +110,9 @@ EOC
 
 my $builder = $class->new( module_name => 'Net::SSH2',
                            license => 'perl',
-                           build_requires => { "Module::Build" => "0.42_17" } );
+                           build_requires => { "Module::Build" => "0.42_17" },
+                           alien_stage_install => 0,
+ );
 
 $builder->create_build_script;
 

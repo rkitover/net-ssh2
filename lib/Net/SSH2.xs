@@ -22,13 +22,18 @@
 
 #if defined(USE_ITHREADS) && (defined(I_PTHREAD) || defined(WIN32))
 
-#ifdef USE_GCRYPT
-#define HAVE_GCRYPT
-#include <gcrypt.h>
-#else /* OpenSSL */
-#define HAVE_OPENSSL
-#include <openssl/crypto.h>
-#endif
+#  if defined(USE_GCRYPT)
+#    define HAVE_GCRYPT
+#    include <gcrypt.h>
+#  elif defined(USE_OPENSSL)
+#    define HAVE_OPENSSL
+#    include <openssl/crypto.h>
+#  elif defined(USE_WINCNG)
+#    define HAVE_WINCNG
+     /* do nothing? */
+#  else
+#    error Crypto backend not defined.
+#  endif
 
 #else
 /* is #warning portable across C compilers? */
@@ -38,13 +43,13 @@
 
 #ifndef MULTIPLICITY
 /* for debugging output */
-#define my_perl ((void *)0)
+#  define my_perl ((void *)0)
 #endif
 
 /* constants */
 
 #ifndef LIBSSH2_ERROR_NONE
-#define LIBSSH2_ERROR_NONE 0
+#  define LIBSSH2_ERROR_NONE 0
 #endif  /* LIBSSH2_ERROR_NONE */
 
 /* LIBSSH2_ERROR_* values; from 0 continuing negative */
@@ -602,11 +607,11 @@ static void (*msg_cb[])() = {
 #define MY_CXT_KEY "Net::SSH2::_guts" XS_VERSION
 
 #ifdef HAVE_GCRYPT
-#ifndef WIN32
+#  ifndef WIN32
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
-#else
+#  else
 GCRY_THREAD_OPTION_PTH_IMPL;
-#endif
+#  endif
 #endif
 
 typedef struct {
@@ -643,7 +648,7 @@ static UV get_my_thread_id(void) /* returns threads->tid() value */
     return tid;
 }
 
-#if defined(USE_ITHREADS) && !defined(HAVE_GCRYPT)
+#if defined(USE_ITHREADS) && defined(HAVE_OPENSSL)
 /* IMPORTANT NOTE:
  * openssl locking was implemented according to http://www.openssl.org/docs/crypto/threads.html
  * we implement both static and dynamic locking as described on URL above
@@ -663,19 +668,19 @@ static void openssl_locking_function(int mode, int type, const char *file, int l
       MUTEX_UNLOCK(&GLOBAL_openssl_mutex[type]);
 }
 
-#if OPENSSL_VERSION_NUMBER < 0x10000000L
+#  if OPENSSL_VERSION_NUMBER < 0x10000000L
 static unsigned long openssl_threadid_func(void)
 {
     dMY_CXT;
     return (unsigned long)(MY_CXT.tid);
 }
-#else
+#  else
 static void openssl_threadid_func(CRYPTO_THREADID *id)
 {
     dMY_CXT;
     CRYPTO_THREADID_set_numeric(id, (unsigned long)(MY_CXT.tid));
 }
-#endif
+#  endif
 
 struct CRYPTO_dynlock_value
 {
@@ -713,24 +718,24 @@ static void openssl_threads_init(void)
 
     /* initialize static locking */
     if ( !CRYPTO_get_locking_callback() ) {
-#if OPENSSL_VERSION_NUMBER < 0x10000000L
+#  if OPENSSL_VERSION_NUMBER < 0x10000000L
         if ( !CRYPTO_get_id_callback() ) {
-#else
+#  else
         if ( !CRYPTO_THREADID_get_callback() ) {
-#endif
+#  endif
             New(0, GLOBAL_openssl_mutex, CRYPTO_num_locks(), perl_mutex);
             if (!GLOBAL_openssl_mutex) return;
             for (i=0; i<CRYPTO_num_locks(); i++) MUTEX_INIT(&GLOBAL_openssl_mutex[i]);
             CRYPTO_set_locking_callback(openssl_locking_function);
 
-#ifndef WIN32
+#  ifndef WIN32
             /* no need for threadid_func() on Win32 */
-#if OPENSSL_VERSION_NUMBER < 0x10000000L
+#    if OPENSSL_VERSION_NUMBER < 0x10000000L
             CRYPTO_set_id_callback(openssl_threadid_func);
-#else
+#    else
             CRYPTO_THREADID_set_callback(openssl_threadid_func);
-#endif
-#endif
+#    endif
+#  endif
         }
     }
 
@@ -777,13 +782,13 @@ INCLUDE: const-xs.inc
 BOOT:
 {
     MY_CXT_INIT;
-#ifdef HAVE_GCRYPT
+#if defined(HAVE_GCRYPT)
     gcry_error_t ret;
-#ifndef WIN32
+#  ifndef WIN32
     ret = gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-#else
+#  else
     ret = gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pth);
-#endif
+#  endif
     if (gcry_err_code(ret) != GPG_ERR_NO_ERROR)
         croak("could not initialize libgcrypt for threads (%d: %s/%s)",
          gcry_err_code(ret),
@@ -792,7 +797,7 @@ BOOT:
 
     if (!gcry_check_version(GCRYPT_VERSION))
         croak("libgcrypt version mismatch (needed: %s)", GCRYPT_VERSION);
-#else /* OpenSSL */
+#elif defined(HAVE_OPENSSL)
     openssl_threads_init();
     MY_CXT.global_cb_data = newHV();
     MY_CXT.tid = get_my_thread_id();
@@ -1242,7 +1247,7 @@ CODE:
      pv_username, len_username, default_string(publickey), privatekey,
      default_string(passphrase)));
 
-#if LIBSSH2_VERSION_NUM >= 0x010600
+#if (LIBSSH2_VERSION_NUM >= 0x010600) && defined(HAVE_OPENSSL)
 
 void
 net_ss_auth_publickey_frommemory(SSH2* ss, SV* username, SV* publickey, \
@@ -1262,7 +1267,7 @@ CODE:
      default_string(passphrase)));
 
 #endif
-    
+
 void
 net_ss_auth_hostbased(SSH2* ss, SV* username, const char* publickey, \
  const char* privatekey, SV* hostname, SV* local_username = NULL, \
