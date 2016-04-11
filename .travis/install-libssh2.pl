@@ -28,4 +28,4 @@ for (1..5) {
 }
 system "tar xf $tgz_name" and die;
 chdir $tgz_dir or die $!;
-system "CFLAGS='$cflags' ./configure --prefix=$prefix && make && make install" and die $?;
+system "CFLAGS='$cflags' ./configure --prefix=$prefix --enable-shared=no && make && make install" and die $?;
