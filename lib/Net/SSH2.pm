@@ -716,9 +716,41 @@ with all of the key exchanges, ciphers, and compression of libssh2.
 Unless otherwise indicated, methods return a true value on success and
 false on failure; use the error method to get extended error information.
 
-The typical order is to create the SSH2 object, set up the connection methods
-you want to use, call connect, authenticate with one of the C<auth> methods,
-then create channels on the connection to perform commands.
+The typical usage order is as follows:
+
+=over 4
+
+=item 1
+
+Create the SSH2 object calling C<new>.
+
+=item 2
+
+Configure it if required. For instance, enabling compression or picking
+some specific encryption methods.
+
+=item 3
+
+Establish the SSH connection calling the method C<connect>.
+
+=item 4
+
+Check the remote host public key, typically comparing it to the one
+stored in /etc/ssh/known_hosts. See L<Net::SSH2::KnownHosts>.
+
+=item 5
+
+Authenticate calling one (or several) of the authentication methods
+provided.
+
+=item 6
+
+Create channels over the connection and use them.
+
+=item 7
+
+Close the connection letting the Net::SSH2 object go out of scope or
+calling C<disconnect> explicitly.
 
 =head1 EXPORTS
 
