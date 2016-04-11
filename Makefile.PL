@@ -157,7 +157,10 @@ sub findlib {
         (join "\n  ", @search_paths)."\n";
 }
 
-unless ($do_not_check_libs) {
+if ($do_not_check_libs) {
+    $crypto_backend ||= 'openssl';
+}
+else {
     warn "Looking for libraries...\n";
     my $detected_crypto_backend;
 
@@ -239,9 +242,6 @@ EOF
                     run_checks_as_author => 1);
         }
     }
-}
-else {
-    $crypto_backend ||= 'openssl';
 }
 
 if ($crypto_backend eq 'gcrypt') {
