@@ -1,6 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
-0.59_01
+0.59_01  Apr 11, 2016
         *** WARNING: this release includes lots of changes, some
             visible, most internal. Regressions are expected. Also,
             it introduces some minor backward incompatible changes -
