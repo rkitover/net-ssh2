@@ -1,7 +1,55 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_01
+        *** WARNING: this release includes lots of changes, some
+            visible, most internal. Regressions are expected. Also,
+            it introduces some minor backward incompatible changes -
+            but in those cases, the old behavior was broken or insane
+            anyway.
+
+        - libssh2 version 1.7.0 is now recommended. The module would
+          still compile against older versions, but not all its
+          features will be available.
+        - Makefile.PL has been refactored and improved. Now it is
+          better able to find the library libssh2 and compile code
+          using it.
+        - Lots of XS code refactoring has been performed in order to
+          simplify the module internals. Specifically, now typemaps
+          are used extensively to convert between C and Perl
+          types. Also, some complex non-performance-critical functions
+          have been moved to the Perl side or broken in a high level
+          Perl wrapper and a low level simpler C wrapper.
+        - KnownHost methods now return undef on error instead of
+          die'ing. Note that this submodule is still marked as
+          experimental.
+        - Die when data containing wide characters is passed
+          (i.e. outside the latin1 range). In previous versions,
+          methods on this module would happily accept string internally
+          encoded as latin1 or utf8 and pass then along untouched,
+          resulting in unreliable behavior.
+        - In 32bit perls, return offsets and file sizes as NVs when
+          required to avoid overflow.
+        - Method "new" now also accepts the options "compress" and
+          "sigpipe".
+        - Passing options to "connect" is now deprecated.
+        - Passing a file descriptor number to "connect" is not
+          supported anymore (it was already broken).
+        - Method "connect" consistently returns undef on error. The
+          error code can be retrieved calling the "error" method
+          (requires libssh2 1.7.0). In previous versions, some errors
+          made the method die.
+        - Timeouts are handled correctly inside "connect".
+        - Report EAGAIN in the same way as any other error. This
+          introduces a minor backward incompatibility, but the old
+          behavior was utterly insane and undocumented, and so
+          probably, nobody was using it right anyway!
+        - use libssh2_session_set_last_error function for storage of
+          the Perl level errors (required libssh2 1.7.0). This may
+          introduce some minor backward incompatibilities, but the old
+          code was broken and unreliable anyway.
+
 0.58  2015-12-20
-        - rereleased as stable
+        - re-released as stable
 
 0.57_03  2015-12-5
         - remove MYMETA.* from distribution (fixes #rt108717, reported
