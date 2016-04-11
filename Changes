@@ -24,9 +24,9 @@ Revision history for Perl extension Net::SSH2.
           experimental.
         - Die when data containing wide characters is passed
           (i.e. outside the latin1 range). In previous versions,
-          methods on this module would happily accept string internally
-          encoded as latin1 or utf8 and pass then along untouched,
-          resulting in unreliable behavior.
+          methods on this module would happily accept strings
+          internally encoded as latin1 or utf8 and pass then along
+          untouched, resulting in unreliable behavior.
         - In 32bit perls, return offsets and file sizes as NVs when
           required to avoid overflow.
         - Method "new" now also accepts the options "compress" and
