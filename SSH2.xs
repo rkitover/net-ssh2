@@ -1795,13 +1795,12 @@ CODE:
             size -= count;
             if (blocking) break;
         }
-        else if (blocking) {
-            if ( ((count  < 0) && (count != LIBSSH2_ERROR_EAGAIN)) ||
-                 ((count == 0) && libssh2_channel_eof(ch->channel)) ) break;
-        }
         else {
-            if (!count) count = LIBSSH2_ERROR_EAGAIN;
-            break;
+            if (count == 0) {
+                if (libssh2_channel_eof(ch->channel)) break;
+                count = LIBSSH2_ERROR_EAGAIN;
+            }
+            if ((count != LIBSSH2_ERROR_EAGAIN) || !blocking) break;
         }
     }
     debug("- read %d total\n", total);
