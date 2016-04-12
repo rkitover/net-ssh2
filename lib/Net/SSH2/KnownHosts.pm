@@ -41,7 +41,7 @@ Net::SSH2::KnownHosts - SSH 2 knownhosts object
 
   my $check = $kh->check($hostname, $port, $key, $flags);
 
-  if ($check == LIBSSH2_CHECK_MATCH) {
+  if ($check == LIBSSH2_KNOWNHOST_CHECK_MATCH) {
       # ok!
   }
   elsif ($check == LIBSSH2_KNOWNHOST_CHECK_MISMATCH) {

@@ -110,6 +110,8 @@ Net::SSH2::Channel - SSH 2 channel object
   $chan->exec("ls -ld /usr/local/libssh2*")
     or $ssh2->die_with_error;
 
+  $chan->send_eof;
+
   while (<$chan>) {
     print "line read: $_";
   }
@@ -142,8 +144,10 @@ Returns true if the remote server sent an EOF.
 
 =head2 send_eof
 
-Send an EOF to the remote.  After an EOF has been sent, no more data may be
-sent; the connection should be closed.
+Send an EOF to the remote.
+
+After an EOF has been sent, no more data may be
+sent to the remote process C<stdin> channel.
 
 =head2 close
 

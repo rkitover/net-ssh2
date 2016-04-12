@@ -275,14 +275,14 @@ sub connect {
         } elsif(ref $sock) {
             # handled below
         } else {
-            @_ = ($sock, getservbyname(qw(ssh tcp)) || 22);
+            @_ = ($sock, 'ssh');
         }
     }
 
     my %opts = splice @_, 2;
     if (%opts) {
         $connect_opts_warned++ or
-            carp "passing options to connect is deprectated";
+            carp "passing options to connect is deprecated";
         $self->timeout($opts{Timeout}) if $opts{Timeout};
         if ($opts{Compress} and
             ($self->version)[1] >= 0x10500) {
@@ -290,18 +290,18 @@ sub connect {
         }
     }
 
+    my ($remote_hostname, $remote_port);
     if (@_ == 2) {
-        my $timeout = $self->timeout;
-        my $blocking = $self->blocking;
-        $sock = $socket_class->new( PeerHost => $_[0],
-                                    PeerPort => $_[1],
-                                    Blocking => $blocking,
-                                    Timeout => $timeout );
+        $remote_hostname = $_[0];
+        $remote_port = getservbyname($_[1] || 'ssh', 'tcp') || 22;
+        $sock = $socket_class->new( PeerHost => $remote_hostname,
+                                    PeerPort => $remote_port,
+                                    Blocking => $self->blocking,
+                                    Timeout => $self->timeout );
         unless ($sock) {
             $self->_set_error(LIBSSH2_ERROR_SOCKET_NONE(), "Unable to connect to remote host: $!");
             goto error;
         }
-
         $sock->sockopt(SO_LINGER, pack('SS', 0, 0));
     }
 
@@ -319,8 +319,16 @@ sub connect {
         $fd = Win32API::File::FdGetOsFHandle($fd);
     }
 
+    {
+        local ($@, $SIG{__DIE__});
+        $remote_port = eval { $sock->peerport }
+            unless defined $remote_port;
+        $remote_hostname = eval { $sock->peername } || 22
+            unless defined $remote_hostname;
+    }
+
     # pass it in, do protocol
-    return $self->_startup($fd, $sock);
+    return $self->_startup($fd, $sock, $remote_hostname, $remote_port);
 
  error:
     unless (defined wantarray) {
@@ -459,6 +467,39 @@ sub auth_password_interact {
         print "Password authentication failed!\n";
     }
     return $rc;
+}
+
+sub check_remote_hostkey {
+    my ($self, $path, $policy) = @_;
+    my $remote_hostname = $self->remote_hostname;
+    croak("remote_hostname unknown: in order to use check_remote_hostkey the peer host name ".
+          "must be given (or discoverable) at connect time")
+        unless defined $remote_hostname;
+
+    unless (defined $path) {
+        my $home = $ENV{HOME} || (getpwuid($<))[7];
+        unless (defined $home) {
+            $self->_set_error(LIBSSH2_ERROR_FILE(), "Unable to determine known_hosts location");
+            return;
+        }
+        require File::Spec;
+        $path = File::Spec->catfile($home, '.ssh', 'known_hosts');
+    }
+
+    my $kh = $self->known_hosts or return;
+    $kh->readfile($path) or return;
+
+    my ($key, $type) = $self->remote_hostkey;
+    my $flags = ( LIBSSH2_KNOWNHOST_TYPE_PLAIN() |
+                  LIBSSH2_KNOWNHOST_KEYENC_RAW() |
+                  (($type + 1) << LIBSSH2_KNOWNHOST_KEY_SHIFT()) );
+
+    my $check = $kh->check($remote_hostname, $self->remote_port, $key, $flags);
+    $check == LIBSSH2_KNOWNHOST_CHECK_MATCH() and return 1;
+
+    # TODO: implement other policies!
+    $self->_set_error(LIBSSH2_ERROR_KNOWN_HOSTS(), 'Unable to verify remote host key');
+    ()
 }
 
 sub scp_get {
@@ -1094,6 +1135,10 @@ C<hostkey>.
 Returns the public key of the remote host and its type which is one of
 C<LIBSSH2_HOSTKEY_TYPE_RSA>, C<LIBSSH2_HOSTKEY_TYPE_DSS>, or
 C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
+
+=head2 check_remote_hostkey( known_hosts_path, policy )
+
+Looks for the remote host key in the given file.
 
 =head2 auth_list ( [username] )
 
