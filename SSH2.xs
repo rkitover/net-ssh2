@@ -1789,15 +1789,19 @@ CODE:
     while (size) {
         count = libssh2_channel_read_ex(ch->channel, XLATEXT, pv_buffer, size);
         debug("- read %d bytes\n", count);
-        if (count < 0) {
-            if ((count != LIBSSH2_ERROR_EAGAIN) || !blocking)
-                break;
-        }
-        else if (count) {
+        if (count > 0) {
             total += count;
             pv_buffer += count;
             size -= count;
             if (blocking) break;
+        }
+        else if (blocking) {
+            if ( ((count  < 0) && (count != LIBSSH2_ERROR_EAGAIN)) ||
+                 ((count == 0) && libssh2_channel_eof(ch->channel)) ) break;
+        }
+        else {
+            if (!count) count = LIBSSH2_ERROR_EAGAIN;
+            break;
         }
     }
     debug("- read %d total\n", total);
