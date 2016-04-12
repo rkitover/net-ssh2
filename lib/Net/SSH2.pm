@@ -241,6 +241,16 @@ sub new {
     return $self;
 }
 
+sub die_with_error {
+    my $self = shift;
+    if (my ($code, $name, $string) = $self->error) {
+        die join(": ", @_, "$string ($code $name)");
+    }
+    else {
+        die join(": ", @_, "no libssh2 error registered");
+    }
+}
+
 sub method {
     my $self = shift;
     my $method_type = shift;
@@ -839,6 +849,18 @@ returns (code, error name, error string).
 
 Note that the returned error value is only meaningful after some other
 method indicates an error by returning false.
+
+=head2 die_with_error ( [message] )
+
+Calls C<die> with the given message with the error information from
+the object attached.
+
+For instance:
+
+  $ssh2->connect("ajhkfhdklfjhklsjhd", 22)
+    or $ssh2->die_with_error;
+  # dies as:
+  #  Unable to connect to remote host: Invalid argument (-1 LIBSSH2_ERROR_SOCKET_NONE)
 
 =head2 sock
 
