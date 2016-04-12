@@ -24,8 +24,8 @@ mkdir $workdir or die $!;
 chdir $workdir or die $!;
 
 for (1..5) {
-    system "wget --retry-connrefused --tries=8 $tgz_url" or last;
+    system "wget --retry-connrefused --tries=8 --no-check-certificate $tgz_url" or last;
 }
 system "tar xf $tgz_name" and die;
 chdir $tgz_dir or die $!;
-system "CFLAGS='$cflags' ./configure --prefix=$prefix --enable-shared=no && make && make install" and die $?;
+system "CFLAGS='$cflags' ./configure --prefix=$prefix --enable-shared=yes --enable-static=no --disable-examples-build && make && make install" and die $?;

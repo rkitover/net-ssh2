@@ -13,4 +13,4 @@ install:
   - cpanm Module::Install::CheckLib
 
 script:
-  - perl Makefile.PL lib=libssh2/lib inc=libssh2/include && make test
+  - perl Makefile.PL lib=libssh2/lib inc=libssh2/include ldargs=-Wl,-rpath=libssh2/lib && make test
