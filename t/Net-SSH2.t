@@ -4,7 +4,7 @@
 
 #########################
 
-use Test::More tests => 73;
+use Test::More tests => 72;
 
 use strict;
 use File::Basename;
@@ -33,17 +33,12 @@ my ($version2, $vernum, $banner) = $ssh2->version();
 is($version, $version2, 'list version match');
 my ($major) = $version =~ /^(\d+)/;
 
-SKIP: {
-    skip 'old libssh2', 1 if !defined($vernum);
-    skip 'version not decimal', 1 if ($version =~ y/.//) > 1;
-
-    if ($major > 0) {
-      ok(($vernum >> 8) == ($major << 8) + ($version - $major) * 10,
-       'decimal version matches');
-    } else {
-      ok(($vernum >> 8) == ($major << 8) + ($version - $major) * 100,
-       'decimal version matches');
-    }
+diag "libssh2 version: $version\n";
+if (!defined($vernum) or $vernum < 0x010500) {
+    diag "\n*** Your version of libssh2 is very old and broken. Upgrade it!!! ***\n\n";
+}
+elsif ($vernum < 0x010700) {
+    diag "Your version of libssh2 is behind the recomended 1.7.0";
 }
 
 is($banner, "SSH-2.0-libssh2_$version", "banner is $banner");
