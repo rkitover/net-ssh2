@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_04
+        - Several documentation improvements.
+
 0.59_03  Apr 12, 2016
         - Fix Channel "read" method that was hanging in blocking mode.
         - Add "check_remote_hostkey" method for easy remote host key
