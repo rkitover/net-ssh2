@@ -740,7 +740,7 @@ Establish the SSH connection calling the method C<connect>.
 =item 4
 
 Check the remote host public key, typically comparing it to the one
-stored in /etc/ssh/known_hosts. See L<Net::SSH2::KnownHosts>.
+stored in C</etc/ssh/known_hosts>. See L<Net::SSH2::KnownHosts>.
 
 =item 5
 
