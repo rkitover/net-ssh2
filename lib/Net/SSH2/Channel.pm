@@ -102,6 +102,20 @@ __END__
 
 Net::SSH2::Channel - SSH 2 channel object
 
+=head1 SYNOPSIS
+
+  my $chan = $ssh2->channel()
+    or $ssh2->die_with_error;
+
+  $chan->exec("ls -ld /usr/local/libssh2*")
+    or $ssh2->die_with_error;
+
+  while (<$chan>) {
+    print "line read: $_";
+  }
+
+  print "exit status: " . $chan->exit_status . "\n";
+
 =head1 DESCRIPTION
 
 A channel object is created by the L<Net::SSH2> C<channel> method.  As well
@@ -155,25 +169,6 @@ Request a terminal size change on a channel. C<width> and C<height> are the
 width and height in characters; if negative their absolute values specify
 width and height in pixels.
 
-=head2 process ( request, message )
-
-Start a process on the channel.  See also L<shell>, L<exec>, L<subsystem>.
-
-=head2 shell
-
-Start a shell on the remote host; calls L<process>("shell").
-
-=head2 exec ( command )
-
-Execute the command on the remote host; calls L<process>("exec", command).
-Note that only one of these requests can succeed per channel (cp.
-L<perlfunc/exec>); if you want to run a series of commands, consider using
-L<shell> instead.
-
-=head2 subsystem ( name )
-
-Run subsystem on the remote host; calls L<process>("subsystem", command).
-
 =head2 ext_data ( mode )
 
 Set extended data handling mode:
@@ -194,6 +189,36 @@ Merge into the regular channel.
 
 =back
 
+=head2 process ( request, message )
+
+Start a process on the channel.  See also L<shell>, L<exec>, L<subsystem>.
+
+Note that only one invocation of C<process> or any of the shortcuts
+C<shell>, C<exec> or C<subsystem> is allowed per channel. In order to
+run several commands, shells or/and subsystems, a new C<Channel>
+instance must be used for every command.
+
+Alternatively, it is also possible to launch a remote shell (using
+L<shell>) and simulate the user interaction printing commands to its
+C<stdin> stream and reading data back from its C<stdout> and
+C<stderr>. But this approach should be avoided if possible; talking to
+a shell is difficult and, in general, unreliable.
+
+=head2 shell
+
+Start a shell on the remote host (calls C<process("shell")>).
+
+=head2 exec ( command )
+
+Execute the command on the remote host (calls C<process("exec", command)>).
+
+Note that the given command is parsed by the remote shell; it should
+be properly quoted, specially when passing data from untrusted sources.
+
+=head2 subsystem ( name )
+
+Run subsystem on the remote host (calls C<process("subsystem", name)>).
+
 =head2 read ( buffer, size [, ext ] )
 
 Attempts to read size bytes into the buffer.  Returns number of bytes read,
@@ -206,22 +231,21 @@ Attempts to write the buffer to the channel.  Returns number of bytes written,
 undef on failure.  If ext is present and set, writes to the extended data
 channel (stderr).
 
-In versions of this module prior to 0.57, when working in
-non-blocking mode, the would-block condition was signaled by returning
+In versions of this module prior to 0.57, when working in non-blocking
+mode, the would-block condition was signaled by returning
 LIBSSH2_ERROR_EAGAIN (a negative number) while leaving the session
-error status unset. From version 0.56, C<undef> is returned and the
-session error status is set to LIBSSH2_ERROR_EAGAIN in a similar
-fashion to the other errors.
+error status unset. From version 0.59, C<undef> is returned and the
+session error status is set to C<LIBSSH2_ERROR_EAGAIN> as for any
+other error.
 
 =head2 flush ( [ ext ] )
 
-Flushes the channel; if ext is present and set, flushes extended data channel.
-Returns number of bytes flushed, undef on error.
+Flushes the channel; if C<ext> is present and set, flushes extended
+data channel. Returns number of bytes flushed, C<undef> on error.
 
 =head2 exit_signal
 
-Returns the exit signal of the command executed on the channel. Requires libssh
-1.2.8 or higher.
+Returns the exit signal of the command executed on the channel.
 
 =head2 window_read
 
@@ -233,9 +257,14 @@ immediately available for read and the size of the initial window.
 
 =head2 window_write
 
-Returns the number of bytes which may be safely written on the channel
-without blocking. In list context it also returns the size of the
-initial window.
+Returns the number of bytes which may be safely written to the channel
+without blocking at the SSH level. In list context it also returns the
+size of the initial window.
+
+Note that this method doesn't take into account the TCP connection
+being used under the hood. Getting a positive integer back from this
+method does not guarantee that such number of bytes could be written
+to the channel without blocking the TCP connection.
 
 =head2 receive_window_adjust (adjustment [, force])
 
@@ -246,22 +275,10 @@ and force is false the adjustment amount will be queued for a later
 packet.
 
 On success returns the new size of the receive window. On failure it
-returns undef.
+returns C<undef>.
 
 =head1 SEE ALSO
 
 L<Net::SSH2>.
-
-=head1 AUTHOR
-
-David B. Robins, E<lt>dbrobins@cpan.orgE<gt>
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (C) 2005, 2006 by David B. Robins; all rights reserved.
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.0 or,
-at your option, any later version of Perl 5 you may have available.
 
 =cut
