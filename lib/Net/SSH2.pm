@@ -1136,9 +1136,14 @@ Returns the public key of the remote host and its type which is one of
 C<LIBSSH2_HOSTKEY_TYPE_RSA>, C<LIBSSH2_HOSTKEY_TYPE_DSS>, or
 C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
 
-=head2 check_remote_hostkey( known_hosts_path, policy )
+=head2 check_remote_hostkey( [known_hosts_path, [policy]] )
 
 Looks for the remote host key in the given file.
+
+The path to the file containing the known host keys defaults to
+C<~/.ssh/known_hosts>.
+
+Currently, the C<policy> argument is ignored.
 
 =head2 auth_list ( [username] )
 
