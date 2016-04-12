@@ -60,7 +60,7 @@ makemaker_append_once CCFLAGS   => $Config{ccflags};
 makemaker_append_once LDDLFLAGS => $Config{lddlflags};
 
 my %arg2mmappend = ( inc => 'INC',
-                     lib => 'LDDLFLAGS',
+                     lib => 'LIBS',
                      ldargs => 'LDDLFLAGS' );
 my %arg2prefix = (inc => '-I',
                   lib => '-L');
@@ -69,15 +69,22 @@ my $arg_keys = join('|', map quotemeta, keys %arg2mmappend);
 my $do_not_check_libs_keys = 'lib|inc';
 
 for (keys %ENV) {
-    makemaker_append_once $arg2mmappend{lc $1} => ($arg2prefix{lc $1} || '').$ENV{$_}
-        if /^LIBSSH2_($arg_keys)$/;
-    $do_not_check_libs ||= /^LIBSSH2_($do_not_check_libs_keys)$/i;
+    if (/^LIBSSH2_($arg_keys)$/) {
+        my $value = $ENV{$_};
+        my $prefix = $arg2prefix{lc $1} || '';
+        $value = File::Spec->rel2abs($value) if $prefix;
+        makemaker_append_once $arg2mmappend{lc $1} => $prefix . $value;
+        $do_not_check_libs ||= /^LIBSSH2_($do_not_check_libs_keys)$/i;
+    }
 }
 
 my @pass_through_args;
 for (@ARGV) {
     if (/^($arg_keys)=(.*)\z/) {
-        makemaker_append_once $arg2mmappend{$1} => ($arg2prefix{$1} || '').$2;
+        my $prefix = $arg2prefix{$1} || '';
+        my $value = $2;
+        $value = File::Spec->rel2abs($value) if $prefix;
+        makemaker_append_once $arg2mmappend{$1} => $prefix.$value;
         $do_not_check_libs ||= /^($do_not_check_libs_keys)=/;
     }
     elsif ($_ eq 'gcrypt') {
