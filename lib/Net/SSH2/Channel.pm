@@ -200,7 +200,7 @@ Start a process on the channel.  See also L<shell>, L<exec>, L<subsystem>.
 Note that only one invocation of C<process> or any of the shortcuts
 C<shell>, C<exec> or C<subsystem> is allowed per channel. In order to
 run several commands, shells or/and subsystems, a new C<Channel>
-instance must be used for every command.
+instance must be used for every one.
 
 Alternatively, it is also possible to launch a remote shell (using
 L<shell>) and simulate the user interaction printing commands to its
