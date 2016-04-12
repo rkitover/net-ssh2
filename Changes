@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_02  Apr 12, 2016
+        - Fix handling of "lib" argument in Makefile.PL.
+        - Compilation was broken for perls 5.8.0 .. 5.8.3.
+        - Several documentation improvements.
+
 0.59_01  Apr 11, 2016
         *** WARNING: this release includes lots of changes, some
             visible, most internal. Regressions are expected. Also,
@@ -43,7 +48,7 @@ Revision history for Perl extension Net::SSH2.
           introduces a minor backward incompatibility, but the old
           behavior was utterly insane and undocumented, and so
           probably, nobody was using it right anyway!
-        - use libssh2_session_set_last_error function for storage of
+        - Use libssh2_session_set_last_error function for storage of
           the Perl level errors (required libssh2 1.7.0). This may
           introduce some minor backward incompatibilities, but the old
           code was broken and unreliable anyway.
