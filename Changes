@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_03
+        - Add "die_with_error" method.
+        - Several documentation improvements.
+
 0.59_02  Apr 12, 2016
         - Fix "auth_list" method.
         - Fix handling of "lib" argument in Makefile.PL.
