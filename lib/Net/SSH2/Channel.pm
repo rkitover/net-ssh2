@@ -100,7 +100,7 @@ __END__
 
 =head1 NAME
 
-Net::SSH2::Channel - SSH 2 channel object
+Net::SSH2::Channel - SSH2 channel object
 
 =head1 SYNOPSIS
 
