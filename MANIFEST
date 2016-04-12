@@ -33,3 +33,4 @@ SSH2.xs
 t/Net-SSH2.t
 TODO
 typemap
+example/scat.pl
