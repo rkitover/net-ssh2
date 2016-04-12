@@ -13,6 +13,21 @@
 #define NEED_sv_2pv_nolen
 #include "ppport.h"
 
+#if PERL_REVISION == 5 && (PERL_VERSION < 8 || (PERL_VERSION == 8 && PERL_SUBVERSION < 4 ))
+
+#  ifdef SvPVbyte_force
+#    undef SvPVbyte_force
+#  endif
+#  define SvPVbyte_force(sv,lp) SvPV_force(sv,lp)
+
+#  ifdef SvPVbyte_nolen
+#    undef SvPVbyte_nolen
+#  endif
+#  define SvPVbyte_nolen SvPV_nolen
+
+#endif
+
+
 #include <libssh2.h>
 #include <libssh2_sftp.h>
 #include <libssh2_publickey.h>
