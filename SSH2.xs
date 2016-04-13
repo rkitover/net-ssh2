@@ -248,6 +248,8 @@ LIBSSH2_FREE_FUNC(local_free) {
     Safefree(ptr);
 }
 
+#define SV2TYPE(sv, type) ((type)((sizeof(IV) < sizeof(type)) ? SvNV(sv) : SvIV(sv)))
+
 static void
 wrap_tied_into(SV *to, const char *pkg, void *object) {
     GV* gv = (GV*)newSVrv(to, pkg);
@@ -1420,6 +1422,18 @@ OUTPUT:
 
 #endif
 
+#if LIBSSH2_VERSION_NUM >= 0x10206
+
+SSH2_CHANNEL*
+net_ss__scp_put(SSH2* ss, SSH2_CHARP path, int mode, SSH2_BYTES64 size, \
+                time_t mtime = 0, time_t atime = 0)
+CODE:
+    NEW_CHANNEL(libssh2_scp_send64(ss->session,
+                                   path, mode, size, mtime, atime));
+OUTPUT:
+    RETVAL
+
+#else
 SSH2_CHANNEL*
 net_ss__scp_put(SSH2* ss, SSH2_CHARP path, int mode, size_t size, \
                 long mtime = 0, long atime = 0)
@@ -1428,6 +1442,8 @@ CODE:
                                     path, mode, size, mtime, atime));
 OUTPUT:
     RETVAL
+
+#endif
 
 SSH2_CHANNEL*
 net_ss_tcpip(SSH2* ss, SSH2_CHARP host, int port, \
@@ -2597,7 +2613,7 @@ CODE:
 
             if ((rc != LIBSSH2_ERROR_BUFFER_TOO_SMALL) ||
                 (SvLEN(buffer) > 256 * 1024)) break;
-                
+
             SvGROW(buffer, SvLEN(buffer) * 2);
         }
     }

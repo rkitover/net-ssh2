@@ -4,6 +4,10 @@ TYPEMAP
     const char    *   T_PV
     AV            *   T_AVREF
 
+    time_t        T_TIME_T
+    size_t        T_SIZE_T
+    long          T_LONG
+
     SSH2          *   O_SESSION
     SSH2_CHANNEL  *   O_CHANNEL
     SSH2_LISTENER *   O_LISTENER
@@ -142,3 +146,18 @@ T_SSH2_CHARP
 
 T_SSH2_CHARP_OR_NULL
     $var = (SvOK($arg) ? SvPVbyte_nolen($arg) : NULL);
+
+T_TIME_T
+    $var = SV2TYPE($arg, time_t);
+
+T_SIZE_T
+    $var = SV2TYPE($arg, size_t);
+
+T_INT
+    $var = my_sv2int($arg);
+
+T_LONG
+    $var = SV2TYPE($arg, long);
+
+T_SSH2_BYTES64
+    $var = SV2TYPE($arg, SSH2_BYTES64);
