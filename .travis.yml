@@ -11,6 +11,9 @@ perl:
 env:
   - LIBVER=1.7.0
   - LIBVER=1.6.0
+  - LIBVER=1.5.0
+  - LIBVER=1.4.3
+  - LIBVER=1.2.4
 
 install:
   - perl .travis/install-libssh2.pl $LIBVER
