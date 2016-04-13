@@ -56,7 +56,6 @@ is($ssh2->remote_hostname, undef, '->remote_hostname is undef before connect');
 unless (defined $host) {
     if (-t STDIN and -t STDOUT) {
         chomp(my $prompt = <<EOP);
-
 To test the connection capabilities of Net::SSH2, we need a test site running
 a secure shell server daemon.  Enter 'localhost' or '127.0.0.1' to use this
 host over IPv4. Enter '::1' to use this host over IPv6.
@@ -130,7 +129,7 @@ ok($type, "authentication type is defined");
 
 # (5) channels
 my $chan = $ssh2->channel();
-isa_ok($chan, 'Net::SSH2::Channel', 'new channel');
+isa_ok($chan, 'Net::SSH2::Channel');
 $chan->blocking(0); pass('set blocking');
 ok(!$chan->eof(), 'not at EOF');
 ok($chan->ext_data('normal'), 'normal extended data handling');
@@ -150,7 +149,7 @@ ok($ssh2->callback(disconnect => sub { warn "SSH_MSG_DISCONNECT!\n"; }),
 # (2) SFTP
 $ssh2->blocking(1);  # creating channel may block
 my $sftp = $ssh2->sftp();
-isa_ok($sftp, 'Net::SSH2::SFTP', 'SFTP session');
+isa_ok($sftp, 'Net::SSH2::SFTP');
 is($sftp->session, $ssh2, 'verify session');
 
 # (4) directories
