@@ -1,3 +1,5 @@
+# -*- Mode: CPerl -*-
+
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl Net-SSH2.t'
 # THIS LINE WILL BE READ BY A TEST BELOW
@@ -8,6 +10,7 @@ use Test::More;
 
 use strict;
 use File::Basename;
+use File::Spec;
 
 #########################
 
@@ -80,11 +83,14 @@ for my $type (qw(kex hostkey crypt_cs crypt_sc mac_cs mac_sc comp_cs comp_sc)) {
     ok($ssh2->method($type), "$type method: $method");
 }
 
-# (2) hostkey hash
+# (2) check host key
 my $md5 = $ssh2->hostkey_hash('md5');
 is(length $md5, 16, 'have MD5 hostkey hash');
 my $sha1 = $ssh2->hostkey_hash('sha1');
 is(length $sha1, 20, 'have SHA1 hostkey hash');
+
+ok($ssh2->check_remote_hostkey(File::Spec->devnull, 'ask'), "check remote key")
+    or diag(join " ", "Error:", $ssh2->error);
 
 # (3) authentication methods
 unless ($user) {
@@ -214,7 +220,7 @@ undef $dh;
 # (2) read file
 $fh = $sftp->open($altname);
 isa_ok($fh, 'Net::SSH2::File', 'opened file');
-scalar <$fh> for 1..2;
+scalar <$fh> for 1..4;
 my $line = <$fh>;
 chomp $line;
 if($^O =~ /MSWin32/i) {
