@@ -92,7 +92,7 @@ unless ($user) {
     my $def_user;
     $def_user = getpwuid $< if $^O !~ /mswin/i;
     $user = $ssh2->_ask_user("Enter username" . ($def_user ? " [$def_user]: " : ": "));
-    $user ||= $def_user;
+    $user = $def_user unless defined $user and length $user;
 }
 my $auth = $ssh2->auth_list($user);
 ok($auth, "authenticate: $auth");
