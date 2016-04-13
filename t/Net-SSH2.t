@@ -55,16 +55,15 @@ is($ssh2->remote_hostname, undef, '->remote_hostname is undef before connect');
 # (1) connect
 unless (defined $host) {
     if (-t STDIN and -t STDOUT) {
-        print <<TEST;
+        chomp(my $prompt = <<EOP);
 
 To test the connection capabilities of Net::SSH2, we need a test site running
 a secure shell server daemon.  Enter 'localhost' or '127.0.0.1' to use this
 host over IPv4. Enter '::1' to use this host over IPv6.
 
-TEST
-        print "Hostname or IP address [ENTER to skip]: ";
-        chomp($host = <STDIN>);
-        print "\n";
+Hostname or IP address [ENTER to skip]: 
+EOP
+        $host = $ssh2->_ask_user($prompt, 1);
     }
     unless (defined $host and length $host) {
         done_testing;
@@ -92,8 +91,7 @@ is(length $sha1, 20, 'have SHA1 hostkey hash');
 unless ($user) {
     my $def_user;
     $def_user = getpwuid $< if $^O !~ /mswin/i;
-    print $def_user ? "\nEnter username [$def_user]: " : "\nEnter username: ";
-    chomp($user = <STDIN>);
+    $user = $ssh2->_ask_user("Enter username" . ($def_user ? " [$def_user]: " : ": "));
     $user ||= $def_user;
 }
 my $auth = $ssh2->auth_list($user);

@@ -451,20 +451,34 @@ sub _load_term_readkey {
     return;
 }
 
+sub _print_stderr {
+    my $self = shift;
+    my $ofh = select STDERR; local $|= 1; select $ofh;
+    print STDERR $_ for @_;
+}
+
+sub _ask_user {
+    my ($self, $prompt, $echo) = @_;
+    _load_term_readkey or return;
+    $self->_print_stderr($prompt);
+    Term::ReadKey::ReadMode('noecho') unless $echo;
+    my $reply = Term::ReadKey::ReadLine(0);
+    Term::ReadKey::ReadMode('normal') unless $echo;
+    $self->_print_stderr("\n") unless $echo;
+    chomp $reply;
+    return $reply;
+}
+
 sub auth_password_interact {
     my ($self, $username, $cb) = @_;
     _load_term_readkey or return;
-    local $| = 1;
     my $rc;
     for (0..2) {
-        print "[user $username] password?\n";
-        Term::ReadKey::ReadMode('noecho');
-        my $password = Term::ReadKey::ReadLine(0);
-        Term::ReadKey::ReadMode('normal');
-        chomp $password;
+        my $password = $self->_ask_user("${username}'s password? ", 0);
         $rc = $self->auth_password($username, $password, $cb);
         last if $rc or $self->error != LIBSSH2_ERROR_AUTHENTICATION_FAILED();
-        print "Password authentication failed!\n";
+        my $ofh = select STDERR; local $|= 1; select $ofh;
+        $self->_print_stderr("Password authentication failed!\n");
     }
     return $rc;
 }
@@ -673,23 +687,13 @@ sub _cb_kbdint_response_default {
     my ($self, $user, $name, $instr, @prompt) = @_;
     _load_term_readkey or return;
 
-    local $| = 1;
     my $prompt = "[user $user] ";
     $prompt .= "$name\n" if $name;
     $prompt .= "$instr\n" if $instr;
     $prompt =~ s/ $/\n/;
-    print $prompt;
+    $self->_print_stderr($prompt);
 
-    my @out;
-    for my $prompt(@prompt) {
-        print STDERR "$prompt->{text}";
-
-        Term::ReadKey::ReadMode('noecho') unless $prompt->{echo};
-        chomp(my $value = Term::ReadKey::ReadLine(0));
-        Term::ReadKey::ReadMode('normal') unless $prompt->{echo};
-        push @out, $value;
-    }
-    @out
+    return map $self->_ask_user($_->{text}, $_->{echo}), @prompt;
 }
 
 my $hostkey_warned;
