@@ -22,12 +22,10 @@ Net::SSH2::KnownHosts - SSH 2 knownhosts object
 
   my $kh = $ssh2->known_hosts;
 
-  my $ok = eval {
-      $kh->readfile($known_hosts_path);
-  };
+  my $n_ent = $kh->readfile($known_hosts_path);
 
   # a non-existent known_hosts file usually is not an error...
-  unless (defined $ok) {
+  unless (defined $n_ent) {
       if ($ssh2->error != LIBSSH2_ERROR_FILE or -f $known_hosts_path) {
           die; # propagate error;
       }
@@ -52,10 +50,10 @@ Net::SSH2::KnownHosts - SSH 2 knownhosts object
           if $strict_host_key_checking;
 
       # else, save new key to file:
-      eval {
-          $kh->add($hostname, '', $key, "Perl added me", $flags);
-          $kh->writefile($known_hosts_path);
-      } or warn "unable to save known_hosts file: " . ($ssh2->error)[1];
+      unless ( $kh->add($hostname, '', $key, "Perl added me", $flags) and
+               $kh->writefile($known_hosts_path) ) {
+          warn "unable to save known_hosts file: " . ($ssh2->error)[1];
+      }
   }
   else {
       die "host key verification failed, unknown reason";
