@@ -9,10 +9,10 @@ unless ($ENV{TRAVIS}) {
 }
 
 my $workdir = "footomizeme";
-my $libssh2_ver = "1.7.0";
+my $libssh2_ver = shift || "1.7.0";
 my $tgz_dir = "libssh2-$libssh2_ver";
 my $tgz_name = "$tgz_dir.tar.gz";
-my $tgz_url = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz";
+my $tgz_url = "https://www.libssh2.org/download/libssh2-$libssh2_ver.tar.gz";
 my $cflags = "-g -O0";
 my $prefix = "libssh2";
 

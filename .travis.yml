@@ -8,8 +8,12 @@ perl:
   - "5.10"
   - "5.8"
 
+env:
+  - LIBVER=1.7.0
+  - LIBVER=1.6.0
+
 install:
-  - perl .travis/install-libssh2.pl
+  - perl .travis/install-libssh2.pl $LIBVER
   - cpanm Module::Install::CheckLib
 
 script:
