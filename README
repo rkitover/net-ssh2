@@ -63,6 +63,8 @@ This will prompt you for a hostname and subsequently a username to
 test connecting with. You can use localhost, a remote hostname or an
 IPv4 or IPv6 address.
 
+There are some tests (SCP) that require IO::Scalar installed to run.
+
 
 HACKING
 

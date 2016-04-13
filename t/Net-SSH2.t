@@ -159,20 +159,26 @@ is($stat{name}, $dir, 'directory name matches');
 my $remote = "$dir/".basename($0);
 ok($ssh2->scp_put($0, $remote), "put $0 to remote");
 
+sub slurp {
+    my $file = shift;
+    if (open my $fh, '<', $file) {
+        binmode $fh;
+        local $/;
+        my $data = <$fh>;
+        return $data if close $fh;
+    }
+    ()
+}
+
 SKIP: { # SKIP-scalar
     eval { require IO::Scalar };
     skip '- IO::Scalar required', 2 if $@;
     my $check = IO::Scalar->new;
     ok($ssh2->scp_get($remote, $check), "get $remote from remote");
  SKIP: { # SKIP-slurp
-        eval { require File::Slurp };
-        skip '- File::Slurp required', 1 if $@;
-        if($^O =~ /MSWin32/i) {
-            is(${$check->sref}, File::Slurp::read_file($0, binmode => ':raw'), 'files match');
-        }
-        else {
-            is(${$check->sref}, File::Slurp::read_file($0), 'files match');
-        }
+        my $data = slurp($0);
+        defined $data or skip "- Unable to read '$0': $!", 1;
+        is(${$check->sref}, $data, 'files match');
     } # SKIP-slurp
 } # SKIP-scalar
 
