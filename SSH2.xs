@@ -1381,44 +1381,40 @@ OUTPUT:
 #if LIBSSH2_VERSION_NUM >= 0x10601
 
 SSH2_CHANNEL*
-net_ss__scp_get(SSH2* ss, SSH2_CHARP path, HV* stat = NULL)
+net_ss__scp_get(SSH2* ss, SSH2_CHARP path, HV* stat)
 PREINIT:
     libssh2_struct_stat st;
 CODE:
     NEW_CHANNEL(libssh2_scp_recv2(ss->session, path, &st));
-    if (stat) {
-        hv_clear(stat);
-        hv_store(stat, "mode",  4, newSVuv(st.st_mode),  0/*hash*/);
-        hv_store(stat, "uid",   3, newSVuv(st.st_uid),   0/*hash*/);
-        hv_store(stat, "gid",   3, newSVuv(st.st_gid),   0/*hash*/);
+    hv_clear(stat);
+    hv_store(stat, "mode",  4, newSVuv(st.st_mode),  0/*hash*/);
+    hv_store(stat, "uid",   3, newSVuv(st.st_uid),   0/*hash*/);
+    hv_store(stat, "gid",   3, newSVuv(st.st_gid),   0/*hash*/);
 #if IVSIZE >= 8
-        hv_store(stat, "size",  4, newSVuv(st.st_size),  0/*hash*/);
+    hv_store(stat, "size",  4, newSVuv(st.st_size),  0/*hash*/);
 #else
-        hv_store(stat, "size",  4, newSVnv(st.st_size),  0/*hash*/);
+    hv_store(stat, "size",  4, newSVnv(st.st_size),  0/*hash*/);
 #endif
-        hv_store(stat, "atime", 5, newSVuv((time_t)st.st_atime), 0/*hash*/);
-        hv_store(stat, "mtime", 5, newSViv((time_t)st.st_mtime), 0/*hash*/);
-    }
+    hv_store(stat, "atime", 5, newSVuv((time_t)st.st_atime), 0/*hash*/);
+    hv_store(stat, "mtime", 5, newSViv((time_t)st.st_mtime), 0/*hash*/);
 OUTPUT:
     RETVAL
 
 #else
 
 SSH2_CHANNEL*
-net_ss__scp_get(SSH2* ss, SSH2_CHARP path, HV* stat = NULL)
+net_ss__scp_get(SSH2* ss, SSH2_CHARP path, HV* stat)
 PREINIT:
     struct stat st;
 CODE:
     NEW_CHANNEL(libssh2_scp_recv(ss->session, path, &st));
-    if (stat) {
-        hv_clear(stat);
-        hv_store(stat, "mode",  4, newSVuv(st.st_mode),  0/*hash*/);
-        hv_store(stat, "uid",   3, newSVuv(st.st_uid),   0/*hash*/);
-        hv_store(stat, "gid",   3, newSVuv(st.st_gid),   0/*hash*/);
-        hv_store(stat, "size",  4, newSVuv(st.st_size),  0/*hash*/);
-        hv_store(stat, "atime", 5, newSVuv((time_t)st.st_atime), 0/*hash*/);
-        hv_store(stat, "mtime", 5, newSViv((time_t)st.st_mtime), 0/*hash*/);
-    }
+    hv_clear(stat);
+    hv_store(stat, "mode",  4, newSVuv(st.st_mode),  0/*hash*/);
+    hv_store(stat, "uid",   3, newSVuv(st.st_uid),   0/*hash*/);
+    hv_store(stat, "gid",   3, newSVuv(st.st_gid),   0/*hash*/);
+    hv_store(stat, "size",  4, newSVuv(st.st_size),  0/*hash*/);
+    hv_store(stat, "atime", 5, newSVuv((time_t)st.st_atime), 0/*hash*/);
+    hv_store(stat, "mtime", 5, newSViv((time_t)st.st_mtime), 0/*hash*/);
 OUTPUT:
     RETVAL
 
@@ -1426,10 +1422,10 @@ OUTPUT:
 
 SSH2_CHANNEL*
 net_ss__scp_put(SSH2* ss, SSH2_CHARP path, int mode, size_t size, \
-    long mtime = 0, long atime = 0)
+                long mtime = 0, long atime = 0)
 CODE:
     NEW_CHANNEL(libssh2_scp_send_ex(ss->session,
-     path, mode, size, mtime, atime));
+                                    path, mode, size, mtime, atime));
 OUTPUT:
     RETVAL
 
