@@ -2587,7 +2587,7 @@ CODE:
     rc = libssh2_knownhost_checkp(kh->knownhosts, host, port_uv,
                                   key_pv, key_len, typemask, &entry);
 #else
-    if ((port != 0) && (port != 22))
+    if ((port_uv != 0) && (port_uv != 22))
         croak("libssh2 version 1.2.6 is required when using a custom TCP port");
     rc = libssh2_knownhost_check(kh->knownhosts, host,
                                  key_pv, key_len, typemask, &entry);
