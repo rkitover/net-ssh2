@@ -11,11 +11,19 @@ use Test::More;
 use strict;
 use File::Basename;
 use File::Spec;
+use Getopt::Long;
 
 #########################
 
 # to speed up testing, set host, user and pass here
-my ($host, $user, $password, $passphrase) = qw();
+my ($host, $user, $password, $passphrase, $known_hosts) = qw();
+
+$known_hosts ||= File::Spec->devnull;
+GetOptions("host|h=s" => \$host,
+           "user|u=s" => \$user,
+           "password|pwd|pw|w=s" => \$password,
+           "passphrase|pp=s" => \$passphrase,
+           "known_hosts|kh|k=s" => \$known_hosts);
 
 $| = 1;
 sub slurp;
@@ -89,7 +97,7 @@ is(length $md5, 16, 'have MD5 hostkey hash');
 my $sha1 = $ssh2->hostkey_hash('sha1');
 is(length $sha1, 20, 'have SHA1 hostkey hash');
 
-ok($ssh2->check_hostkey(File::Spec->devnull, 'ask'), "check remote key")
+ok($ssh2->check_hostkey($known_hosts, 'ask'), "check remote key")
     or diag(join " ", "Error:", $ssh2->error);
 
 # (3) authentication methods
