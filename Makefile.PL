@@ -196,7 +196,7 @@ else {
                 return (libssh2_version(LIBSSH2_VERSION_NUM) ? 0 : 1);
 EOF
             analyze_binary => sub {
-                warn "Analyzing file $_[1]";
+                warn "Analyzing file $_[1]\n";
                 my $out = capture ldd => $_[1];
                 # warn "out:\n$out";
                 if ($out =~ /gcrypt/i) {
