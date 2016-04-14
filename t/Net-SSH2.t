@@ -53,7 +53,7 @@ is($ssh2->poll(0), 0, 'poll indefinite');
 is($ssh2->poll(2000), 0, 'poll 2 second');
 
 is($ssh2->sock, undef, '->sock is undef before connect');
-is($ssh2->remote_hostname, undef, '->remote_hostname is undef before connect');
+is($ssh2->hostname, undef, '->hostname is undef before connect');
 
 # (1) connect
 unless (defined $host) {
@@ -75,7 +75,7 @@ EOP
 
 ok($ssh2->connect($host), "connect to $host");
 isa_ok($ssh2->sock, 'IO::Socket', '->sock isa IO::Socket');
-is($ssh2->remote_hostname, $host, '->remote_hostname');
+is($ssh2->hostname, $host, '->hostname');
 
 # (8) server methods
 for my $type (qw(kex hostkey crypt_cs crypt_sc mac_cs mac_sc comp_cs comp_sc)) {
@@ -89,7 +89,7 @@ is(length $md5, 16, 'have MD5 hostkey hash');
 my $sha1 = $ssh2->hostkey_hash('sha1');
 is(length $sha1, 20, 'have SHA1 hostkey hash');
 
-ok($ssh2->check_remote_hostkey(File::Spec->devnull, 'ask'), "check remote key")
+ok($ssh2->check_hostkey(File::Spec->devnull, 'ask'), "check remote key")
     or diag(join " ", "Error:", $ssh2->error);
 
 # (3) authentication methods

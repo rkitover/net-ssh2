@@ -20,7 +20,7 @@ $port //= '22';
 my $ssh2 = Net::SSH2->new();
 # $ssh2->debug(1);
 $ssh2->connect($host, $port) or $ssh2->die_with_error;
-$ssh2->check_remote_hostkey  or $ssh2->die_with_error;
+$ssh2->check_hostkey  or $ssh2->die_with_error;
 
 if ($pwd) {
     $ssh2->auth_password($user, $pwd);

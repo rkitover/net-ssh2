@@ -163,8 +163,8 @@ typedef struct SSH2 {
     LIBSSH2_SESSION* session;
     SV* sv_ss;  /* NB: not set until callback() called */
     SV* socket;
-    SV* remote_hostname;
-    int remote_port;
+    SV* hostname;
+    int port;
     SV* sv_tmp;
     SV* rgsv_cb[LIBSSH2_CALLBACK_X11 + 1];
 } SSH2;
@@ -938,8 +938,8 @@ CODE:
     libssh2_session_free(ss->session);
     if (ss->socket)
         SvREFCNT_dec(ss->socket);
-    if (ss->remote_hostname)
-        SvREFCNT_dec(ss->remote_hostname);
+    if (ss->hostname)
+        SvREFCNT_dec(ss->hostname);
     Safefree(ss);
 
 void
@@ -1056,30 +1056,30 @@ OUTPUT:
     RETVAL
 
 SSH2_NERROR
-net_ss__startup(SSH2* ss, int fd, SV *socket, SV* remote_hostname, int remote_port)
+net_ss__startup(SSH2* ss, int fd, SV *socket, SV* hostname, int port)
 CODE:
     RETVAL = libssh2_session_startup(ss->session, fd);
     if ((RETVAL >= 0) && SvOK(socket)) {
         if (ss->socket)
             sv_2mortal(ss->socket);
         ss->socket = newSVsv(socket);
-        ss->remote_hostname = newSVsv(remote_hostname);
-        ss->remote_port = remote_port;
+        ss->hostname = newSVsv(hostname);
+        ss->port = port;
     }
 OUTPUT:
     RETVAL
 
 SV *
-net_ss_remote_hostname(SSH2* ss)
+net_ss_hostname(SSH2* ss)
 CODE:
-    RETVAL = (ss->remote_hostname ? newSVsv(ss->remote_hostname) : &PL_sv_undef);
+    RETVAL = (ss->hostname ? newSVsv(ss->hostname) : &PL_sv_undef);
 OUTPUT:
     RETVAL
 
 int
-net_ss_remote_port(SSH2* ss)
+net_ss_port(SSH2* ss)
 CODE:
-    RETVAL = ss->remote_port;
+    RETVAL = ss->port;
  OUTPUT:
     RETVAL
 

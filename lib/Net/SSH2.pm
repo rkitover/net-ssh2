@@ -290,12 +290,12 @@ sub connect {
         }
     }
 
-    my ($remote_hostname, $remote_port);
+    my ($hostname, $port);
     if (@_ == 2) {
-        $remote_hostname = $_[0];
-        $remote_port = getservbyname($_[1] || 'ssh', 'tcp') || 22;
-        $sock = $socket_class->new( PeerHost => $remote_hostname,
-                                    PeerPort => $remote_port,
+        $hostname = $_[0];
+        $port = getservbyname($_[1] || 'ssh', 'tcp') || 22;
+        $sock = $socket_class->new( PeerHost => $hostname,
+                                    PeerPort => $port,
                                     Blocking => $self->blocking,
                                     Timeout => $self->timeout );
         unless ($sock) {
@@ -321,14 +321,14 @@ sub connect {
 
     {
         local ($@, $SIG{__DIE__});
-        $remote_port = eval { $sock->peerport }
-            unless defined $remote_port;
-        $remote_hostname = eval { $sock->peername } || 22
-            unless defined $remote_hostname;
+        $port = eval { $sock->peerport }
+            unless defined $port;
+        $hostname = eval { $sock->peername } || 22
+            unless defined $hostname;
     }
 
     # pass it in, do protocol
-    return $self->_startup($fd, $sock, $remote_hostname, $remote_port);
+    return $self->_startup($fd, $sock, $hostname, $port);
 
  error:
     unless (defined wantarray) {
@@ -483,15 +483,15 @@ sub auth_password_interact {
     return $rc;
 }
 
-sub check_remote_hostkey {
+sub check_hostkey {
     my ($self, $path, $policy) = @_;
 
     return 1 if $policy eq 'advisory'; # user doesn't care!
 
-    my $remote_hostname = $self->remote_hostname;
-    croak("remote_hostname unknown: in order to use check_remote_hostkey the peer host name ".
+    my $hostname = $self->hostname;
+    croak("hostname unknown: in order to use check_hostkey the peer host name ".
           "must be given (or discoverable) at connect time")
-        unless defined $remote_hostname;
+        unless defined $hostname;
 
     unless (defined $path) {
         my $home = $ENV{HOME} || (getpwuid($<))[7];
@@ -512,13 +512,13 @@ sub check_remote_hostkey {
                   LIBSSH2_KNOWNHOST_KEYENC_RAW() |
                   (($type + 1) << LIBSSH2_KNOWNHOST_KEY_SHIFT()) );
 
-    my $check = $kh->check($remote_hostname, $self->remote_port, $key, $flags);
+    my $check = $kh->check($hostname, $self->port, $key, $flags);
     $check == LIBSSH2_KNOWNHOST_CHECK_MATCH() and return 1;
 
     if ($check == LIBSSH2_KNOWNHOST_CHECK_NOTFOUND()) {
         if ($policy eq 'ask') {
             my $fp = unpack 'H*', $self->hostkey_hash(LIBSSH2_HOSTKEY_HASH_SHA1());
-            my $yes = $self->_ask_user("The authenticity of host '$remote_hostname' can't be established.\n" .
+            my $yes = $self->_ask_user("The authenticity of host '$hostname' can't be established.\n" .
                                        "key fingerprint is SHA1:$fp.\n" .
                                        "Are you sure you want to continue connecting (yes/no)? ", 1);
             if (lc $yes eq 'yes') {
@@ -1137,6 +1137,15 @@ Send a clean disconnect message to the remote server.  Default values are empty
 strings for description and language, and C<SSH_DISCONNECT_BY_APPLICATION> for
 the reason.
 
+=head2 hostname
+
+The name of the remote host given at connect time or retrieved from
+the TCP connection.
+
+=head2 port
+
+The port number or the remote SSH server.
+
 =head2 hostkey_hash ( hash type )
 
 Returns a hash of the host key; note that the key is raw data and may contain
@@ -1159,7 +1168,7 @@ Returns the public key of the remote host and its type which is one of
 C<LIBSSH2_HOSTKEY_TYPE_RSA>, C<LIBSSH2_HOSTKEY_TYPE_DSS>, or
 C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
 
-=head2 check_remote_hostkey( [known_hosts_path, [policy]] )
+=head2 check_hostkey( [known_hosts_path, [policy]] )
 
 Looks for the remote host key in the given file.
 
