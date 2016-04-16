@@ -623,10 +623,21 @@ C<Net::SSH2> is a perl interface to the libssh2 (L<http://www.libssh2.org>)
 library.  It supports the SSH2 protocol (there is no support for SSH1)
 with all of the key exchanges, ciphers, and compression of libssh2.
 
+Even if the module can be compiled and linked against very old
+versions of the library, nothing below 1.5.0 should really be used
+(older versions were quite buggy and unreliable) and version 1.7.0 or
+later is recommended.
+
 =head2 Error handling
 
 Unless otherwise indicated, methods return a true value on success and
 false on failure; use the error method to get extended error information.
+
+Methods in Net::SSH2 not backed by libssh2 functions
+(i.e. C<check_hostkey> or SCP related methods) require libssh2 1.7.0
+or later in order to set the error state or, in other words, when an
+older version of the library is used, after any of those methods fails
+C<error> would not return the real code but just some bogus result.
 
 =head2 Typical usage
 
