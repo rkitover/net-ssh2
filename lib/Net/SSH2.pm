@@ -484,9 +484,17 @@ sub auth_password_interact {
 }
 
 sub check_hostkey {
-    my ($self, $path, $policy) = @_;
-
-    return 1 if $policy eq 'advisory'; # user doesn't care!
+    my ($self, $path, $policy, $comment) = @_;
+    my $cb;
+    if (not defined $policy) {
+        $policy = LIBSSH2_HOSTKEY_POLICY_STRICT();
+    }
+    elsif (ref $policy eq 'CODE') {
+        $cb = $policy;
+    }
+    else {
+        $policy =  _parse_constant(HOSTKEY_POLICY => $policy);
+    }
 
     my $hostname = $self->hostname;
     croak("hostname unknown: in order to use check_hostkey the peer host name ".
@@ -503,36 +511,59 @@ sub check_hostkey {
         $path = File::Spec->catfile($home, '.ssh', 'known_hosts');
     }
 
-    my $kh = $self->known_hosts or return;
-    my $n_ent = $kh->readfile($path);
-    defined $n_ent or return;
+    my ($check, $key, $type, $flags);
+    my $kh = $self->known_hosts;
+    if ($kh and defined $kh->readfile($path)) {
 
-    my ($key, $type) = $self->remote_hostkey;
-    my $flags = ( LIBSSH2_KNOWNHOST_TYPE_PLAIN() |
-                  LIBSSH2_KNOWNHOST_KEYENC_RAW() |
-                  (($type + 1) << LIBSSH2_KNOWNHOST_KEY_SHIFT()) );
+        ($key, $type) = $self->remote_hostkey;
+        $flags = ( LIBSSH2_KNOWNHOST_TYPE_PLAIN() |
+                   LIBSSH2_KNOWNHOST_KEYENC_RAW() |
+                   (($type + 1) << LIBSSH2_KNOWNHOST_KEY_SHIFT()) );
 
-    my $check = $kh->check($hostname, $self->port, $key, $flags);
-    $check == LIBSSH2_KNOWNHOST_CHECK_MATCH() and return 1;
+        $check = $kh->check($hostname, $self->port, $key, $flags);
+        $check == LIBSSH2_KNOWNHOST_CHECK_MATCH() and return "00";
+    }
+    else {
+        $check = LIBSSH2_KNOWNHOST_CHECK_FAILURE();
+    }
+
+    if ($cb) {
+        my $ok = $cb->($self, $check, $comment);
+        $ok or $self->_set_error(LIBSSH2_ERROR_KNOWN_HOSTS(), 'Host key verification failed');
+        return $ok;
+    }
+
+    return $check
+        if $policy == LIBSSH2_HOSTKEY_POLICY_ADVISORY(); # user doesn't care!
 
     if ($check == LIBSSH2_KNOWNHOST_CHECK_NOTFOUND()) {
-        if ($policy eq 'ask') {
-            my $fp = unpack 'H*', $self->hostkey_hash(LIBSSH2_HOSTKEY_HASH_SHA1());
-            my $yes = $self->_ask_user("The authenticity of host '$hostname' can't be established.\n" .
-                                       "key fingerprint is SHA1:$fp.\n" .
-                                       "Are you sure you want to continue connecting (yes/no)? ", 1);
-            if (lc $yes eq 'yes') {
-                return 1;
+        $self->_set_error(LIBSSH2_ERROR_KNOWN_HOSTS(), 'Unable to verify host key, host not found');
+        unless ($policy == LIBSSH2_HOSTKEY_POLICY_TOFU()) {
+            if ($policy == LIBSSH2_HOSTKEY_POLICY_ASK()) {
+                my $fp = unpack 'H*', $self->hostkey_hash(LIBSSH2_HOSTKEY_HASH_SHA1());
+                my $yes = $self->_ask_user("The authenticity of host '$hostname' can't be established.\n" .
+                                           "key fingerprint is SHA1:$fp.\n" .
+                                           "Are you sure you want to continue connecting (yes/no)? ", 1);
+                unless ($yes =~ /^y(es)?$/i) {
+                    $self->_set_error(LIBSSH2_ERROR_KNOWN_HOSTS(), 'Host key verification failed: user did not accept the key');
+                    return undef;
+                }
             }
         }
-        elsif ($policy eq 'tofu') {
-            return 1;
-        }
-    }
-    # else policy is 'strict' or the key doesn't match the one in known_hosts
 
-    $self->_set_error(LIBSSH2_ERROR_KNOWN_HOSTS(), 'Unable to verify remote host key');
-    ()
+        $comment = '(Net::SSH2)' unless defined $comment;
+        # we ignore errors here, that is the usual SSH client behaviour
+        $kh->add($hostname, $self->port, $key, $comment, $flags) and
+            $kh->writefile($path);
+
+        return $check;
+    }
+
+    $self->_set_error(LIBSSH2_ERROR_KNOWN_HOSTS(), 'Host key verification failed: '.
+                      ( ($check == LIBSSH2_KNOWNHOST_CHECK_NOTFOUND())
+                        ? "key not found in '$path'"
+                        : "unable to perform the chek"));
+    return undef;
 }
 
 sub scp_get {
@@ -1168,14 +1199,50 @@ Returns the public key of the remote host and its type which is one of
 C<LIBSSH2_HOSTKEY_TYPE_RSA>, C<LIBSSH2_HOSTKEY_TYPE_DSS>, or
 C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
 
-=head2 check_hostkey( [known_hosts_path, [policy]] )
+=head2 check_hostkey( [known_hosts_path [, policy [, comment] ] ] )
 
-Looks for the remote host key in the given file.
+Looks for the remote host key in the given known host file (defaults
+to C<~/.ssh/known_hosts>).
 
-The path to the file containing the known host keys defaults to
-C<~/.ssh/known_hosts>.
+This method returns undef if the check fails or the result of the call
+to C<Net::SSH2::KnownHost::check>.
 
-Currently, the C<policy> argument is ignored.
+The accepted policies are as follow:
+
+=over 4
+
+=item LIBSSH2_HOSTKEY_POLICY_STRICT
+
+Only host keys already present in the known hosts file are accepted.
+
+=item LIBSSH2_HOSTKEY_POLICY_ASK
+
+If the host key is not present in the known hosts file, the user is
+asked if it should be accepted or not.
+
+If accepted, the key is added to the known host file with the given
+comment.
+
+=item LIBSSH2_HOSTKEY_POLICY_TOFU
+
+Trust On First Use: if the host key is not present in the known hosts
+file, it is added there and accepted.
+
+=item LIBSSH2_HOSTKEY_POLICY_ADVISORY
+
+The key is always accepted, but it is never saved into the known host
+file.
+
+=item $callback
+
+If a reference to a subroutine is given, it is called when the key is
+not present in the known hosts file or a different key is found. The
+arguments passed to the callback are the session object, the matching
+error (C<LIBSSH2_KNOWNHOST_CHECK_FAILURE>,
+C<LIBSSH2_KNOWNHOST_CHECK_NOTFOUND> or
+C<LIBSSH2_KNOWNHOST_CHECK_MISMATCH>) and the comment.
+
+=back
 
 =head2 auth_list ( [username] )
 
