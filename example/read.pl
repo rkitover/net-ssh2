@@ -10,11 +10,13 @@ use Net::SSH2;
 use IO::Scalar;
 
 my $ssh2 = Net::SSH2->new;
-die "can't connect" unless $ssh2->connect('localhost');
+$ssh2->connect('localhost') or $ssh2->die_with_error;
+$ssh2->check_hostkey('ask') or $ssh2->die_with_error;
+
 # use an interactive authentication method with default callback
 # (if a password is provided here, it will forward it without prompting)
-die "can't authenticate"
- unless $ssh2->auth(username => scalar getpwuid($<), interact => 1);
+$ssh2->auth(username => scalar getpwuid($<), interact => 1)
+    or $ssh2->die_with_error;
 
 sub _read {
     my $handle = shift;
