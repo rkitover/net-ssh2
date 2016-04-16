@@ -287,7 +287,7 @@ sub auth_password_interact {
 }
 
 sub check_hostkey {
-    my ($self, $path, $policy, $comment) = @_;
+    my ($self, $policy, $path, $comment) = @_;
     my $cb;
     if (not defined $policy) {
         $policy = LIBSSH2_HOSTKEY_POLICY_STRICT();
@@ -365,7 +365,7 @@ sub check_hostkey {
     $self->_set_error(LIBSSH2_ERROR_KNOWN_HOSTS(), 'Host key verification failed: '.
                       ( ($check == LIBSSH2_KNOWNHOST_CHECK_NOTFOUND())
                         ? "key not found in '$path'"
-                        : "unable to perform the chek"));
+                        : "unable to perform the check"));
     return undef;
 }
 
@@ -1008,15 +1008,15 @@ Returns the public key of the remote host and its type which is one of
 C<LIBSSH2_HOSTKEY_TYPE_RSA>, C<LIBSSH2_HOSTKEY_TYPE_DSS>, or
 C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
 
-=head2 check_hostkey( [known_hosts_path [, policy [, comment] ] ] )
+=head2 check_hostkey( [policy, [known_hosts_path [, comment] ] ] )
 
-Looks for the remote host key in the given known host file (defaults
-to C<~/.ssh/known_hosts>).
+Looks for the remote host key inside the given known host file
+(defaults to C<~/.ssh/known_hosts>).
 
 This method returns undef if the check fails or the result of the call
 to C<Net::SSH2::KnownHost::check>.
 
-The accepted policies are as follow:
+The accepted policies are as follows:
 
 =over 4
 

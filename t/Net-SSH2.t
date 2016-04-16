@@ -97,7 +97,10 @@ is(length $md5, 16, 'have MD5 hostkey hash');
 my $sha1 = $ssh2->hostkey_hash('sha1');
 is(length $sha1, 20, 'have SHA1 hostkey hash');
 
-ok($ssh2->check_hostkey($known_hosts, 'ask'), "check remote key")
+ok($ssh2->check_hostkey('advisory', $known_hosts), "check remote key - advisory")
+    or diag(join " ", "Error:", $ssh2->error);
+
+ok($ssh2->check_hostkey('ask', $known_hosts), "check remote key - ask")
     or diag(join " ", "Error:", $ssh2->error);
 
 # (3) authentication methods
