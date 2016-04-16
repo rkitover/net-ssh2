@@ -803,6 +803,8 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
 
   $ssh2->connect('example.com') or die $ssh2->error;
 
+  $ssh->check_hostkey('ask') or die;
+
   if ($ssh2->auth_keyboard('fizban')) {
       my $chan = $ssh2->channel();
       $chan->exec('program');
