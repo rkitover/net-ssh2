@@ -279,10 +279,13 @@ resources repository => 'git://github.com/rkitover/net-ssh2.git';
 
 makemaker_append_once LIBS => '-lssh2', '-lz';
 
-WriteAll;
-
 my $gen = "util/gen_constants.pl";
-system $^X, $gen if -f $gen;
+if (-f $gen) {
+    system $^X, $gen
+        and warn "$gen failed: $?\n";
+}
+
+WriteAll;
 
 my %appended;
 sub makemaker_append_once {

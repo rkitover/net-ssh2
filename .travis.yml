@@ -17,7 +17,7 @@ env:
 
 install:
   - perl .travis/install-libssh2.pl $LIBVER
-  - cpanm Module::Install::CheckLib
+  - cpanm Module::Install::CheckLib ExtUtils::Constant;
 
 script:
   - perl Makefile.PL lib=libssh2/lib inc=libssh2/include ldargs=-Wl,-rpath=libssh2/lib && make test
