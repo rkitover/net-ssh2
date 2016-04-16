@@ -98,13 +98,15 @@ for (@names) {
 }
 
 print $fh <<EOT;
-package Net::SSH2::Constants;
+package
+     Net::SSH2::Constants;
 
 # This file is generated automatically by util/gen_constants.pl
 
-sub import { die "do not use Net::SSH2::Constants!"; }
+sub import { die "Do not use Net::SSH2::Constants!"; }
 
-package Net::SSH2;
+package
+    Net::SSH2;
 
 use strict;
 use warnings;
