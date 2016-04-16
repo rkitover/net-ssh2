@@ -801,16 +801,16 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
 
   my $ssh2 = Net::SSH2->new();
 
-  $ssh2->connect('example.com') or die $ssh2->error;
+  $ssh2->connect('example.com') or $ssh2->die_with_error;
 
-  $ssh->check_hostkey('ask') or die;
+  $ssh->check_hostkey('ask') or $ssh2->die_with_error;
 
   if ($ssh2->auth_keyboard('fizban')) {
       my $chan = $ssh2->channel();
       $chan->exec('program');
 
       my $sftp = $ssh2->sftp();
-      my $fh = $sftp->open('/etc/passwd') or die;
+      my $fh = $sftp->open('/etc/passwd') or $ssh->die_with_error;
       print $_ while <$fh>;
   }
 
