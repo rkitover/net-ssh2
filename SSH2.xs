@@ -105,7 +105,16 @@ static const char *const xs_libssh2_error[] = {
     "INVAL",
     "INVALID_POLL_TYPE",
     "PUBLICKEY_PROTOCOL",
-    "EAGAIN"
+    "EAGAIN",
+    "ERROR_BUFFER_TOO_SMALL",
+    "BAD_USE",
+    "ERROR_COMPRESS",
+    "OUT_OF_BOUNDARY",
+    "AGENT_PROTOCOL",
+    "SOCKET_RECV",
+    "ENCRYPT",
+    "BAD_SOCKET",
+    "KNOWN_HOSTS",
 };
 
 /* SSH_FX_* values; from 0 continuing positive */
