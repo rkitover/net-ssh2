@@ -1,6 +1,6 @@
 package Net::SSH2;
 
-our $VERSION = '0.59_05';
+our $VERSION = '0.59_06';
 
 use 5.006;
 use strict;
@@ -619,9 +619,10 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
 
 =head1 DESCRIPTION
 
-C<Net::SSH2> is a perl interface to the libssh2 (L<http://www.libssh2.org>)
-library.  It supports the SSH2 protocol (there is no support for SSH1)
-with all of the key exchanges, ciphers, and compression of libssh2.
+C<Net::SSH2> is a perl interface to the C<libssh2>
+(L<http://www.libssh2.org>) library.  It supports the SSH2 protocol
+(there is no support for SSH1) with all of the key exchanges, ciphers,
+and compression of C<libssh2>.
 
 Even if the module can be compiled and linked against very old
 versions of the library, nothing below 1.5.0 should really be used
@@ -631,13 +632,15 @@ later is recommended.
 =head2 Error handling
 
 Unless otherwise indicated, methods return a true value on success and
-false on failure; use the error method to get extended error information.
+C<undef> on failure; use the L</error> method to get extended error
+information.
 
-Methods in Net::SSH2 not backed by libssh2 functions
-(i.e. C<check_hostkey> or SCP related methods) require libssh2 1.7.0
-or later in order to set the error state or, in other words, when an
-older version of the library is used, after any of those methods fails
-C<error> would not return the real code but just some bogus result.
+B<Important>: methods in C<Net::SSH2> not backed by libssh2 functions
+(i.e. L</check_hostkey> or L<SCP|/scp_get> related methods) require
+libssh2 1.7.0 or later in order to set the error state. That means
+that after any of those methods fails, L</error> would not return the
+real code but just some bogus result when an older version of the
+library is used.
 
 =head2 Typical usage
 
@@ -647,42 +650,56 @@ The typical usage order is as follows:
 
 =item 1
 
-Create the SSH2 object calling C<new>.
+Create the SSH2 object calling L</new>.
 
 =item 2
 
-Configure it if required. For instance, enabling compression or picking
-some specific encryption methods.
+Configure the session if required. For instance, enabling compression
+or picking some specific encryption methods.
 
 =item 3
 
-Establish the SSH connection calling the method C<connect>.
+Establish the SSH connection calling the method L</connect>.
 
 =item 4
 
-Check the remote host public key, typically comparing it to the one
-stored in C</etc/ssh/known_hosts>. See L<Net::SSH2::KnownHosts>.
+Check the remote host public key calling L</check_hostkey>.
 
 =item 5
 
-Authenticate calling one (or several) of the authentication methods
-provided.
+Authenticate calling the required L<authentication methods|/auth>.
 
 =item 6
 
-Create channels over the connection and use them.
+Call L</channel> and related methods to create new bidirectional
+communication channels over the SSH connection.
 
 =item 7
 
-Close the connection letting the Net::SSH2 object go out of scope or
-calling C<disconnect> explicitly.
+Close the connection letting the C<Net::SSH2> object go out of scope or
+calling L</disconnect> explicitly.
 
 =back
 
 =head1 CONSTANTS
 
-The module accepts the following tags that can be used to pick the set
-of constants to be imported.
+All the constants defined in L<libssh2> can be imported from
+C<Net::SSH2>.
+
+For instance:
+
+   use Net::SSH2 qw(LIBSSH2_CHANNEL_EXTENDED_DATA_MERGE
+                    LIBSSH2_CHANNEL_FLUSH_ALL
+                    LIBSSH2_HOSTKEY_POLICY_ASK);
+
+Though note that most methods also accept the uncommon part of the
+constant name as a string. For instance the following two method calls
+are equivalent:
+
+    $channel->ext_data(LIBSSH2_CHANNEL_EXTENDED_DATA_MERGE);
+    $channel->ext_data('merge');
+
+Tags can also be used to import the following constant subsets:
 
 =over 4
 
@@ -720,7 +737,7 @@ Disconnect type constants.
 
 =item policy
 
-Policies for method C<check_hostkey>.
+Policies for method L</check_hostkey>.
 
 =back
 
@@ -742,7 +759,7 @@ SFTP constants:
 
 Create new SSH2 object.
 
-To turn on tracing with a debug build of libssh2 use:
+To turn on tracing with a debug build of C<libssh2> use:
 
     my $ssh2 = Net::SSH2->new(trace => -1);
 
@@ -759,7 +776,7 @@ default banner text (e.g. "SSH-2.0-libssh2_0.18.0-20071110").
 
 =head2 error
 
-Returns the last error code; returns false if no error.  In list context,
+Returns the last error code. In list context,
 returns (code, error name, error string).
 
 Note that the returned error value is only meaningful after some other
@@ -767,15 +784,15 @@ method indicates an error by returning false.
 
 =head2 die_with_error ( [message] )
 
-Calls C<die> with the given message with the error information from
-the object attached.
+Calls C<die> with the given message and the error information from the
+object appended.
 
 For instance:
 
   $ssh2->connect("ajhkfhdklfjhklsjhd", 22)
-    or $ssh2->die_with_error;
+      or $ssh2->die_with_error;
   # dies as:
-  #  Unable to connect to remote host: Invalid argument (-1 LIBSSH2_ERROR_SOCKET_NONE)
+  #    Unable to connect to remote host: Invalid argument (-1 LIBSSH2_ERROR_SOCKET_NONE)
 
 =head2 sock
 
@@ -785,11 +802,12 @@ C<undef> if not yet connected.
 
 =head2 trace
 
-Calls libssh2_trace with supplied bitmask, to enable all tracing use:
+Calls C<libssh2_trace> with supplied bitmask. In order to enable all
+tracing pass C<-1> as follows:
 
     $ssh2->trace(-1);
 
-You need a debug build of libssh2 with tracing support.
+A version of libssh2 compiled with tracing support is required.
 
 =head2 timeout ( timeout_ms )
 
@@ -961,46 +979,47 @@ compression methods.
 
 =back
 
-=head2 connect ( handle | host [, port [, Timeout => secs ] [, Compress => 1]] )
+=head2 connect ( handle | host [, port])
 
-Accepts a handle over which to conduct the SSH 2 protocol.  The handle may be:
+The arguments combinations accepted are as follows:
 
 =over 4
 
-=item an C<IO::*> object
+=item a glob or C<IO::*> object reference
 
-=item a glob reference
+Note that tied file handles are not acceptable. The underlying
+C<libssh2> requires real file handles.
 
-=item an integer file descriptor
-
-=item a host name and port
+=item host [, port]
 
 In order to handle IPv6 addresses the optional module
-L<IO::Socket::IP> needs to be installed (otherwise the module will use
-the IPv4 only core module L<IO::Socket::INET> to establish the
-connection).
+L<IO::Socket::IP> is required.
+
+The port number defaults to 22.
 
 =back
 
 =head2 disconnect ( [description [, reason [, language]]] )
 
-Send a clean disconnect message to the remote server.  Default values are empty
+Sends a clean disconnect message to the remote server. Default values are empty
 strings for description and language, and C<SSH_DISCONNECT_BY_APPLICATION> for
 the reason.
 
 =head2 hostname
 
 The name of the remote host given at connect time or retrieved from
-the TCP connection.
+the TCP layer.
 
 =head2 port
 
-The port number or the remote SSH server.
+The port number of the remote SSH server.
 
 =head2 hostkey_hash ( hash type )
 
 Returns a hash of the host key; note that the key is raw data and may contain
-nulls or control characters.  The type may be:
+nulls or control characters.
+
+The type may be as follows:
 
 =over 4
 
@@ -1024,8 +1043,14 @@ C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
 Looks for the remote host key inside the given known host file
 (defaults to C<~/.ssh/known_hosts>).
 
-This method returns undef if the check fails or the result of the call
-to C<Net::SSH2::KnownHost::check>.
+On success, this method returns the result of the call done under the
+hood to C<Net::SSH2::KnownHost::check>
+(i.e. C<LIBSSH2_KNOWNHOST_CHECK_MATCH>,
+C<LIBSSH2_KNOWNHOST_CHECK_FAILURE>,
+C<LIBSSH2_KNOWNHOST_CHECK_NOTFOUND> or
+C<LIBSSH2_KNOWNHOST_CHECK_MISMATCH>).
+
+On failure it returns C<undef>.
 
 The accepted policies are as follows:
 
@@ -1034,6 +1059,8 @@ The accepted policies are as follows:
 =item LIBSSH2_HOSTKEY_POLICY_STRICT
 
 Only host keys already present in the known hosts file are accepted.
+
+This is the default policy.
 
 =item LIBSSH2_HOSTKEY_POLICY_ASK
 
@@ -1053,7 +1080,7 @@ file, it is added there and accepted.
 The key is always accepted, but it is never saved into the known host
 file.
 
-=item $callback
+=item callback
 
 If a reference to a subroutine is given, it is called when the key is
 not present in the known hosts file or a different key is found. The
@@ -1066,19 +1093,19 @@ C<LIBSSH2_KNOWNHOST_CHECK_MISMATCH>) and the comment.
 
 =head2 auth_list ( [username] )
 
-Get a list (or comma-separated string in scalar context) of authentication
-methods supported by the server; or returns C<undef>.  If C<undef> is returned
-and L<auth_ok> is true, the server accepted an unauthenticated session for the
-given username.
+Returns the authentication methods accepted by the server. In scalar
+context the methods are returned as a comma separated string.
+
+When the server accepted an unauthenticated session for the given
+username, this method returns C<undef> but L</auth_ok> returns true.
 
 =head2 auth_ok
 
-Returns true iff the session is authenticated.
+Returns true when the session is authenticated.
 
 =head2 auth_password ( username [, password [, callback ]] )
 
-Authenticate using a password (C<PasswordAuthentication> must be
-enabled in C<sshd_config> or equivalent for this to work.)
+Authenticates using a password.
 
 If the password has expired, if a callback code reference was given, it's
 called as C<callback($self, $username)> and should return a password.  If
@@ -1086,58 +1113,55 @@ no callback is provided, LIBSSH2_ERROR_PASSWORD_EXPIRED is returned.
 
 =head2 auth_password_interact ( username [, callback])
 
-Prompts the user for the password interactively using Term::ReadKey.
+Prompts the user for the password interactively (requires
+L<Term::ReadKey>).
 
 =head2 auth_publickey ( username, publickey_path, privatekey_path [, passphrase ] )
 
-Note that public key and private key are names of files containing the keys!
+Authenticate using the given private key and an optional passphrase.
 
-Authenticate using keys and an optional passphrase.
-
-When libssh2 is compiled using OpenSSL as the crypto backend, passing
-this method C<undef> as the public key argument is acceptable (OpenSSH
-is able to extract the public key from the private one).
+When L<libssh2> is compiled using OpenSSL as the crypto backend,
+passing this method C<undef> as the public key argument is acceptable
+(OpenSSL is able to extract the public key from the private one).
 
 =head2 auth_publickey_frommemory ( username, publickey_blob, privatekey_blob [, passphrase ] )
 
 Authenticate using the given public/private key and an optional
-passphrase. The keys must be PEM encoded.
-
-This method requires libssh2 1.6.0 or later compiled with the OpenSSL
-backend.
+passphrase. The keys must be PEM encoded (requires C<libssh2> 1.6.0 or
+later with the OpenSSL backend).
 
 =head2 auth_hostbased ( username, publickey, privatekey, hostname,
  [, local username [, passphrase ]] )
 
-Host-based authentication using an optional passphrase.  The local username
+Host-based authentication using an optional passphrase. The local username
 defaults to be the same as the remote username.
 
 =head2 auth_keyboard ( username, password | callback )
 
-Authenticate using "keyboard-interactive".  Takes either a password, or a
-callback code reference which is invoked as C<callback-E<gt>(self, username,
-name, instruction, prompt...)> (where each prompt is a hash with C<text> and
-C<echo> keys, signifying the prompt text and whether the user input should be
-echoed, respectively) which should return an array of responses.
+Authenticate using C<keyboard-interactive>. Takes either a password,
+or a callback code reference which is invoked as
+C<callback-E<gt>(self, username, name, instruction, prompt...)> (where
+each prompt is a hash with C<text> and C<echo> keys, signifying the
+prompt text and whether the user input should be echoed, respectively)
+which should return an array of responses.
 
 If only a username is provided, the default callback will handle standard
-interactive responses; L<Term::ReadKey> is required.
+interactive responses (requires L<Term::ReadKey>)
 
 =head2 auth_agent ( username )
 
-Try to authenticate using ssh-agent. This requires libssh2 version 1.2.3 or
-later.
+Try to authenticate using an SSH agent (requires libssh2 1.2.3).
 
 =head2 auth ( ... )
 
-This is a general, prioritizing authentication mechanism that can use any
-of the previous methods.  You provide it some parameters and (optionally)
-a ranked list of methods you want considered (defaults to all).  It will
-remove any unsupported methods or methods for which it doesn't have parameters
-(e.g. if you don't give it a public key, it can't use publickey or hostkey),
-and try the rest, returning whichever one succeeded or a false value if they
-all failed. If a parameter is passed with an undef value, a default value
-will be supplied if possible.
+This is a general, prioritizing authentication mechanism that can use
+any of the previous methods. You provide it some parameters and
+(optionally) a ranked list of methods you want considered (defaults to
+all). It will remove any unsupported methods or methods for which it
+doesn't have parameters (e.g. if you don't give it a public key, it
+can't use publickey or hostkey), and try the rest, returning whichever
+one succeeded or C<undef> if they all failed. If a parameter is passed
+with an C<undef> value, a default value will be supplied if possible.
 
 The parameters are:
 
@@ -1146,10 +1170,10 @@ The parameters are:
 =item rank
 
 An optional ranked list of methods to try.  The names should be the
-names of the L<Net::SSH2> C<auth> methods, e.g. 'keyboard' or
-'publickey', with the addition of 'keyboard-auto' for automated
-'keyboard-interactive' and 'password-interact' that prompts the user
-for the password interactively.
+names of the L<Net::SSH2> C<auth> methods, e.g. C<keyboard> or
+C<publickey>, with the addition of C<keyboard-auto> for automated
+C<keyboard-interactive> and C<password-interact> which prompts the
+user for the password interactively.
 
 =item username
 
@@ -1159,9 +1183,9 @@ for the password interactively.
 
 =item privatekey
 
-=item passphrase
+C<privatekey> and C<publickey> are file paths.
 
-As in the methods, publickey and privatekey are filenames.
+=item passphrase
 
 =item hostname
 
@@ -1169,7 +1193,7 @@ As in the methods, publickey and privatekey are filenames.
 
 =item interact
 
-If this is set to a true value, interactive methods will be considered.
+If this option is set to a true value, interactive methods will be enabled.
 
 =item fallback
 
