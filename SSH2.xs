@@ -32,6 +32,10 @@
 #include <libssh2_sftp.h>
 #include <libssh2_publickey.h>
 
+#define LIBSSH2_HOSTKEY_POLICY_STRICT   1
+#define LIBSSH2_HOSTKEY_POLICY_ASK      2
+#define LIBSSH2_HOSTKEY_POLICY_TOFU     3
+#define LIBSSH2_HOSTKEY_POLICY_ADVISORY 4
 
 #include "const-c.inc"
 
@@ -861,6 +865,13 @@ CODE:
     MY_CXT.global_cb_data = newHV();
     MY_CXT.tid = get_my_thread_id();
     debug("%s::CLONE: tid=%d my_perl=0x%p\n", class, MY_CXT.tid, my_perl);
+
+IV
+_parse_constant(char *prefix, SV *value)
+CODE:
+    RETVAL = sv2iv_constant_or_croak(prefix, value);
+OUTPUT:
+    RETVAL
 
 SSH2*
 net_ss__new(SV* proto)
