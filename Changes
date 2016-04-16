@@ -1,5 +1,13 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_05
+        - Rewrite constant generation code
+        - Improve "check_hostkey" method adding support for using a
+          callback as policy.
+        - Rename "remote_port" to "port", "remote_hostname" to
+          "hostname" and "check_remote_hostkey" to "check_hostkey".
+        - Several documentation improvements.
+
 0.59_04  Apr 13, 2016
         - Use libssh2 function "libssh2_scp_send64" when available. It
           allows sending files bigger than 4GB.

@@ -17,3 +17,4 @@ MYMETA.*
 SSH2.c
 inc
 META.yml
+lib/Net/SSH2/Constants.pm
