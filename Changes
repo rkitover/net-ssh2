@@ -1,6 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
-0.59_05
+0.59_05  Apr 16, 2016
         - Switch the order of "policy" and "known_host_path" arguments
           in method "check_hostkey".
         - Improve "check_hostkey" method adding support for using a
