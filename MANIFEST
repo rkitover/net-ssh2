@@ -33,5 +33,4 @@ ppport.h
 README
 SSH2.xs
 t/Net-SSH2.t
-TODO
 typemap
