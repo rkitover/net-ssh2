@@ -494,6 +494,8 @@ static LIBSSH2_USERAUTH_KBDINT_RESPONSE_FUNC(cb_kbdint_response_callback) {
     PUSHs(sv_2mortal(newSVpvn(instruction, instruction_len)));
     for (i = 0; i < num_prompts; ++i) {
         HV* hv = newHV();
+        /* Perl_warn(aTHX_ "prompt %d: text: %p, length: %d, echo: %d\n", */
+        /* i, prompts[i].text, prompts[i].length, prompts[i].echo); */
         PUSHs(sv_2mortal(newRV_noinc((SV*)hv)));
         hv_store(hv, "text", 4, newSVpvn(prompts[i].text, prompts[i].length), 0);
         hv_store(hv, "echo", 4, newSVuv(prompts[i].echo), 0);
