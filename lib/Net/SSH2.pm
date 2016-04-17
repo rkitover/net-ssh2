@@ -202,7 +202,13 @@ my $password_when_you_mean_passphrase_warned;
 sub auth {
     my ($self, %p) = @_;
 
+    $self->_set_error(LIBSSH2_ERROR_AUTHENTICATION_FAILED(),
+                      "Authentication failed"); # default error
+
     my @rank = $self->_auth_rank(delete $p{rank});
+    my $remote_rank;
+    $remote_rank = { map { $_ => 1 } $self->auth_list($p{username}) }
+        if defined $p{username};
 
     # if fallback is set, interact with the user even when a password
     # is given
@@ -211,7 +217,11 @@ sub auth {
     TYPE: for(my $i = 0; $i < @rank; $i++) {
         my $type = $rank[$i];
         my $data = $self->_auth_methods->{$type};
-        confess "unknown authentication method '$type'" unless $data;
+        unless ($data) {
+            carp "unknown authentication method '$type'";
+            next;
+        }
+        next if $remote_rank and !$remote_rank->{$data->{ssh}};
 
         # do we have the required parameters?
         my @pass;
@@ -238,6 +248,8 @@ sub auth {
         # invoke the authentication method
         return $type if $data->{method}->($self, @pass) and $self->auth_ok;
     }
+
+    return 'none' if  $self->auth_ok;
     return;  # failure
 }
 
