@@ -36,11 +36,11 @@ _read($passwd);
 
 # (b) read a line at a time with SFTP
 my $sftp = $ssh2->sftp;
-my $file = $sftp->open('/etc/passwd') or die;
+my $file = $sftp->open('/etc/passwd') or $sftp->die_with_error;
 _read($file);
 
 # (c) type it over a channel
 my $chan = $ssh2->channel;
-$chan->exec('cat /etc/passwd') or die;
+$chan->exec('cat /etc/passwd') or die $ssh2->die_with_error;
 _read($chan);
 

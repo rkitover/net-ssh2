@@ -613,7 +613,7 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
       $chan->exec('program');
 
       my $sftp = $ssh2->sftp();
-      my $fh = $sftp->open('/etc/passwd') or $ssh->die_with_error;
+      my $fh = $sftp->open('/etc/passwd') or $sftp->die_with_error;
       print $_ while <$fh>;
   }
 
@@ -1310,6 +1310,10 @@ an IO object instead of a filename (but it must have a valid stat method).
 
 Return SecureFTP interface object (see L<Net::SSH2::SFTP>).
 
+Note that SFTP support in C<libssh2> is pretty rudimentary. You should
+consider using L<Net::SFTP::Foreign> with the L<Net::SSH2> backend
+L<Net::SFTP::Foreign::Backend::Net_SSH2> instead.
+
 =head2 public_key
 
 Return public key interface object (see L<Net::SSH2::PublicKey>).
@@ -1319,6 +1323,11 @@ Return public key interface object (see L<Net::SSH2::PublicKey>).
 Returns known hosts interface object (see L<Net::SSH2::KnownHosts>).
 
 =head2 poll ( timeout, arrayref of hashes )
+
+B<Deprecated>: the poll functionality in C<libssh2> is deprecated and
+its usage disregarded. Session methods L</sock> and
+L</block_directions> can be used instead to integrate C<Net::SSH2>
+inside an external event loop.
 
 Pass in a timeout in milliseconds and an arrayref of hashes with the following
 keys:
