@@ -1,9 +1,10 @@
 Revision history for Perl extension Net::SSH2.
 
-0.59_06
+0.59_06  2016-04-17
+        - Add method die_with_error into Net::SSH2::SFTP
         - Several documentation improvements.
 
-0.59_05  Apr 16, 2016
+0.59_05  2016-04-16
         - Switch the order of "policy" and "known_host_path" arguments
           in method "check_hostkey".
         - Improve "check_hostkey" method adding support for using a
@@ -13,7 +14,7 @@ Revision history for Perl extension Net::SSH2.
         - Rewrite constant generation code
         - Several documentation improvements.
 
-0.59_04  Apr 13, 2016
+0.59_04  2016-04-13
         - Use libssh2 function "libssh2_scp_send64" when available. It
           allows sending files bigger than 4GB.
         - Improve the way the user is prompted.
@@ -22,20 +23,20 @@ Revision history for Perl extension Net::SSH2.
         - Several documentation improvements.
         - Remove File::Slurp dependency in test script.
 
-0.59_03  Apr 12, 2016
+0.59_03  2016-04-12
         - Fix Channel "read" method that was hanging in blocking mode.
         - Add "check_remote_hostkey" method for easy remote host key
           verification (WIP)
         - Add "die_with_error" method.
         - Several documentation improvements.
 
-0.59_02  Apr 12, 2016
+0.59_02  2016-04-12
         - Fix "auth_list" method.
         - Fix handling of "lib" argument in Makefile.PL.
         - Compilation was broken for perls 5.8.0 .. 5.8.3.
         - Several documentation improvements.
 
-0.59_01  Apr 11, 2016
+0.59_01  2016-04-11
         *** WARNING: this release includes lots of changes, some
             visible, most internal. Regressions are expected. Also,
             it introduces some minor backward incompatible changes -
