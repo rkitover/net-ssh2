@@ -683,7 +683,7 @@ calling L</disconnect> explicitly.
 
 =head1 CONSTANTS
 
-All the constants defined in L<libssh2> can be imported from
+All the constants defined in libssh2 can be imported from
 Net::SSH2.
 
 For instance:
@@ -1120,9 +1120,9 @@ L<Term::ReadKey>).
 
 Authenticate using the given private key and an optional passphrase.
 
-When L<libssh2> is compiled using OpenSSL as the crypto backend,
-passing this method C<undef> as the public key argument is acceptable
-(OpenSSL is able to extract the public key from the private one).
+When libssh2 is compiled using OpenSSL as the crypto backend, passing
+this method C<undef> as the public key argument is acceptable (OpenSSL
+is able to extract the public key from the private one).
 
 =head2 auth_publickey_frommemory ( username, publickey_blob, privatekey_blob [, passphrase ] )
 
