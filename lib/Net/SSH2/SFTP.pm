@@ -4,7 +4,15 @@ use strict;
 use warnings;
 use Carp;
 
-# methods
+sub die_with_error {
+    my $self = shift;
+    if (my ($code, $name) = $self->error) {
+        die join(": ", @_, "SFTP error $code $name");
+    }
+    else {
+        die join(": ", @_, "no SFTP error registered");
+    }
+}
 
 
 1;
@@ -23,6 +31,11 @@ An SFTP object is created by the L<Net::SSH2> C<sftp> method.
 Returns the last SFTP error (one of the LIBSSH2_FX_* constants).  Use this
 when Net::SSH2::error returns LIBSSH2_ERROR_SFTP_PROTOCOL.  In list context,
 returns (code, error name).
+
+=head2 die_with_error( [message] )
+
+Calls C<die> with the given message and the error information from the
+object appended.
 
 =head2 open ( file [, flags [, mode ]]] )
 
