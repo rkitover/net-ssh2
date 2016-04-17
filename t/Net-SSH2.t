@@ -185,10 +185,23 @@ SKIP: { # SKIP-scalar
     skip '- IO::Scalar required', 2 if $@;
     my $check = IO::Scalar->new;
     ok($ssh2->scp_get($remote, $check), "get $remote from remote");
+    my $content = ${$check->sref};
  SKIP: { # SKIP-slurp
         my $data = slurp($0);
         defined $data or skip "- Unable to read '$0': $!", 1;
-        is(${$check->sref}, $data, 'files match');
+        if (length $content == length $data) {
+            is($content, $data, 'files match');
+        }
+        else {
+            fail('file size match');
+            if (length $content == 0) {
+                diag <<MSG
+This is a known bug of Straberry perl: there is a mismatch between perl and libssh2 about the layout of 'struct stat'.
+The best way to avoid it is to upgrade libssh2 to version 1.6.1 or later.
+This bug affects SCP methods only.
+MSG
+            }
+        }
     } # SKIP-slurp
 } # SKIP-scalar
 
