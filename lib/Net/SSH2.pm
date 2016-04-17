@@ -619,10 +619,10 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
 
 =head1 DESCRIPTION
 
-C<Net::SSH2> is a perl interface to the C<libssh2>
+Net::SSH2 is a perl interface to the libssh2
 (L<http://www.libssh2.org>) library.  It supports the SSH2 protocol
 (there is no support for SSH1) with all of the key exchanges, ciphers,
-and compression of C<libssh2>.
+and compression of libssh2.
 
 Even if the module can be compiled and linked against very old
 versions of the library, nothing below 1.5.0 should really be used
@@ -635,7 +635,7 @@ Unless otherwise indicated, methods return a true value on success and
 C<undef> on failure; use the L</error> method to get extended error
 information.
 
-B<Important>: methods in C<Net::SSH2> not backed by libssh2 functions
+B<Important>: methods in Net::SSH2 not backed by libssh2 functions
 (i.e. L</check_hostkey> or L<SCP|/scp_get> related methods) require
 libssh2 1.7.0 or later in order to set the error state. That means
 that after any of those methods fails, L</error> would not return the
@@ -676,7 +676,7 @@ communication channels over the SSH connection.
 
 =item 7
 
-Close the connection letting the C<Net::SSH2> object go out of scope or
+Close the connection letting the Net::SSH2 object go out of scope or
 calling L</disconnect> explicitly.
 
 =back
@@ -684,7 +684,7 @@ calling L</disconnect> explicitly.
 =head1 CONSTANTS
 
 All the constants defined in L<libssh2> can be imported from
-C<Net::SSH2>.
+Net::SSH2.
 
 For instance:
 
@@ -759,7 +759,7 @@ SFTP constants:
 
 Create new SSH2 object.
 
-To turn on tracing with a debug build of C<libssh2> use:
+To turn on tracing with a debug build of libssh2 use:
 
     my $ssh2 = Net::SSH2->new(trace => -1);
 
@@ -988,7 +988,7 @@ The arguments combinations accepted are as follows:
 =item a glob or C<IO::*> object reference
 
 Note that tied file handles are not acceptable. The underlying
-C<libssh2> requires real file handles.
+libssh2 requires real file handles.
 
 =item host [, port]
 
@@ -1127,7 +1127,7 @@ passing this method C<undef> as the public key argument is acceptable
 =head2 auth_publickey_frommemory ( username, publickey_blob, privatekey_blob [, passphrase ] )
 
 Authenticate using the given public/private key and an optional
-passphrase. The keys must be PEM encoded (requires C<libssh2> 1.6.0 or
+passphrase. The keys must be PEM encoded (requires libssh2 1.6.0 or
 later with the OpenSSL backend).
 
 =head2 auth_hostbased ( username, publickey, privatekey, hostname,
@@ -1310,7 +1310,7 @@ an IO object instead of a filename (but it must have a valid stat method).
 
 Return SecureFTP interface object (see L<Net::SSH2::SFTP>).
 
-Note that SFTP support in C<libssh2> is pretty rudimentary. You should
+Note that SFTP support in libssh2 is pretty rudimentary. You should
 consider using L<Net::SFTP::Foreign> with the L<Net::SSH2> backend
 L<Net::SFTP::Foreign::Backend::Net_SSH2> instead.
 
@@ -1324,9 +1324,9 @@ Returns known hosts interface object (see L<Net::SSH2::KnownHosts>).
 
 =head2 poll ( timeout, arrayref of hashes )
 
-B<Deprecated>: the poll functionality in C<libssh2> is deprecated and
+B<Deprecated>: the poll functionality in libssh2 is deprecated and
 its usage disregarded. Session methods L</sock> and
-L</block_directions> can be used instead to integrate C<Net::SSH2>
+L</block_directions> can be used instead to integrate Net::SSH2
 inside an external event loop.
 
 Pass in a timeout in milliseconds and an arrayref of hashes with the following
