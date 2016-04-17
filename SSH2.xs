@@ -1420,7 +1420,7 @@ CODE:
     hv_store(stat, "size",  4, newSVnv(st.st_size),  0/*hash*/);
 #endif
     hv_store(stat, "atime", 5, newSVuv((time_t)st.st_atime), 0/*hash*/);
-    hv_store(stat, "mtime", 5, newSViv((time_t)st.st_mtime), 0/*hash*/);
+    hv_store(stat, "mtime", 5, newSVuv((time_t)st.st_mtime), 0/*hash*/);
 OUTPUT:
     RETVAL
 
@@ -1438,7 +1438,7 @@ CODE:
     hv_store(stat, "gid",   3, newSVuv(st.st_gid),   0/*hash*/);
     hv_store(stat, "size",  4, newSVuv(st.st_size),  0/*hash*/);
     hv_store(stat, "atime", 5, newSVuv((time_t)st.st_atime), 0/*hash*/);
-    hv_store(stat, "mtime", 5, newSViv((time_t)st.st_mtime), 0/*hash*/);
+    hv_store(stat, "mtime", 5, newSVuv((time_t)st.st_mtime), 0/*hash*/);
 OUTPUT:
     RETVAL
 

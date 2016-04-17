@@ -178,7 +178,7 @@ is($stat{name}, $dir, 'directory name matches');
 
 # (4) SCP
 my $remote = "$dir/".basename($0);
-ok($ssh2->scp_put($0, $remote), "put $0 to remote");
+ok($ssh2->scp_put($0, $remote), "put $0 to remote ($remote)");
 
 SKIP: { # SKIP-scalar
     eval { require IO::Scalar };
