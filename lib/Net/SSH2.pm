@@ -692,14 +692,14 @@ For instance:
                     LIBSSH2_CHANNEL_FLUSH_ALL
                     LIBSSH2_HOSTKEY_POLICY_ASK);
 
-Though note that most methods also accept the uncommon part of the
+Though note that most methods accept the uncommon part of the
 constant name as a string. For instance the following two method calls
 are equivalent:
 
     $channel->ext_data(LIBSSH2_CHANNEL_EXTENDED_DATA_MERGE);
     $channel->ext_data('merge');
 
-Tags can also be used to import the following constant subsets:
+Tags can be used to import the following constant subsets:
 
 =over 4
 
