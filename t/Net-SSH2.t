@@ -105,9 +105,8 @@ ok($ssh2->check_hostkey('ask', $known_hosts), "check remote key - ask")
 
 # (3) authentication methods
 unless ($user) {
-    my $def_user;
-    $def_user = getpwuid $< if $^O !~ /mswin/i;
-    $user = $ssh2->_ask_user("Enter username" . ($def_user ? " [$def_user]: " : ": "));
+    my $def_user = eval { getpwuid $< };
+    $user = $ssh2->_ask_user("Enter username" . ($def_user ? " [$def_user]: " : ": "), 1);
     $user = $def_user unless defined $user and length $user;
 }
 my $auth = $ssh2->auth_list($user);
@@ -118,7 +117,7 @@ ok(!$ssh2->auth_ok, 'not authenticated yet');
 
 # (2) authenticate
 my $type;
-my $home = $ENV{HOME} || (getpwuid($<))[7];
+my $home = $ssh2->_local_home;
 if (defined $home) {
     for my $key (qw(dsa rsa)) {
         my $path = "$home/.ssh/id_$key";

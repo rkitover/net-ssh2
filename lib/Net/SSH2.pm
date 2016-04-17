@@ -286,6 +286,13 @@ sub auth_password_interact {
     return $rc;
 }
 
+sub _local_home {
+    return $ENV{HOME} if defined $ENV{HOME};
+    local ($@, $SIG{__DIE__}, $SIG{__WARN__});
+    my $home = eval { (getpwuid($<))[7] };
+    return $home;
+}
+
 sub check_hostkey {
     my ($self, $policy, $path, $comment) = @_;
     my $cb;
@@ -305,7 +312,7 @@ sub check_hostkey {
         unless defined $hostname;
 
     unless (defined $path) {
-        my $home = $ENV{HOME} || (getpwuid($<))[7];
+        my $home = _local_home;
         unless (defined $home) {
             $self->_set_error(LIBSSH2_ERROR_FILE(), "Unable to determine known_hosts location");
             return;
@@ -757,7 +764,7 @@ SFTP constants:
 
 =head2 new
 
-Create new SSH2 object.
+Create new Net::SSH2 object representing a SSH session.
 
 To turn on tracing with a debug build of libssh2 use:
 
