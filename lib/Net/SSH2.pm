@@ -638,7 +638,7 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
 
 =head1 DESCRIPTION
 
-Net::SSH2 is a perl interface to the libssh2
+Net::SSH2 is a Perl interface to the libssh2
 (L<http://www.libssh2.org>) library.  It supports the SSH2 protocol
 (there is no support for SSH1) with all of the key exchanges, ciphers,
 and compression of libssh2.
@@ -720,57 +720,10 @@ are equivalent:
 
 Tags can be used to import the following constant subsets:
 
-=over 4
+  callback channel error socket trace hash method
+  disconnect policy fx fxf sftp
 
-=item all
-
-All constants.
-
-=back
-
-SSH constants:
-
-=over 4
-
-=item callback
-
-=item channel
-
-=item error
-
-=item socket
-
-=item trace
-
-Tracing constants for use with C<<$ssh2->trace>> and C<<$ssh2->new(trace =>...)>>.
-
-=item hash
-
-Key hash constants.
-
-=item method
-
-=item disconnect
-
-Disconnect type constants.
-
-=item policy
-
-Policies for method L</check_hostkey>.
-
-=back
-
-SFTP constants:
-
-=over 4
-
-=item fx
-
-=item fxf
-
-=item sftp
-
-=back
+The tag C<all> can also be used to import all of them.
 
 =head1 METHODS
 
@@ -781,10 +734,6 @@ Create new Net::SSH2 object representing a SSH session.
 The accepted options are as follows:
 
 =over 4
-
-=item comoress
-
-Sets flag <COMPRESS>. See L</flag>.
 
 =item timeout
 
@@ -800,9 +749,14 @@ Example:
 
 Note that tracing requires a version of libssh2 compiled with debugging support.
 
+
+=item compress
+
+Sets flag C<LIBSSH2_FLAG_COMPRESS>. See L</flag>.
+
 =item sigpipe
 
-Sets flag C<SIGPIPE>. See L</flag>.
+Sets flag C<LIBSSH2_FLAG_SIGPIPE>. See L</flag>.
 
 =back
 
@@ -867,7 +821,7 @@ The following methods can be set or queried:
 
 =over 4
 
-=item KEX
+=item LIBSSH2_METHOD_KEX
 
 Key exchange method names. Supported values:
 
@@ -891,7 +845,7 @@ draft secsh-dh-group-exchange).
 
 =back
 
-=item HOSTKEY
+=item LIBSSH2_METHOD_HOSTKEY
 
 Public key algorithms. Supported values:
 
@@ -907,7 +861,7 @@ Based on PKCS#1 (RFC 3447).
 
 =back
 
-=item CRYPT_CS
+=item LIBSSH2_METHOD_CRYPT_CS
 
 Encryption algorithm from client to server. Supported algorithms:
 
@@ -951,12 +905,12 @@ No encryption.
 
 =back
 
-=item CRYPT_SC
+=item LIBSSH2_METHOD_CRYPT_SC
 
-Encryption algorithm from server to client. See L<CRYPT_CS> for supported
-algorithms.
+Encryption algorithm from server to client. See the
+C<LIBSSH2_METHOD_CRYPT_CS> entry above for supported algorithms.
 
-=item MAC_CS
+=item LIBSSH2_METHOD_MAC_CS
 
 Message Authentication Code (MAC) algorithms from client to server. Supported
 values:
@@ -993,12 +947,12 @@ No encryption.
 
 =back
 
-=item MAC_SC
+=item LIBSSH2_METHOD_MAC_SC
 
 Message Authentication Code (MAC) algorithms from server to client. See
-L<MAC_SC> for supported algorithms.
+L<LIBSSH2_METHOD_MAC_CS> for supported algorithms.
 
-=item COMP_CS
+=item LIBSSH2_METHOD_COMP_CS
 
 Compression methods from client to server. Supported values:
 
@@ -1014,16 +968,16 @@ No compression
 
 =back
 
-=item COMP_SC
+=item LIBSSH2_METHOD_COMP_SC
 
-Compression methods from server to client. See L<COMP_CS> for supported
-compression methods.
+Compression methods from server to client. See
+L<LIBSSH2_METHOD_COMP_CS> for supported compression methods.
 
 =back
 
 =head2 connect ( handle | host [, port])
 
-The arguments combinations accepted are as follows:
+The argument combinations accepted are as follows:
 
 =over 4
 
@@ -1065,9 +1019,13 @@ The type may be as follows:
 
 =over 4
 
-=item MD5 (16 bytes)
+=item LIBSSH2_HOSTKEY_HASH_MD5
 
-=item SHA1 (20 bytes)
+MD5 hash, 16 bytes long (requires libssh2 compiled with MD5 support).
+
+=item LIBSSH2_HOSTKEY_HASH_SHA1
+
+SHA1 hash, 20 bytes long.
 
 =back
 
@@ -1076,7 +1034,7 @@ C<hostkey>.
 
 =head2 remote_hostkey
 
-Returns the public key of the remote host and its type which is one of
+Returns the public key from the remote host and its type which is one of
 C<LIBSSH2_HOSTKEY_TYPE_RSA>, C<LIBSSH2_HOSTKEY_TYPE_DSS>, or
 C<LIBSSH2_HOSTKEY_TYPE_UNKNOWN>.
 
@@ -1278,7 +1236,7 @@ The currently supported flag values are:
 
 =over 4
 
-=item COMPRESS
+=item LIBSSH2_FLAG_COMPRESS
 
 If set before the connection negotiation is performed, compression
 will be negotiated for this connection.
@@ -1286,7 +1244,7 @@ will be negotiated for this connection.
 Compression can also be enabled passing option C<compress> to the
 constructor L<new>.
 
-=item SIGPIPE
+=item LIBSSH2_FLAG_SIGPIPE
 
 if set, Net::SSH2/libssh2 will not attempt to block SIGPIPEs but will
 let them trigger from the underlying socket layer.
@@ -1312,10 +1270,14 @@ Note that the underlying libssh2 function C<libssh2_keepalive_send>
 can not recover from EAGAIN errors. If this method fails with such
 error, the SSH connection may become corrupted.
 
+The usage of this function is discouraged.
+
 =head2 channel ( [type, [window size, [packet size]]] )
 
-Creates and returns a new channel object.  The default type is "session".
-See L<Net::SSH2::Channel>.
+Creates and returns a new channel object. See L<Net::SSH2::Channel>.
+
+Type, if given, must be C<session> (a reminiscence of an old, more
+generic, but never working wrapping).
 
 =head2 tcpip ( host, port [, shost, sport ] )
 
@@ -1333,20 +1295,24 @@ and forwards incoming connections to the remote side.
 
 Sets up a TCP listening port on the remote host.  Host defaults to 0.0.0.0;
 if bound port is provided, it should be a scalar reference in which the bound
-port is returned.  Queue size specifies the maximum number of queued connections
+port is returned. Queue size specifies the maximum number of queued connections
 allowed before the server refuses new connections.
 
 Returns a new Net::SSH2::Listener object.
 
-=head2 scp_get ( remote [, local ] )
+=head2 scp_get ( remote_path [, local_path ] )
 
-Retrieve a file with scp; local path defaults to basename of remote.  C<local>
-may be an IO object (e.g. IO::File, IO::Scalar).
+Retrieve a file with SCP. Local path defaults to basename of remote.
 
-=head2 scp_put ( local [, remote ] )
+Alternatively, C<local_path> may be an already open file handle or an
+IO::Handle object (e.g. IO::File, IO::Scalar).
 
-Send a file with scp; remote path defaults to same as local.  C<local> may be
-an IO object instead of a filename (but it must have a valid stat method).
+=head2 scp_put ( local_path [, remote_path ] )
+
+Send a file with SCP. Remote path defaults to same as local.
+
+Alternatively, C<local_path> may be an already open file handle or a
+reference to a IO::Handle object (it must have a valid stat method).
 
 =head2 sftp
 
@@ -1371,8 +1337,8 @@ its usage disregarded. Session methods L</sock> and
 L</block_directions> can be used instead to integrate Net::SSH2
 inside an external event loop.
 
-Pass in a timeout in milliseconds and an arrayref of hashes with the following
-keys:
+Pass in a timeout in milliseconds and an arrayref of hashes with the
+following keys:
 
 =over 4
 
@@ -1398,19 +1364,31 @@ Returns undef on error, or the number of active objects.
 
 =head2 block_directions
 
-Get the blocked direction when a function returns LIBSSH2_ERROR_EAGAIN, returns
-LIBSSH2_SOCKET_BLOCK_INBOUND or LIBSSH2_SOCKET_BLOCK_OUTBOUND from the socket
-export group.
+Get the blocked direction after some method returns
+C<LIBSSH2_ERROR_EAGAIN>.
+
+Returns C<LIBSSH2_SOCKET_BLOCK_INBOUND> or
+C<LIBSSH2_SOCKET_BLOCK_OUTBOUND>.
 
 =head2 debug ( state )
 
-Class method (affects all Net::SSH2 objects).  Pass 1 to enable, 0 to disable.
-Debug output is sent to stderr via C<warn>.
+Class method (affects all Net::SSH2 objects).
+
+Pass 1 to enable, 0 to disable. Debug output is sent to C<STDERR>.
 
 =head2 blocking ( flag )
 
-Enable or disable blocking.  Note that if blocking is disabled, methods that
-create channels may fail, e.g. C<channel>, C<SFTP>, C<scp_*>.
+Enable or disable blocking.
+
+A good number of the methods in Net::SSH2/libssh2 can not work in
+non-blocking mode. Some of them may just forcebly enable blocking
+during its execution. A few may even corrupt the SSH session or crash
+the program.
+
+The ones that can be safelly called are C<read> and, with some
+caveats, C<write>. See L<Net::SSH2::Channel/write>.
+
+I<Don't hesitate to report any bug you found in that area!>
 
 =head1 SEE ALSO
 
