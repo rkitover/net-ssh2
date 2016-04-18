@@ -1410,7 +1410,6 @@ PREINIT:
     libssh2_struct_stat st;
 CODE:
     NEW_CHANNEL(libssh2_scp_recv2(ss->session, path, &st));
-    hv_clear(stat);
     hv_store(stat, "mode",  4, newSVuv(st.st_mode),  0/*hash*/);
     hv_store(stat, "uid",   3, newSVuv(st.st_uid),   0/*hash*/);
     hv_store(stat, "gid",   3, newSVuv(st.st_gid),   0/*hash*/);
@@ -1432,7 +1431,6 @@ PREINIT:
     struct stat st;
 CODE:
     NEW_CHANNEL(libssh2_scp_recv(ss->session, path, &st));
-    hv_clear(stat);
     hv_store(stat, "mode",  4, newSVuv(st.st_mode),  0/*hash*/);
     hv_store(stat, "uid",   3, newSVuv(st.st_uid),   0/*hash*/);
     hv_store(stat, "gid",   3, newSVuv(st.st_gid),   0/*hash*/);
