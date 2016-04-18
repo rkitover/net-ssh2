@@ -1381,11 +1381,11 @@ Pass 1 to enable, 0 to disable. Debug output is sent to C<STDERR>.
 Enable or disable blocking.
 
 A good number of the methods in Net::SSH2/libssh2 can not work in
-non-blocking mode. Some of them may just forcebly enable blocking
+non-blocking mode. Some of them may just forcibly enable blocking
 during its execution. A few may even corrupt the SSH session or crash
 the program.
 
-The ones that can be safelly called are C<read> and, with some
+The ones that can be safely called are C<read> and, with some
 caveats, C<write>. See L<Net::SSH2::Channel/write>.
 
 I<Don't hesitate to report any bug you found in that area!>

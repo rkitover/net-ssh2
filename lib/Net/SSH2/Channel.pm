@@ -121,22 +121,24 @@ Net::SSH2::Channel - SSH2 channel object
 =head1 DESCRIPTION
 
 A channel object is created by the L<Net::SSH2> C<channel> method.  As well
-as being an object, it is also a tied filehandle.  The L<Net::SSH2> C<poll>
-method can be used to check for read/write availability and other conditions.
+as being an object, it is also a tied filehandle.
 
 =head2 setenv ( key, value ... )
 
-Sets remote environment variables.  Note that most implementations do not allow
-environment variables to be freely set.  Pass in a list of keys and values
-with the values to set.
+Sets remote environment variables. Note that most servers do not allow
+environment variables to be freely set.
 
-It returns a true value when all the given environment variables are
+Pass in a list of keys and values with the values to set.
+
+It returns a true value if all the given environment variables were
 correctly set.
 
 =head2 blocking ( flag )
 
-Enable or disable blocking.  Note that this is currently implemented in libssh2
-by setting a per-session flag; it's equivalent to L<Net::SSH2::blocking>.
+Enable or disable blocking.
+
+Note that this is currently implemented in libssh2 by setting a
+per-session flag. It's equivalent to L<Net::SSH2::blocking>.
 
 =head2 eof
 
@@ -144,10 +146,10 @@ Returns true if the remote server sent an EOF.
 
 =head2 send_eof
 
-Send an EOF to the remote.
+Sends an EOF to the remote side.
 
 After an EOF has been sent, no more data may be
-sent to the remote process C<stdin> channel.
+sent to the remote process C<STDIN> channel.
 
 =head2 close
 
@@ -155,7 +157,7 @@ Close the channel (happens automatically on object destruction).
 
 =head2 wait_closed
 
-Wait for a remote close event.  Must have already seen remote EOF.
+Wait for a remote close event. Must have already seen remote EOF.
 
 =head2 exit_status
 
@@ -181,7 +183,7 @@ Set extended data handling mode:
 
 =item normal (default)
 
-Keep data in separate channels; stderr is read separately.
+Keep data in separate channels; C<STDERR> is read separately.
 
 =item ignore
 
@@ -225,9 +227,11 @@ Run subsystem on the remote host (calls C<process("subsystem", name)>).
 
 =head2 read ( buffer, size [, ext ] )
 
-Attempts to read size bytes into the buffer.  Returns number of bytes read,
-undef on failure.  If ext is present and set, reads from the extended data
-channel (stderr).
+Attempts to read C<size> bytes into C<buffer>.
+
+If C<ext> is true, reads from the extended data channel (C<STDERR>).
+
+Returns number of bytes read or C<undef> on failure.
 
 =head2 write ( buffer [, ext ] )
 
