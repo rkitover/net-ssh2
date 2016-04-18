@@ -227,27 +227,29 @@ Run subsystem on the remote host (calls C<process("subsystem", name)>).
 
 =head2 read ( buffer, size [, ext ] )
 
-Attempts to read C<size> bytes into C<buffer>.
+Attempts to read C<size> bytes from the channel into C<buffer>. If
+C<ext> is true, reads from the extended data channel (C<STDERR>).
 
-If C<ext> is true, reads from the extended data channel (C<STDERR>).
+The method returns as soon as some data is available, even if the
+given size has not been reached.
 
 Returns number of bytes read or C<undef> on failure.
 
 =head2 write ( buffer [, ext ] )
 
-Attempts to write the buffer to the channel.  Returns number of bytes written,
+Send the data in C<buffer> through the channel.  Returns number of bytes written,
 undef on failure.  If ext is present and set, writes to the extended data
 channel (stderr).
 
 In versions of this module prior to 0.57, when working in non-blocking
 mode, the would-block condition was signaled by returning
-LIBSSH2_ERROR_EAGAIN (a negative number) while leaving the session
+C<LIBSSH2_ERROR_EAGAIN> (a negative number) while leaving the session
 error status unset. From version 0.59, C<undef> is returned and the
 session error status is set to C<LIBSSH2_ERROR_EAGAIN> as for any
 other error.
 
 In non-blocking mode, if C<write> fails with a C<LIBSSH2_ERROR_EAGAIN>
-error. No other operation must be invoked over any object in the same
+error, no other operation must be invoked over any object in the same
 SSH session besides L</sock> and L<blocking_directions>.
 
 Once the socket becomes ready again, the exact same former C</write>
