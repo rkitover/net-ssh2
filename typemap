@@ -44,11 +44,10 @@ T_SSH2_BYTES
     $arg = ( (($var) < 0) ? &PL_sv_undef : newSVuv($var) );
 
 T_SSH2_BYTES64
-#if (IVSIZE >= 8)
-    $arg = ( (($var) < 0) ? &PL_sv_undef : newSVuv($var) );
-#else
-    $arg = ( (($var) < 0) ? &PL_sv_undef : newSVnv($var) );
-#endif
+    if (IVSIZE >= 8)
+        $arg = ( (($var) < 0) ? &PL_sv_undef : newSVuv($var) );
+    else
+        $arg = ( (($var) < 0) ? &PL_sv_undef : newSVnv($var) );
 
 T_SSH2_BOOL
     $arg = (($var) ? &PL_sv_yes : &PL_sv_no);
