@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_08  2016-04-18
+        - Get extended diagnosis messages when $ENV{AUTOMATED_TESTING}
+          is set.
+
 0.59_07  2016-04-17
         - In auth, do not call authentications methods unless they are
           supported by the server.
