@@ -22,6 +22,7 @@ TYPEMAP
     SSH2_NERROR   T_SSH2_NERROR
     SSH2_BYTES    T_SSH2_BYTES
     SSH2_BYTES64  T_SSH2_BYTES64
+    SSH2_BYTESU64 T_SSH2_BYTESU64
     SSH2_BOOL     T_SSH2_BOOL
 
     SSH2_METHOD  T_SSH2_METHOD
@@ -44,10 +45,10 @@ T_SSH2_BYTES
     $arg = ( (($var) < 0) ? &PL_sv_undef : newSVuv($var) );
 
 T_SSH2_BYTES64
-    if (IVSIZE >= 8)
-        $arg = ( (($var) < 0) ? &PL_sv_undef : newSVuv($var) );
-    else
-        $arg = ( (($var) < 0) ? &PL_sv_undef : newSVnv($var) );
+    $arg = ( (($var) < 0) ? &PL_sv_undef : ((IVSIZE >= 8) ? newSVuv($var) : newSVnv($var)) );
+
+T_SSH2_BYTESU64
+    $arg = ((IVSIZE >= 8) ? newSVuv($var) : newSVnv($var));
 
 T_SSH2_BOOL
     $arg = (($var) ? &PL_sv_yes : &PL_sv_no);
@@ -160,3 +161,6 @@ T_LONG
 
 T_SSH2_BYTES64
     $var = SV2TYPE($arg, SSH2_BYTES64);
+
+T_SSH2_BYTESU64
+    $var = SV2UTYPE($arg, SSH2_BYTESU64);
