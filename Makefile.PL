@@ -157,6 +157,9 @@ sub findlib {
                     makemaker_append_once LDDLFLAGS => $ldflags if $ldflags;
                     return 1;
                 }
+                else {
+                    warn $@ if $@ and $ENV{AUTOMATED_TESTING};
+                }
             }
         }
     }
@@ -197,17 +200,21 @@ else {
 EOF
             analyze_binary => sub {
                 warn "Analyzing file $_[1]\n";
-                my $out = capture ldd => $_[1];
-                # warn "out:\n$out";
-                if ($out =~ /gcrypt/i) {
-                    $detected_crypto_backend = 'gcrypt';
-                }
-                elsif ($out =~ /lib(ssl|crypto)/i) {
-                    $detected_crypto_backend = 'openssl';
-                }
-                else {
-                    warn "Unable to detect crypto backend used by libssh2!\n"
-                }
+                local $@;
+                eval {
+                    my $out = capture ldd => $_[1];
+                    # warn "out:\n$out";
+                    if ($out =~ /gcrypt/i) {
+                        $detected_crypto_backend = 'gcrypt';
+                    }
+                    elsif ($out =~ /lib(ssl|crypto)/i) {
+                        $detected_crypto_backend = 'openssl';
+                    }
+                    else {
+                        warn "Unable to detect crypto backend used by libssh2!\n"
+                    }
+                };
+                warn $@ if $@ and $ENV{AUTOMATED_TESTING};
                 1;
             },
             run_checks_as_author => 1, );
