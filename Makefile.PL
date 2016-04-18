@@ -281,7 +281,6 @@ makemaker_append_once(CCFLAGS => '-Wno-deprecated-declarations') if $^O eq 'darw
 makemaker_append_once(CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c99 -pedantic-errors -Wno-long-long')
     if $Module::Install::AUTHOR and $linux and $cc_gcc;
 
-realclean_files qw/const-c.inc const-xs.inc/;
 resources repository => 'git://github.com/rkitover/net-ssh2.git';
 
 makemaker_append_once LIBS => '-lssh2', '-lz';
