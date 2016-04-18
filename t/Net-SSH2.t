@@ -141,9 +141,11 @@ unless ($type) {
 }
 
 ok($ssh2->auth_ok, 'authenticated successfully');
-ok($type, "authentication type is defined");
+ok($type, "authentication type is defined (".($type||undef).")");
 
 # (5) channels
+ok(!defined eval { $ssh2->channel("direct-tcpip") }, "only session channels");
+
 my $chan = $ssh2->channel();
 isa_ok($chan, 'Net::SSH2::Channel');
 $chan->blocking(0); pass('set blocking');
@@ -258,7 +260,7 @@ ok($sftp->rmdir($dir), "remove directory $dir");
 undef $sftp; pass('close SFTP session');
 
 # (5) poll
-$chan = $ssh2->channel();
+ok($chan = $ssh2->channel("session"), "open channel stating type session");
 ok($chan->exec('ls -d /'), "exec 'ls -d /'");
 $chan->blocking(0);  # don't block, or we'll wait forever
 my @poll = { handle => $chan, events => ['in'] };

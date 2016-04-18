@@ -1382,23 +1382,17 @@ CODE:
 #endif
 
 SSH2_CHANNEL*
-net_ss_channel(SSH2* ss, SV* channel_type = NULL,                \
-               int window_size = LIBSSH2_CHANNEL_WINDOW_DEFAULT, \
+net_ss_channel(SSH2* ss,  SSH2_CHARP_OR_NULL channel_type = NULL,   \
+               int window_size = LIBSSH2_CHANNEL_WINDOW_DEFAULT,    \
                int packet_size = LIBSSH2_CHANNEL_PACKET_DEFAULT)
 PREINIT:
-    const char* pv_channel_type;
-    STRLEN len_channel_type;
+    static const char mandatory_type[] = "session";
 CODE:
-    if (channel_type)
-        pv_channel_type = SvPVbyte(channel_type, len_channel_type);
-    else {
-        pv_channel_type = "session";
-        len_channel_type = 7;
-    }
-
+    if (channel_type && strcmp(channel_type, mandatory_type))
+        Perl_croak(aTHX_ "channel_type must be 'session' ('%s' given)", channel_type);
     NEW_CHANNEL(libssh2_channel_open_ex(ss->session,
-     pv_channel_type, len_channel_type, window_size, packet_size,
-     NULL/*message*/, 0/*message_len*/));
+        mandatory_type, strlen(mandatory_type), window_size, packet_size,
+        NULL/*message*/, 0/*message_len*/));
 OUTPUT:
     RETVAL
 
