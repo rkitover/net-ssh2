@@ -774,13 +774,37 @@ SFTP constants:
 
 =head1 METHODS
 
-=head2 new
+=head2 new ( %options )
 
 Create new Net::SSH2 object representing a SSH session.
 
-To turn on tracing with a debug build of libssh2 use:
+The accepted options are as follows:
+
+=over 4
+
+=item comoress
+
+Sets flag <COMPRESS>. See L</flag>.
+
+=item timeout
+
+Sets the default timeout. See L</timeout>.
+
+=item trace
+
+Sets tracing. See L</trace>.
+
+Example:
 
     my $ssh2 = Net::SSH2->new(trace => -1);
+
+Note that tracing requires a version of libssh2 compiled with debugging support.
+
+=item sigpipe
+
+Sets flag C<SIGPIPE>. See L</flag>.
+
+=back
 
 =head2 banner ( text )
 
@@ -830,9 +854,8 @@ A version of libssh2 compiled with tracing support is required.
 
 =head2 timeout ( timeout_ms )
 
-Enables a global timeout (in milliseconds) which will affect every action.
-
-libssh2 version 1.2.9 or higher is required to use this method.
+Enables a global timeout (in milliseconds) which will affect every
+action (requires libssh2 1.2.9 or later).
 
 =head2 method ( type [, values... ] )
 
@@ -1260,8 +1283,8 @@ The currently supported flag values are:
 If set before the connection negotiation is performed, compression
 will be negotiated for this connection.
 
-Compression can also be enabled passing the C<Compress> option
-L</connect>.
+Compression can also be enabled passing option C<compress> to the
+constructor L<new>.
 
 =item SIGPIPE
 
