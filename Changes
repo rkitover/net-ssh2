@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_10  2016-04-19
+        - Don't warn when undef is passed to method "timeout".
+        - Add more tests.
+        - Several documentation improvements.
+
 0.59_09  2016-04-18
         - Method "read" was not returning errors correctly.
         - Typemaps for 64bit integers were broken
