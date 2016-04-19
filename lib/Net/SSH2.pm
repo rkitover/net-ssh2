@@ -812,7 +812,7 @@ Enables a global timeout (in milliseconds) which will affect every
 action (requires libssh2 1.2.9 or later).
 
 By default, or if you set the timeout to zero, Net::SSH2 has no
-timeout for blocking methods.
+timeout.
 
 Note that timeout errors may leave the SSH connection in an
 inconsistent state and further operations may fail or behave
