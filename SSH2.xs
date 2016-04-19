@@ -928,12 +928,15 @@ CODE:
 #if LIBSSH2_VERSION_NUM >= 0x010209
 
 SV *
-net_ss_timeout(SSH2* ss, long timeout = 0)
+net_ss_timeout(SSH2* ss, SV *timeout = &PL_sv_undef)
+PREINIT:
+    long r;
 CODE:
     if (items > 1)
-        libssh2_session_set_timeout(ss->session, timeout);
-    timeout = libssh2_session_get_timeout(ss->session);
-    RETVAL = (timeout > 0 ? newSVuv(timeout) : &PL_sv_undef);
+        libssh2_session_set_timeout(ss->session,
+                                    (SvOK(timeout) ? SvUV(timeout) : 0));
+    r = libssh2_session_get_timeout(ss->session);
+    RETVAL = (r > 0 ? newSVuv(r) : &PL_sv_undef);
 OUTPUT:
     RETVAL
 

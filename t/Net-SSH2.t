@@ -274,6 +274,19 @@ ok(!$line, 'no more lines');
 
 # (4) public key
 $ssh2->blocking(1);  # creating channel may block
+
+$chan = $ssh2->channel();
+ok($chan->exec('cat'), "exec 'cat'");
+is($ssh2->timeout(100), 100, "sets timeout");
+is($ssh2->timeout, 100, "timeout is 100");
+ok(!$chan->read(my $buf, 10), "read fails");
+is(($ssh2->error)[0], Net::SSH2::LIBSSH2_ERROR_TIMEOUT(), "error timeout");
+is($ssh2->timeout(0), undef, "sets timeout to 0");
+is($ssh2->timeout, undef, "timeout is undef");
+is($ssh2->timeout(10), 10, "sets timeout to 10");
+is($ssh2->timeout(undef), undef, "sets timeout to undef");
+is($ssh2->timeout, undef, "timeout is undef 2");
+
 my $pk = $ssh2->public_key;
 SKIP: {
     skip ' - public key infrastructure not present', 4 unless $pk;
