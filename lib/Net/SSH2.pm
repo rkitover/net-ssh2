@@ -811,11 +811,19 @@ A version of libssh2 compiled with tracing support is required.
 Enables a global timeout (in milliseconds) which will affect every
 action (requires libssh2 1.2.9 or later).
 
+Note that timeout errors may leave the SSH connection in an
+inconsistent state and further operations may fail or behave
+incorrectly. Actually, some methods are able to recover after a
+timeout error and others are not.
+
+I<Don't hesitate to report any issue you encounter related to this so
+that it can be fixed or at least, documented!>
+
 =head2 method ( type [, values... ] )
 
-Sets or returns a method preference; for get, pass in the type only; to set,
-pass in either a list of values or a comma-separated string.  Values can only
-be queried after the session is connected.
+Sets or gets a method preference. For get, pass in the type only; to
+set, pass in either a list of values or a comma-separated
+string. Values can only be queried after the session is connected.
 
 The following methods can be set or queried:
 
