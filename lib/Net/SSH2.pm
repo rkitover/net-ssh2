@@ -1,6 +1,6 @@
 package Net::SSH2;
 
-our $VERSION = '0.59_10';
+our $VERSION = '0.59_11';
 
 use 5.006;
 use strict;
@@ -86,7 +86,7 @@ sub connect {
     if (%opts) {
         $connect_opts_warned++ or
             carp "passing options to connect is deprecated";
-        $self->timeout($opts{Timeout}) if $opts{Timeout};
+        $self->timeout(1000 * $opts{Timeout}) if $opts{Timeout};
         if ($opts{Compress} and
             ($self->version)[1] >= 0x10500) {
             $self->flag(COMPRESS => 1);
@@ -95,12 +95,14 @@ sub connect {
 
     my ($hostname, $port);
     if (@_ == 2) {
+
         $hostname = $_[0];
         $port = getservbyname($_[1] || 'ssh', 'tcp') || 22;
+        my $timeout = $self->timeout;
         $sock = $socket_class->new( PeerHost => $hostname,
                                     PeerPort => $port,
                                     Blocking => $self->blocking,
-                                    Timeout => $self->timeout );
+                                    (defined($timeout) ? (Timeout => 0.001 * $timeout) : ()) );
         unless ($sock) {
             $self->_set_error(LIBSSH2_ERROR_SOCKET_NONE(), "Unable to connect to remote host: $!");
             goto error;
@@ -737,7 +739,7 @@ The accepted options are as follows:
 
 =item timeout
 
-Sets the default timeout. See L</timeout>.
+Sets the default timeout in milliseconds. See L</timeout>.
 
 =item trace
 
@@ -1005,6 +1007,10 @@ L<IO::Socket::IP> is required.
 The port number defaults to 22.
 
 =back
+
+This method used to accept a C<Timeout> argument. That feature has
+been replaced by the constructor C<timeout> option but note that it
+takes milliseconds instead of seconds!
 
 =head2 disconnect ( [description [, reason [, language]]] )
 

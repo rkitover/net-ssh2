@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_11
+        - Scale timeout values passed between IO::Socket::* (using
+          seconds) and libssh2 (using miliseconds).
+
 0.59_10  2016-04-19
         - Don't warn when undef is passed to method "timeout".
         - Add more tests.
