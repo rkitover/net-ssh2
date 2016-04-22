@@ -32,6 +32,68 @@ sub setenv {
     $rc
 }
 
+sub read1 {
+    my $self = shift;
+    my $buffer;
+    my $rc = $self->read($buffer, @_);
+    return (defined $rc ? $buffer : undef);
+}
+
+sub read2 {
+    my ($self, $max_size) = @_;
+    $max_size = 32678 unless defined $max_size;
+    my $ssh2 = $self->session;
+    my $old_blocking = $ssh2->blocking;
+    my $timeout = $ssh2->timeout;
+    my $delay = (($timeout and $timeout < 2000) ? 0.0005 * $timeout : 1);
+    my $deadline;
+    $deadline = time + 1 + 0.001 * $timeout if $timeout;
+    $ssh2->blocking(0);
+    while (1) {
+        my @out;
+        my $bytes;
+        my $fail;
+        my $zero;
+        for (0, 1) {
+            my $rc = $self->read($out[$_], $max_size, $_);
+            if (defined $rc) {
+                $rc or $zero++;
+                $bytes += $rc;
+                $deadline = time + 1 + 0.001 * $timeout if $timeout;
+            }
+            else {
+                $out[$_] = '';
+                if ($ssh2->error != Net::SSH2::LIBSSH2_ERROR_EAGAIN()) {
+                    $fail++;
+                    last;
+                }
+            }
+        }
+        if ($bytes or $self->eof) {
+            $ssh2->blocking($old_blocking);
+            return (wantarray ? @out : $out[0])
+        }
+        if ($fail) {
+            $ssh2->blocking($old_blocking);
+            return;
+        }
+        unless ($zero) {
+            return unless $old_blocking;
+            if ($deadline and time > $deadline) {
+                $ssh2->_set_error(Net::SSH2::LIBSSH2_ERROR_TIMEOUT(), "Time out waiting for data");
+                return;
+            }
+            return if time > $deadline;
+            my $sock = $ssh2->sock;
+            my $fn = fileno($sock);
+            my ($rbm, $wbm) = ('', '');
+            my $bd = $ssh2->block_directions;
+            vec($rbm, $fn, 1) = 1 if $bd & Net::SSH2::LIBSSH2_SESSION_BLOCK_INBOUND();
+            vec($wbm, $fn, 1) = 1 if $bd & Net::SSH2::LIBSSH2_SESSION_BLOCK_OUTBOUND();
+            select $rbm, $wbm, undef, $delay;
+        }
+    }
+}
 
 # tie interface
 
@@ -225,9 +287,9 @@ be properly quoted, specially when passing data from untrusted sources.
 
 Run subsystem on the remote host (calls C<process("subsystem", name)>).
 
-=head2 read ( buffer, size [, ext ] )
+=head2 read ( buffer, max_size [, ext ] )
 
-Attempts to read C<size> bytes from the channel into C<buffer>. If
+Attempts to read up to C<max_size> bytes from the channel into C<buffer>. If
 C<ext> is true, reads from the extended data channel (C<STDERR>).
 
 The method returns as soon as some data is available, even if the
@@ -235,6 +297,31 @@ given size has not been reached.
 
 Returns number of bytes read or C<undef> on failure. Note that 0 is a
 valid return code.
+
+=head2 read2 ( [max_size] )
+
+Attempts to read from both the ordinary (stdout) and the extended
+(stderr) channel streams.
+
+Returns two scalars with the data read both from stdout and stderr. It
+returns as soon as some data is available and any of the returned
+values may be an empty string.
+
+When some error happens it returns the empty list.
+
+Example:
+
+  my ($out, $err) = ('', '');
+  while (!$channel->eof) {
+      if (my ($o, $e) = $channel->read2) {
+          $out .= $o;
+          $err .= $e;
+      }
+      else {
+          $ssh2->die_with_error;
+      }
+  }
+  print "STDOUT:\n$out\nSTDERR:\n$err\n";
 
 =head2 write ( buffer )
 
