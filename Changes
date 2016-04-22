@@ -1,8 +1,15 @@
 Revision history for Perl extension Net::SSH2.
 
-0.59_11
+0.59_11  2016-04-22
+        - Add channel method "read2".
+        - Do not retry read operations when "libssh2_channel_read_ex"
+          returns 0 (bug report by Ferenc Erki).
+        - Fix definitions for LIBSSH2_ERROR_NONE,
+          LIBSSH2_SESSION_BLOCK_INBOUND and
+          LIBSSH2_SESSION_BLOCK_OUTBOUND.
         - Scale timeout values passed between IO::Socket::* (using
           seconds) and libssh2 (using miliseconds).
+        - Several documentation improvements.
 
 0.59_10  2016-04-19
         - Don't warn when undef is passed to method "timeout".
