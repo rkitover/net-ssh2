@@ -1827,12 +1827,7 @@ CODE:
             if (blocking) break;
         }
         else {
-            if (count == 0) {
-                if (libssh2_channel_eof(ch->channel)) break;
-                count = LIBSSH2_ERROR_EAGAIN;
-            }
             if ((count != LIBSSH2_ERROR_EAGAIN) || !blocking) break;
-
         }
     }
     debug("- read %d total\n", total);

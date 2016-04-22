@@ -233,13 +233,13 @@ C<ext> is true, reads from the extended data channel (C<STDERR>).
 The method returns as soon as some data is available, even if the
 given size has not been reached.
 
-Returns number of bytes read or C<undef> on failure.
+Returns number of bytes read or C<undef> on failure. Note that 0 is a
+valid return code.
 
-=head2 write ( buffer [, ext ] )
+=head2 write ( buffer )
 
-Send the data in C<buffer> through the channel.  Returns number of bytes written,
-undef on failure.  If ext is present and set, writes to the extended data
-channel (stderr).
+Send the data in C<buffer> through the channel. Returns number of
+bytes written, undef on failure.
 
 In versions of this module prior to 0.57, when working in non-blocking
 mode, the would-block condition was signaled by returning
