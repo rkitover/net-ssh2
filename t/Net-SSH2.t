@@ -9,6 +9,7 @@
 use Test::More;
 
 use strict;
+use Fcntl qw(O_CREAT O_EXCL O_WRONLY);
 use File::Basename;
 use File::Spec;
 use Getopt::Long;
@@ -16,7 +17,17 @@ use Getopt::Long;
 #########################
 
 # to speed up testing, set host, user and pass here
-my ($host, $user, $password, $passphrase, $known_hosts) = qw();
+my ($host, $user, $password, $passphrase, $known_hosts, $interact) = qw();
+
+# default testing items from %ENV to facilitate coverage testing
+$host        = $ENV{'NETSSH2_HOST'}        if defined( $ENV{'NETSSH2_HOST'} );
+$user        = $ENV{'NETSSH2_USER'}        if defined( $ENV{'NETSSH2_USER'} );
+$password    = $ENV{'NETSSH2_PASSWORD'}    if defined( $ENV{'NETSSH2_PASSWORD'} );
+$passphrase  = $ENV{'NETSSH2_PASSPHRASE'}  if defined( $ENV{'NETSSH2_PASSPHRASE'} );
+$known_hosts = $ENV{'NETSSH2_KNOWN_HOSTS'} if defined( $ENV{'NETSSH2_KNOWN_HOSTS'} );
+
+$interact = 1;
+$interact = 0 if (defined($user) && defined($password));
 
 $known_hosts ||= File::Spec->devnull;
 GetOptions("host|h=s" => \$host,
@@ -137,7 +148,7 @@ unless ($type) {
     diag "reverting to password authentication";
     $type = $ssh2->auth(username => $user,
                         password => $password,
-                        interact => 1);
+                        interact => $interact);
 }
 
 ok($ssh2->auth_ok, 'authenticated successfully');
@@ -232,6 +243,39 @@ my $fstat = $fh->stat;
 is_deeply($fstat, \%fstat, 'compare fstat % and %$');
 undef $fh;
 
+# (3) exercise File tie interface
+my $fh = $sftp->open($altname);
+isa_ok($fh, 'Net::SSH2::File', 'opened file');
+my $line = '';
+my $count = read($fh,$line,10);
+is($count,10,'read partial first line via tie interface');
+$count = read($fh,$line,12,10);
+is($count,12,'read remaining first line via tie interface');
+chomp($line);
+is($line,'# -*- Mode: CPerl -*-','validate first line received via tie interface');
+my @lines = <$fh>;
+$line = pop(@lines);
+chomp($line);
+is($line,'# vim:filetype=perl','read remaining lines via tie interface');
+my $mode = binmode $fh;
+is($mode,undef,'binmode via tie interface');
+is(eof $fh,0,'eof via tie interface');
+is(close $fh,undef,'close via tie interface');
+undef $fh;
+my $outfile = $dir . '/write.out';
+my $fh = $sftp->open($outfile,O_CREAT|O_EXCL|O_WRONLY);
+isa_ok($fh, 'Net::SSH2::File', 'opened file for writing');
+$count = print $fh 'test ';
+is($count,5,'print via tie interface');
+$, = ',';
+$count = print $fh 'test ';
+undef $,;
+is($count,5,'print with separator via tie interface');
+$count = printf $fh 'test %d',1;
+is($count,1,'printf via tie interface');
+undef $fh;
+$sftp->unlink($outfile);
+
 # (2) SFTP dir
 my $dh = $sftp->opendir($dir);
 isa_ok($dh, 'Net::SSH2::Dir', 'opened directory');
@@ -300,9 +344,30 @@ SKIP: {
 }
 undef $pk;
 
-# (2) disconnect
 ok($chan->close(), 'close channel'); # optional step
 undef $fh;
+
+# (5) exercise Channel tie interface
+$chan = $ssh2->channel();
+isa_ok($chan, 'Net::SSH2::Channel');
+#is(eof $chan,0,'channel eof via tie interface');
+$mode = binmode $chan;
+is($mode,undef,'channel binmode via tie interface');
+$chan->shell;
+$chan->subsystem('dummy');
+is($chan->error,-39, 'channel error');
+$, = ';';
+$count = print $chan "exit\n";
+is($count,5,'channel print with separator via tie interface');
+undef $,;
+$count = print $chan "exit\n";
+is($count,5,'channel print via tie interface');
+$count = printf $chan "exit\n";
+is($count,1,'channel printf via tie interface');
+is(close $chan,1,'channel close via tie interface');
+undef $chan;
+
+# (2) disconnect
 ok($ssh2->disconnect('leaving'), 'sent disconnect message');
 
 done_testing;
