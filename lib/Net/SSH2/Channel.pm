@@ -77,10 +77,15 @@ sub GETC {
 }
 
 sub READ {
-    my ($self, $rbuf, $len, $offset) = @_;
+    my $self = shift;
+    my $rbuf = \$_[0];
+    my(undef,$len,$offset) = @_;
     my ($tmp, $count);
     return unless defined($count = $self->read($tmp, $len));
+    $offset = $offset || 0;
+    no strict 'refs';
     substr($$rbuf, $offset) = $tmp;
+    use strict 'refs';
     $count
 }
 
