@@ -1,6 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
-0.59_12
+0.59_12  2016-04-26
         *** WARNING: backward incompatible change: "READLINE" had an
           undocumented hard coded timeout of 250ms which made the
           method unreliable. That timeout has been removed. If
