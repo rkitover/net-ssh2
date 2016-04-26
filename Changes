@@ -1,5 +1,15 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_12
+        *** WARNING: backward incompatible change: "READLINE" had an
+          undocumented hard coded timeout of 250ms which made the
+          method unreliable. That timeout has been removed. If
+          desired, the old behaviour can be attained setting
+          non-blocking mode or with a global timeout.
+        - add Channel "readline" method.
+        - add Channel "getc" method.
+        - Cleanup of the channel tie interface.
+
 0.59_11  2016-04-22
         - Add channel method "read2".
         - Do not retry read operations when "libssh2_channel_read_ex"

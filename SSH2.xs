@@ -1847,6 +1847,25 @@ CODE:
 OUTPUT:
     RETVAL
 
+SV *
+net_ch_getc(SSH2_CHANNEL* ch, SV *ext = &PL_sv_undef)
+PREINIT:
+    char buffer[2];
+    int count;
+CODE:
+    debug("%s::getc(ext = %d)\n", class, SvTRUE(ext));
+    count = libssh2_channel_read_ex(ch->channel, XLATEXT, buffer, 1);
+    if (count >= 0) {
+        buffer[count] = '\0';
+        RETVAL = newSVpvn(buffer, count);
+    }
+    else {
+        save_eagain(ch->ss->session, count);
+        RETVAL = &PL_sv_undef;
+    }
+OUTPUT:
+    RETVAL
+
 SSH2_BYTES
 net_ch_write(SSH2_CHANNEL* ch, SV* buffer, SV *ext = &PL_sv_undef)
 PREINIT:

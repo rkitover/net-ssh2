@@ -95,6 +95,33 @@ sub read2 {
     }
 }
 
+sub readline {
+    my ($self, $ext, $eol) = @_;
+    return if $self->eof;
+    $ext ||= 0;
+    $eol = $/ unless defined $eol;
+    if (wantarray) {
+        my $data = '';
+        my $buffer;
+        while (1) {
+            my $bytes = $self->read($buffer, 32768, $ext);
+            last unless defined $bytes;
+            $data .= $buffer;
+        }
+        return split /(?<=\Q$eol\E)/s, $data;
+    }
+    else {
+        my $data = '';
+        while (1) {
+            my $c = $self->getc($ext);
+            last unless defined $c;
+            $data .= $c;
+            last if $data =~ /\Q$eol\E\z/;
+        }
+        return (length $data ? $data : undef);
+    }
+}
+
 # tie interface
 
 sub PRINT {
@@ -110,52 +137,24 @@ sub PRINTF {
 
 sub WRITE {
     my ($self, $buf, $len, $offset) = @_;
-    $self->write(substr($buf, $offset, $len))
+    $self->write(substr($buf, $offset || 0, $len))
 }
 
-sub READLINE {
-    my $self = shift;
-    return if $self->eof;
-
-    if (wantarray) {
-        my @lines;
-        my $line;
-        push @lines, $line while defined($line = $self->READLINE);
-        return @lines;
-    }
-    
-    my ($line, $eol, $c) = ('', $/);
-    $line .= $c while $line !~ /\Q$eol\E$/ and defined($c = $self->GETC);
-    length($line) ? $line : undef
-}
-
-sub GETC {
-    my $self = shift;
-    my $buf;
-    my @poll = ({ handle => $self, events => 'in' });
-    return
-     unless $self->session->poll(250, \@poll) and $poll[0]->{revents}->{in};
-    $self->read($buf, 1) ? $buf : undef
-}
+sub READLINE { shift->readline(0, $/) }
 
 sub READ {
-    my ($self, $rbuf, $len, $offset) = @_;
-    my ($tmp, $count);
-    return unless defined($count = $self->read($tmp, $len));
-    substr($$rbuf, $offset) = $tmp;
-    $count
+    my ($self, undef, $len, $offset) = @_;
+    my $bytes = $self->read(my($buffer), $len);
+    substr($_[1], $offset || 0) = $buffer
+        if defined $bytes;
+    return $bytes;
 }
 
-sub CLOSE {
-    &close
-}
+sub BINMODE {}
 
-sub BINMODE {
-}
-
-sub EOF {
-    &eof
-}
+*CLOSE = \&close;
+*EOF = \&eof;
+*GETC = \&getc;
 
 1;
 __END__
@@ -323,6 +322,26 @@ Example:
   }
   print "STDOUT:\n$out\nSTDERR:\n$err\n";
 
+=head2 readline ( [ext [, eol ] ] )
+
+Reads the next line from the selected stream (C<ext> defaults to 0:
+stdout).
+
+C<$/> is used as the end of line marker when C<eol> is C<undef>.
+
+In list context reads and returns all the remaining lines until some
+read error happens or the remote side sends an eof.
+
+=head2 getc( [ext] )
+
+Reads and returns the next character from the selected stream.
+
+Returns C<undef> on error.
+
+Note that due to some libssh2 quirks, the return value can be the
+empty string which may indicate an EOF condition (but not
+always!). See L</eof>.
+
 =head2 write ( buffer )
 
 Send the data in C<buffer> through the channel. Returns number of
@@ -339,7 +358,7 @@ In non-blocking mode, if C<write> fails with a C<LIBSSH2_ERROR_EAGAIN>
 error, no other operation must be invoked over any object in the same
 SSH session besides L</sock> and L<blocking_directions>.
 
-Once the socket becomes ready again, the exact same former C</write>
+Once the socket becomes ready again, the exact same former C<write>
 call, with exactly the same arguments must be invoked.
 
 Failing to do that would result in a corrupted SSH session. This is a
