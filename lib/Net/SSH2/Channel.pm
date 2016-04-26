@@ -106,17 +106,26 @@ sub readline {
         while (1) {
             my $bytes = $self->read($buffer, 32768, $ext);
             last unless defined $bytes;
+            if (!$bytes and $self->eof) {
+                $self->session->_set_error(Net::SSH2::LIBSSH2_ERROR_SOCKET_NONE());
+                last;
+            }
             $data .= $buffer;
         }
         return split /(?<=\Q$eol\E)/s, $data;
     }
     else {
+        my $c;
         my $data = '';
         while (1) {
-            my $c = $self->getc($ext);
+            $c = $self->getc($ext);
             last unless defined $c;
             $data .= $c;
-            last if $data =~ /\Q$eol\E\z/;
+            if ( (!length($c) and $self->eof) or
+                 $data =~ /\Q$eol\E\z/) {
+                $self->session->_set_error(Net::SSH2::LIBSSH2_ERROR_SOCKET_NONE());
+                last;
+            }
         }
         return (length $data ? $data : undef);
     }
@@ -212,6 +221,9 @@ Sends an EOF to the remote side.
 After an EOF has been sent, no more data may be
 sent to the remote process C<STDIN> channel.
 
+Note that if a PTY was requested for the channel, the EOF may be
+ignored by the remote server. See L</pty>.
+
 =head2 close
 
 Close the channel (happens automatically on object destruction).
@@ -226,9 +238,14 @@ Returns the channel's program exit status.
 
 =head2 pty ( terminal [, modes [, width [, height ]]] )
 
-Request a terminal on a channel.  If provided, C<width> and C<height> are the
-width and height in characters (defaults to 80x24); if negative their absolute
-values specify width and height in pixels.
+Request a terminal on a channel.
+
+C<terminal> is the type of emulation (e.g. vt102, ansi,
+etc...). C<modes> are the terminal mode modifiers.
+
+If provided, C<width> and C<height> are the width and height in
+characters (defaults to 80x24); if negative their absolute values
+specify width and height in pixels.
 
 =head2 pty_size ( width, height )
 
@@ -331,6 +348,12 @@ C<$/> is used as the end of line marker when C<eol> is C<undef>.
 
 In list context reads and returns all the remaining lines until some
 read error happens or the remote side sends an eof.
+
+Note that this method is only safe when the complementary stream
+(e.g. C<!ext>) is guaranteed to not generate data or when L</ext_data>
+has been used to discard or merge it; otherwise it may hang. This is a
+limitation of libssh2 that hopefully would be removed in a future
+release, in the meantime you are advised to use L<read2> instead.
 
 =head2 getc( [ext] )
 
