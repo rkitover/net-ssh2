@@ -5,6 +5,7 @@ our $VERSION = '0.59_14';
 use 5.006;
 use strict;
 use warnings;
+use warnings::register;
 use Carp;
 
 require Net::SSH2::Constants;
@@ -73,7 +74,7 @@ sub connect {
         $sock = shift;
         if ($sock =~ /^\d{1,10}$/) {
             $connect_fd_warned++ or
-                carp "passing a file descriptor number to connect is deprecated";
+                warnings::warnif($self, "Passing a file descriptor number to connect is deprecated");
             $fd = $sock;
         } elsif(ref $sock) {
             # handled below
@@ -85,7 +86,7 @@ sub connect {
     my %opts = splice @_, 2;
     if (%opts) {
         $connect_opts_warned++ or
-            carp "passing options to connect is deprecated";
+            warnings::warnif($self, "Passing options to connect is deprecated");
         $self->timeout(1000 * $opts{Timeout}) if $opts{Timeout};
         if ($opts{Compress} and
             ($self->version)[1] >= 0x10500) {
@@ -138,7 +139,7 @@ sub connect {
  error:
     unless (defined wantarray) {
         $connect_void_warned++ or
-            carp "calling connect in void context is deprecated";
+            warnings::warnif($self, "Calling connect in void context is deprecated");
         croak "Net::SSH2: failed to connect to $_[0]:$_[1]: $!"
     }
     return;
