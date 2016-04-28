@@ -107,7 +107,7 @@ sub readline {
             my $bytes = $self->read($buffer, 32768, $ext);
             last unless defined $bytes;
             if (!$bytes and $self->eof) {
-                $self->session->_set_error(Net::SSH2::LIBSSH2_ERROR_SOCKET_NONE());
+                $self->session->_set_error(Net::SSH2::LIBSSH2_ERROR_NONE());
                 last;
             }
             $data .= $buffer;
@@ -123,7 +123,7 @@ sub readline {
             $data .= $c;
             if ( (!length($c) and $self->eof) or
                  $data =~ /\Q$eol\E\z/) {
-                $self->session->_set_error(Net::SSH2::LIBSSH2_ERROR_SOCKET_NONE());
+                $self->session->_set_error(Net::SSH2::LIBSSH2_ERROR_NONE());
                 last;
             }
         }

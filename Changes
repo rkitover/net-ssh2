@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_14  2016-0428
+        - READLINE was not clearing the error code correctly.
+
 0.59_13  2016-04-26
         - Detect EOF in most cases (cannot be done always due to
           libssh2 limitations) in "readline" and "getc".
