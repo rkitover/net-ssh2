@@ -10,6 +10,7 @@ perl:
   - "5.8"
 
 env:
+  - LIBVER=git
   - LIBVER=1.7.0
   - LIBVER=1.6.0
   - LIBVER=1.5.0
