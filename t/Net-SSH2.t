@@ -21,13 +21,15 @@ my $user        = $ENV{TEST_NET_SSH2_USER};
 my $password    = $ENV{TEST_NET_SSH2_PASSWORD};
 my $passphrase  = $ENV{TEST_NET_SSH2_PASSPHRASE};
 my $known_hosts = $ENV{TEST_NET_SSH2_KNOWN_HOSTS};
+my $policy      = $ENV{TEST_NET_SSH2_POLICY} || 'ask';
 
 $known_hosts ||= File::Spec->devnull;
 GetOptions("host|h=s" => \$host,
            "user|u=s" => \$user,
            "password|pwd|pw|w=s" => \$password,
            "passphrase|pp=s" => \$passphrase,
-           "known_hosts|kh|k=s" => \$known_hosts);
+           "known_hosts|kh|k=s" => \$known_hosts,
+           "policy|o=s" => \$policy);
 
 $| = 1;
 sub slurp;
@@ -105,7 +107,7 @@ is(length $sha1, 20, 'have SHA1 hostkey hash');
 ok($ssh2->check_hostkey('advisory', $known_hosts), "check remote key - advisory")
     or diag(join " ", "Error:", $ssh2->error);
 
-ok($ssh2->check_hostkey('ask', $known_hosts), "check remote key - ask")
+ok($ssh2->check_hostkey($policy, $known_hosts), "check remote key - ask")
     or diag(join " ", "Error:", $ssh2->error);
 
 # (3) authentication methods
