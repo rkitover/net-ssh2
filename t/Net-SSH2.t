@@ -10,7 +10,6 @@ use Test::More;
 
 use strict;
 use Fcntl qw(O_CREAT O_EXCL O_WRONLY);
-use File::Basename;
 use File::Spec;
 use Getopt::Long;
 
@@ -32,6 +31,7 @@ GetOptions("host|h=s" => \$host,
 
 $| = 1;
 sub slurp;
+sub quote;
 
 # (1) use module
 BEGIN { use_ok('Net::SSH2', ':all') };
@@ -184,51 +184,79 @@ ok($stat{mode} & 0x4000, 'type is directory');
 is($stat{name}, $dir, 'directory name matches');
 
 # (4) SCP
-my $remote = "$dir/".basename($0);
-ok($ssh2->scp_put($0, $remote), "put $0 to remote ($remote)");
+
+my $fn = "ppport.h";
+my ($local_vol, $local_dir) = File::Spec->splitpath(File::Spec->rel2abs($0));
+my $local_fn = File::Spec->join($local_vol, $local_dir, File::Spec->updir, $fn);
+my $local_data = slurp($local_fn);
+my @local_lines = slurp($local_fn);
+
+my $remote_fn = "$dir/$fn";
+ok($ssh2->scp_put($local_fn, $remote_fn), "put $local_fn to remote $remote_fn");
 
 SKIP: { # SKIP-scalar
     eval { require IO::Scalar };
     skip '- IO::Scalar required', 2 if $@;
-    my $check = IO::Scalar->new;
-    ok($ssh2->scp_get($remote, $check), "get $remote from remote");
-    my $content = ${$check->sref};
- SKIP: { # SKIP-slurp
-        my $data = slurp($0);
-        defined $data or skip "- Unable to read '$0': $!", 1;
-        if (length $content == length $data) {
-            is($content, $data, 'files match');
-        }
-        else {
-            fail('file size match');
-            if (length $content == 0) {
-                diag <<MSG
+    my $tmp = IO::Scalar->new;
+    ok($ssh2->scp_get($remote_fn, $tmp), "get $remote_fn from remote");
+    my $remote_data = ${$tmp->sref};
+    if (length $remote_data == length $local_data) {
+        is($remote_data, $local_data, 'files match');
+    }
+    else {
+        fail('file size match');
+        if (length $remote_data == 0) {
+            diag <<MSG
 This is a known bug of Straberry perl: there is a mismatch between perl and libssh2 about the layout of 'struct stat'.
 The best way to avoid it is to upgrade libssh2 to version 1.6.1 or later.
 This bug affects SCP methods only.
 MSG
-            }
         }
-    } # SKIP-slurp
+    }
 } # SKIP-scalar
 
+my $remote_fn_quoted = quote($remote_fn);
+$chan = $ssh2->channel();
+# $ssh2->trace(-1);
+$chan->ext_data('ignore');
+$chan->send_eof;
+ok($chan->exec("cat $remote_fn_quoted"), "exec cat $remote_fn_quoted");
+my $remote_data = do { local $/; <$chan> };
+is ($remote_data, $local_data);
+
+$chan = $ssh2->channel();
+$chan->ext_data('ignore');
+$chan->send_eof;
+ok($chan->exec("cat $remote_fn_quoted"), "exec cat $remote_fn_quoted");
+my @remote_lines = <$chan>;
+is_deeply (\@remote_lines, \@local_lines, 'channel readline');
+
+$chan = $ssh2->channel();
+$chan->ext_data('ignore');
+$chan->send_eof;
+ok($chan->exec("cat $remote_fn_quoted"), "exec cat $remote_fn_quoted");
+my $remote_data = $chan->getc;
+ok (defined $remote_data, 'getc defined');
+is ($remote_data, substr($local_data, 0, length($remote_data)), 'getc value');
+
 # (3) rename
-my $altname = "$remote.renamed";
-$sftp->unlink($altname);
-ok(!$sftp->unlink($altname), 'unlink non-existant file fails');
+my $fn_alt = "$fn.renamed";
+my $remote_fn_alt = "$remote_fn.renamed";
+$sftp->unlink($remote_fn_alt);
+ok(!$sftp->unlink($remote_fn_alt), 'unlink non-existant file fails');
 my @error = $sftp->error();
 is_deeply(\@error, [LIBSSH2_FX_NO_SUCH_FILE(), 'SSH_FX_NO_SUCH_FILE'],
  'got LIBSSH2_FX_NO_SUCH_FILE error');
-ok($sftp->rename($remote, $altname), "rename $remote -> $altname");
+ok($sftp->rename($remote_fn, $remote_fn_alt), "rename $remote_fn -> $remote_fn_alt");
 
 # (3) stat
-%stat = $sftp->stat($altname);
-ok(scalar keys %stat, "stat $altname");
-is($stat{name}, $altname, 'stat filename matches');
-is($stat{size}, -s $0, 'stat filesize matches');
+%stat = $sftp->stat($remote_fn_alt);
+ok(scalar keys %stat, "stat $remote_fn_alt");
+is($stat{name}, $remote_fn_alt, 'stat filename matches');
+is($stat{size}, -s $local_fn, 'stat filesize matches');
 
 # (3) open
-my $fh = $sftp->open($altname);
+my $fh = $sftp->open($remote_fn_alt);
 isa_ok($fh, 'Net::SSH2::File', 'opened file');
 my %fstat = $fh->stat;
 delete $stat{name};  # fstat has no name
@@ -238,23 +266,30 @@ is_deeply($fstat, \%fstat, 'compare fstat % and %$');
 undef $fh;
 
 # (3) exercise File tie interface
-my $fh = $sftp->open($altname);
+my $fh = $sftp->open($remote_fn_alt);
 isa_ok($fh, 'Net::SSH2::File', 'opened file');
 my $line = '';
-my $count = read($fh,$line,10);
-is($count,10,'read partial first line via tie interface');
-$count = read($fh,$line,12,10);
-is($count,12,'read remaining first line via tie interface');
-chomp($line);
-is($line,'# -*- Mode: CPerl -*-','validate first line received via tie interface');
-my @lines = <$fh>;
-$line = pop(@lines);
-chomp($line);
-is($line,'# vim:filetype=perl','read remaining lines via tie interface');
+my $count = read($fh, $line, 20000);
+ok(defined($count), 'read read via tie interface');
+$count = read($fh, $line, 40000, length($line));
+ok(defined($count),'read read via tie interface 2');
+is ($line, substr($local_data, 0, length($line)), 'validate read via tie interface 3');
+$fh->seek(0);
+my @remote_lines = <$fh>;
+is_deeply(\@remote_lines, \@local_lines, 'read lines via tie interface');
+$fh->seek(0);
+@remote_lines = ();
+push @remote_lines, $_ while <$fh>;
+is_deeply(\@remote_lines, \@local_lines, 'read lines via tie interface');
+
+$fh->seek(0);
+my ($remote_data) = do { local $/; <$fh> };
+is ($remote_data, $local_data, 'read lines with $/ undefined');
+
 my $mode = binmode $fh;
-is($mode,undef,'binmode via tie interface');
-is(eof $fh,0,'eof via tie interface');
-is(close $fh,undef,'close via tie interface');
+ok($mode, 'binmode via tie interface');
+is(eof $fh, 0, 'eof via tie interface');
+is(close $fh, undef, 'close via tie interface');
 undef $fh;
 my $outfile = $dir . '/write.out';
 my $fh = $sftp->open($outfile,O_CREAT|O_EXCL|O_WRONLY);
@@ -275,25 +310,13 @@ my $dh = $sftp->opendir($dir);
 isa_ok($dh, 'Net::SSH2::Dir', 'opened directory');
 my $found;
 while(my $item = $dh->read) {
-    $found = 1, last if $item->{name} eq basename $altname;
+    $found++ if $item->{name} eq $fn_alt
 }
-ok($found, "found $altname");
+is($found, 1, "found $remote_fn_alt once");
 undef $dh;
 
-# (2) read file
-$fh = $sftp->open($altname);
-isa_ok($fh, 'Net::SSH2::File', 'opened file');
-scalar <$fh> for 1..4;
-my $line = <$fh>;
-chomp $line;
-if($^O =~ /MSWin32/i) {
-  $line =~ s/\r//;
-}
-is($line, '# THIS LINE WILL BE READ BY A TEST BELOW', "read '$line'");
-#undef $fh;  # don't undef it, ensure reference counts work properly
-
 # (3) cleanup SFTP
-ok($sftp->unlink($altname), "unlink $altname");
+ok($sftp->unlink($remote_fn_alt), "unlink $remote_fn_alt");
 ok($sftp->rmdir($dir), "remove directory $dir");
 undef $sftp; pass('close SFTP session');
 
@@ -346,7 +369,7 @@ $chan = $ssh2->channel();
 isa_ok($chan, 'Net::SSH2::Channel');
 #is(eof $chan,0,'channel eof via tie interface');
 $mode = binmode $chan;
-is($mode,undef,'channel binmode via tie interface');
+is($mode, 1, 'channel binmode via tie interface');
 $chan->shell;
 $chan->subsystem('dummy');
 is($chan->error,-39, 'channel error');
@@ -371,11 +394,24 @@ sub slurp {
     my $file = shift;
     if (open my $fh, '<', $file) {
         binmode $fh;
-        local $/;
-        my $data = <$fh>;
-        return $data if close $fh;
+        my @data = do {
+            local $/ unless wantarray;
+            <$fh>;
+        };
+        if (close $fh) {
+            return (wantarray ? @data : $data[0]);
+        }
     }
-    ()
+    die "Unable to read file '$file': $!";
+}
+
+sub quote {
+    my @o = map {
+        join '', map( /'/  ? qq("$_") :
+                      /\W/ ? qq('$_') :
+                      $_ , split /('+)/ ) } @_;
+    wantarray ? @o : $o[0];
 }
 
 # vim:filetype=perl
+
