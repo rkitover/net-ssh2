@@ -1,10 +1,16 @@
 Revision history for Perl extension Net::SSH2.
 
-0.59_15
+0.59_15  2016-05-03
+        - Channel and SFTP READLINE and readline methods were not
+          handling correctly undef as the end of line marker
+          (i.e. $/=undef).
+        - SFTP and Channel BINMODE methods were returning undef
+          instead of 1.
+        - Add even more tests!
         - Add more tests (contributed by Chris Kirke).
         - SFTP file READ was broken (reported by Chris Kirke).
 
-0.59_14  2016-0428
+0.59_14  2016-04-28
         - READLINE was not clearing the error code correctly.
 
 0.59_13  2016-04-26
