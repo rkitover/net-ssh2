@@ -46,11 +46,11 @@ sub GETC {
 }
 
 sub READ {
-    my ($self, $rbuf, $len, $offset) = @_;
-    my ($tmp, $count);
-    return unless defined($count = $self->read($tmp, $len));
-    substr($$rbuf, $offset) = $tmp;
-    $count
+    my ($self, undef, $len, $offset) = @_;
+    my $bytes = $self->read(my($buffer), $len);
+    substr($_[1], $offset || 0) = $buffer
+        if defined $bytes;
+    return $bytes;
 }
 
 sub CLOSE {
