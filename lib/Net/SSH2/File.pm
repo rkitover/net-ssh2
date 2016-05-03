@@ -35,7 +35,8 @@ sub READLINE {
     }
     
     my ($line, $eol, $c) = ('', $/);
-    $line .= $c while $line !~ /\Q$eol\E$/ and defined($c = $self->GETC);
+    $line .= $c while ( (not defined $eol or $line !~ /\Q$eol\E$/)
+                        and defined($c = $self->GETC) );
     length($line) ? $line : undef
 }
 
@@ -56,12 +57,9 @@ sub READ {
 sub CLOSE {
 }
 
-sub BINMODE {
-}
+sub BINMODE { 1 }
 
-sub EOF {
-    0
-}
+sub EOF { 0 }
 
 1;
 __END__
