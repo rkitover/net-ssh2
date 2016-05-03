@@ -99,8 +99,8 @@ sub readline {
     my ($self, $ext, $eol) = @_;
     return if $self->eof;
     $ext ||= 0;
-    $eol = $/ unless defined $eol;
-    if (wantarray) {
+    $eol = $/ unless @_ >= 3;
+    if (wantarray or not defined $eol) {
         my $data = '';
         my $buffer;
         while (1) {
@@ -112,7 +112,9 @@ sub readline {
             }
             $data .= $buffer;
         }
-        return split /(?<=\Q$eol\E)/s, $data;
+        defined $eol and return split /(?<=\Q$eol\E)/s, $data;
+        wantarray and not length $data and return ();
+        return $data;
     }
     else {
         my $c;
@@ -159,7 +161,7 @@ sub READ {
     return $bytes;
 }
 
-sub BINMODE {}
+sub BINMODE { 1 }
 
 *CLOSE = \&close;
 *EOF = \&eof;
