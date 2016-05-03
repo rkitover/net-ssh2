@@ -16,18 +16,12 @@ use Getopt::Long;
 
 #########################
 
-# to speed up testing, set host, user and pass here
-my ($host, $user, $password, $passphrase, $known_hosts, $interact) = qw();
-
-# default testing items from %ENV to facilitate coverage testing
-$host        = $ENV{'NETSSH2_HOST'}        if defined( $ENV{'NETSSH2_HOST'} );
-$user        = $ENV{'NETSSH2_USER'}        if defined( $ENV{'NETSSH2_USER'} );
-$password    = $ENV{'NETSSH2_PASSWORD'}    if defined( $ENV{'NETSSH2_PASSWORD'} );
-$passphrase  = $ENV{'NETSSH2_PASSPHRASE'}  if defined( $ENV{'NETSSH2_PASSPHRASE'} );
-$known_hosts = $ENV{'NETSSH2_KNOWN_HOSTS'} if defined( $ENV{'NETSSH2_KNOWN_HOSTS'} );
-
-$interact = 1;
-$interact = 0 if (defined($user) && defined($password));
+# default testing items from %ENV to facilitate testing
+my $host        = $ENV{TEST_NET_SSH2_HOST};
+my $user        = $ENV{TEST_NET_SSH2_USER};
+my $password    = $ENV{TEST_NET_SSH2_PASSWORD};
+my $passphrase  = $ENV{TEST_NET_SSH2_PASSPHRASE};
+my $known_hosts = $ENV{TEST_NET_SSH2_KNOWN_HOSTS};
 
 $known_hosts ||= File::Spec->devnull;
 GetOptions("host|h=s" => \$host,
@@ -148,7 +142,7 @@ unless ($type) {
     diag "reverting to password authentication";
     $type = $ssh2->auth(username => $user,
                         password => $password,
-                        interact => $interact);
+                        interact => 1);
 }
 
 ok($ssh2->auth_ok, 'authenticated successfully');

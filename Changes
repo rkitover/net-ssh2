@@ -1,7 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
 0.59_15
-
+        - Add more tests (contributed by Chris Kirke).
         - SFTP file READ was broken (reported by Chris Kirke).
 
 0.59_14  2016-0428
