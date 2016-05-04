@@ -292,6 +292,8 @@ Wait for a remote close event. Must have already seen remote EOF.
 
 Returns the channel's program exit status.
 
+This method blocks until the remote side closes the channel.
+
 =head2 pty ( terminal [, modes [, width [, height ]]] )
 
 Request a terminal on a channel.
@@ -450,7 +452,18 @@ data channel. Returns number of bytes flushed, C<undef> on error.
 
 =head2 exit_signal
 
-Returns the exit signal of the command executed on the channel.
+Returns the name of exit signal from the remote command.
+
+In list context returns also the error message and a language tag,
+though as of libssh2 1.7.0, those values are always undef.
+
+This method blocks until the remote side closes the channel.
+
+=head2 exit_signal_number
+
+Converts the signal name to a signal number using the local mapping
+(which may be different to the remote one if the operating systems
+differ).
 
 =head2 window_read
 

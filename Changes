@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_17
+
+        - Several documentation improvements.
+
 0.59_16  2016-05-04
         - Save EAGAIN errors after every libssh2 channel and session
           call.
