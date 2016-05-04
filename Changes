@@ -1,5 +1,24 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_16  2016-05-04
+        - Save EAGAIN errors after every libssh2 channel and session
+          call.
+        - Extend exit_signal method to return the tree values comming
+          back from libssh2_channel_exit_signal.
+        - Make Channel blocking method be just a wrapper for session
+          blocking method.
+        - Add channel wait_eof method.
+        - Make exit_signal and exit_status call wait_closed under the
+          hood, otherwise they could return a wrong result.
+        - Make wait_closed call wait_eof under the hood to avoid bad
+          usage errors.
+        - Add method exit_signal_number that translates the result of
+          exit_signal to the matching local signal number (note that
+          on the remote machine the signal number may be different).
+        - Channel CLOSE now mimics real file handles better and sets
+          $?.
+        - Improve the test script so that it can be better automated.
+
 0.59_15  2016-05-03
         - Channel and SFTP READLINE and readline methods were not
           handling correctly undef as the end of line marker
