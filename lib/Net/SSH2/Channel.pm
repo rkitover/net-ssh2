@@ -154,6 +154,23 @@ sub exit_signal {
     return $self->_exit_signal;
 }
 
+my %signal_number;
+sub exit_signal_number {
+    my $self = shift;
+    my $signal = $self->exit_signal;
+    return unless defined $signal;
+    return 0 unless $signal;
+    unless (%signal_number) {
+        require Config;
+        my @names = split /\s+/, $Config::Config{sig_name};
+        @signal_number{@names} = 0..$#names;
+    }
+    $signal =~ s/\@\.[^\.]+\.config\.guess$//;
+    my $number = $signal_number{$signal};
+    $number = 255 unless defined $number;
+    return $number;
+}
+
 # tie interface
 
 sub PRINT {
@@ -184,7 +201,23 @@ sub READ {
 
 sub BINMODE { 1 }
 
-*CLOSE = \&close;
+sub CLOSE {
+    my $self = shift;
+    my $ob = $self->blocking;
+    $self->blocking(1);
+    my $rc = undef;
+    if ($self->close and
+        $self->wait_closed) {
+        my $status = $self->exit_status;
+        my $signal = $self->exit_signal_num;
+        $self->session->_set_error;
+        $? = ($status << 8) | $signal;
+        $rc = 1 if $? == 0;
+    }
+    $self->blocking($ob);
+    $rc;
+}
+
 *EOF = \&eof;
 *GETC = \&getc;
 
