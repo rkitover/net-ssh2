@@ -22,6 +22,10 @@ sub error {
     shift->session->error(@_)
 }
 
+sub blocking {
+    shift->session->blocking(@_)
+}
+
 sub setenv {
     my ($self, %env) = @_;
     my $rc = 1;
