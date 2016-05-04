@@ -996,6 +996,7 @@ PREINIT:
 CODE:
     full_banner = sv_2mortal(newSVpvf("SSH-2.0-%s", banner));
     RETVAL = libssh2_banner_set(ss->session, SvPVbyte_nolen(full_banner));
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1040,6 +1041,7 @@ CODE:
     }
     RETVAL = libssh2_session_method_pref(ss->session,
                                          (int)type, prefs);
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1049,6 +1051,7 @@ SSH2_NERROR
 net_ss_flag(SSH2* ss, SSH2_FLAG flag, int value)
 CODE:
     RETVAL = libssh2_session_flag(ss->session, (int)flag, value);
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1093,6 +1096,7 @@ CODE:
         ss->hostname = newSVsv(hostname);
         ss->port = port;
     }
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1122,6 +1126,7 @@ net_ss_disconnect(SSH2* ss, SSH2_CHARP description = "",       \
                   int reason = SSH_DISCONNECT_BY_APPLICATION, SSH2_CHARP lang = "")
 CODE:
     RETVAL = libssh2_session_disconnect_ex(ss->session, reason, description, lang);
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1214,6 +1219,7 @@ CODE:
                                               pv_username, len_username,
                                               pv_password, len_password,
                                               (SvOK(callback) ? cb_password_change_callback : NULL));
+        save_eagain(ss->session, RETVAL);
     }
 OUTPUT:
     RETVAL
@@ -1269,6 +1275,7 @@ CODE:
                                                     pv_username, len_username,
                                                     publickey, privatekey,
                                                     passphrase);
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1289,11 +1296,12 @@ CODE:
                                                    pv_username, len_username, pv_publickey, len_publickey,
                                                    pv_privatekey, len_privatekey,
                                                    passphrase);
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
 #endif
-    
+
 SSH2_NERROR
 net_ss_auth_hostbased(SSH2* ss, SV* username, const char* publickey, \
                       const char* privatekey, SV* hostname,          \
@@ -1318,6 +1326,7 @@ CODE:
                                                     passphrase,
                                                     pv_hostname, len_hostname,
                                                     pv_local_username, len_local_username);
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1352,6 +1361,7 @@ CODE:
         RETVAL = libssh2_userauth_keyboard_interactive_ex(ss->session,
                                                           pv_username, len_username,
                                                           cb_kbdint_response_password);
+    save_eagain(ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1368,6 +1378,7 @@ PREINIT:
     int seconds_to_next;
 CODE:
     RETVAL = libssh2_keepalive_send(ss->session, &seconds_to_next);
+    save_eagain(ss->session, RETVAL);
     if (RETVAL >= 0) RETVAL = seconds_to_next;
 OUTPUT:
     RETVAL
@@ -1635,6 +1646,7 @@ CODE:
     RETVAL = libssh2_channel_setenv_ex(ch->channel,
                                        (char*)pv_key, len_key,
                                        (char*)pv_value, len_value);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1666,18 +1678,11 @@ CODE:
 
 #endif
 
-int
-net_ch_blocking(SSH2_CHANNEL* ch, SV* blocking)
-CODE:
-    libssh2_channel_set_blocking(ch->channel, SvTRUE(blocking));
-    RETVAL = 1;
-OUTPUT:
-    RETVAL
-
 SSH2_BYTES
 net_ch_eof(SSH2_CHANNEL* ch)
 CODE:
     RETVAL = libssh2_channel_eof(ch->channel);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1685,6 +1690,7 @@ SSH2_NERROR
 net_ch_send_eof(SSH2_CHANNEL* ch)
 CODE:
     RETVAL = libssh2_channel_send_eof(ch->channel);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1692,6 +1698,7 @@ SSH2_NERROR
 net_ch_close(SSH2_CHANNEL* ch)
 CODE:
     RETVAL = libssh2_channel_close(ch->channel);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1699,6 +1706,15 @@ SSH2_NERROR
 net_ch_wait_closed(SSH2_CHANNEL* ch)
 CODE:
     RETVAL = libssh2_channel_wait_closed(ch->channel);
+    save_eagain(ch->ss->session, RETVAL);
+OUTPUT:
+    RETVAL
+
+SSH2_NERROR
+net_ch_wait_eof(SSH2_CHANNEL* ch)
+CODE:
+    RETVAL = libssh2_channel_wait_eof(ch->channel);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1738,6 +1754,7 @@ CODE:
                                             (char*)pv_terminal, len_terminal,
                                             (char*)pv_modes, len_modes,
                                             width, height, width_px, height_px);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1762,6 +1779,7 @@ CODE:
 
     RETVAL = libssh2_channel_request_pty_size_ex(ch->channel,
                                                  width, height, width_px, height_px);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1792,6 +1810,7 @@ CODE:
     RETVAL = libssh2_channel_process_startup(ch->channel,
                                              pv_request, len_request,
                                              pv_message, len_message);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -1906,10 +1925,15 @@ OUTPUT:
 
 SSH2_BYTES
 net_ch_receive_window_adjust(SSH2_CHANNEL *ch, unsigned long adjustment, SV *force = &PL_sv_undef)
+PREINIT:
+    unsigned int bytes;
 CODE:
-    if (libssh2_channel_receive_window_adjust2(ch->channel, adjustment,
-                                               SvTRUE(force), (unsigned int *)&RETVAL) < 0)
-        RETVAL = -1;
+    RETVAL = libssh2_channel_receive_window_adjust2(ch->channel, adjustment,
+                                                    SvTRUE(force), &bytes);
+    if (RETVAL)
+        save_eagain(ch->ss->session, RETVAL);
+    else
+        RETVAL = bytes;
 OUTPUT:
     RETVAL
 
@@ -1973,6 +1997,7 @@ SSH2_BYTES
 net_ch_flush(SSH2_CHANNEL* ch, SV *ext = &PL_sv_undef)
 CODE:
     RETVAL = libssh2_channel_flush_ex(ch->channel, XLATEXT);
+    save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -2100,7 +2125,6 @@ PREINIT:
 CODE:
     pv_file = SvPVbyte(file, len_file);
     RETVAL = libssh2_sftp_unlink_ex(sf->sftp, (char*)pv_file, len_file);
-    save_eagain(sf->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -2117,7 +2141,6 @@ CODE:
     pv_new = SvPVbyte(new, len_new);
     RETVAL = libssh2_sftp_rename_ex(sf->sftp,
                                     (char*)pv_old, len_old, (char*)pv_new, len_new, flags);
-    save_eagain(sf->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -2129,7 +2152,6 @@ PREINIT:
 CODE:
     pv_dir = SvPVbyte(dir, len_dir);
     RETVAL = libssh2_sftp_mkdir_ex(sf->sftp, (char*)pv_dir, len_dir, mode);
-    save_eagain(sf->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -2141,7 +2163,6 @@ PREINIT:
 CODE:
     pv_dir = SvPVbyte(dir, len_dir);
     RETVAL = libssh2_sftp_rmdir_ex(sf->sftp, (char*)pv_dir, len_dir);
-    save_eagain(sf->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -2544,6 +2565,7 @@ SSH2_NERROR
 net_kh_writefile(SSH2_KNOWNHOSTS *kh, SSH2_CHARP filename)
 CODE:
     RETVAL = libssh2_knownhost_writefile(kh->knownhosts, filename, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    save_eagain(kh->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -2567,6 +2589,7 @@ CODE:
     RETVAL = libssh2_knownhost_add(kh->knownhosts, host, salt, key_pv, key_len,
                                    typemask, NULL);
 #endif
+    save_eagain(kh->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
@@ -2599,6 +2622,7 @@ PREINIT:
 CODE:
     line_pv = SvPVbyte(line, line_len);
     RETVAL = libssh2_knownhost_readline(kh->knownhosts, line_pv, line_len, LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    save_eagain(kh->ss->session, RETVAL);
 OUTPUT:
     RETVAL
 
