@@ -1652,27 +1652,44 @@ OUTPUT:
 
 #if LIBSSH2_VERSION_NUM >= 0x010208
 
-SV*
-net_ch_exit_signal(SSH2_CHANNEL* ch)
+net_ch__exit_signal(SSH2_CHANNEL* ch)
 PREINIT:
-    char *exitsignal = NULL;  
-CODE:
-    RETVAL;
-    libssh2_channel_get_exit_signal(ch->channel, &exitsignal,
-                                    NULL, NULL, NULL, NULL, NULL);
-    if (exitsignal) {
-        RETVAL = newSVpv(exitsignal, 0);
-        libssh2_free(ch->ss->session, exitsignal);
+    char *exitsignal;
+    char *errmsg;
+    char *langtag;
+    size_t exitsignal_len;
+    size_t errmsg_len;
+    size_t langtag_len;
+    int retcount = 1;
+PPCODE:
+    if (!libssh2_channel_get_exit_signal(ch->channel,
+                                         &exitsignal, &exitsignal_len,
+                                         &errmsg, &errmsg_len,
+                                         &langtag, &langtag_len)) {
+        LIBSSH2_SESSION *session = ch->ss->session;
+        libssh2_session_set_last_error(session, 0, NULL);
+        if (exitsignal) {
+            XPUSHs(sv_2mortal(newSVpvn(exitsignal, exitsignal_len)));
+            if (GIMME_V == G_ARRAY) {
+                XPUSHs(errmsg ? sv_2mortal(newSVpvn(errmsg, errmsg_len)) : &PL_sv_undef);
+                XPUSHs(langtag ? sv_2mortal(newSVpvn(langtag, langtag_len)) : &PL_sv_undef);
+                retcount = 3;
+            }
+            libssh2_free(session, exitsignal);
+            if (errmsg) libssh2_free(session, errmsg);
+            if (langtag) libssh2_free(session, langtag);
+        }
+        else
+            XPUSHs(&PL_sv_no);
+        XSRETURN(retcount);
     }
     else
-        RETVAL = &PL_sv_undef;
-OUTPUT:
-    RETVAL
+        XSRETURN(0);
 
 #else
 
 void
-net_ch_exit_signal(SSH2_CHANNEL* ch)
+net_ch__exit_signal(SSH2_CHANNEL* ch)
 CODE:
     croak("libssh2 version 1.2.8 or higher required for exit_signal support");
 
@@ -1703,7 +1720,7 @@ OUTPUT:
     RETVAL
 
 SSH2_NERROR
-net_ch_wait_closed(SSH2_CHANNEL* ch)
+net_ch__wait_closed(SSH2_CHANNEL* ch)
 CODE:
     RETVAL = libssh2_channel_wait_closed(ch->channel);
     save_eagain(ch->ss->session, RETVAL);
@@ -1719,7 +1736,7 @@ OUTPUT:
     RETVAL
 
 int
-net_ch_exit_status(SSH2_CHANNEL* ch)
+net_ch__exit_status(SSH2_CHANNEL* ch)
 CODE:
     RETVAL = libssh2_channel_get_exit_status(ch->channel);
 OUTPUT:

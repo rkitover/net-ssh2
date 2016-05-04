@@ -137,6 +137,23 @@ sub readline {
     }
 }
 
+sub wait_closed {
+    my $self = shift;
+    $self->wait_eof and $self->_wait_closed;
+}
+
+sub exit_status {
+    my $self = shift;
+    return unless $self->wait_closed;
+    return $self->_exit_status;
+}
+
+sub exit_signal {
+    my $self = shift;
+    return unless $self->wait_closed;
+    return $self->_exit_signal;
+}
+
 # tie interface
 
 sub PRINT {
