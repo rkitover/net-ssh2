@@ -209,7 +209,7 @@ sub CLOSE {
     if ($self->close and
         $self->wait_closed) {
         my $status = $self->exit_status;
-        my $signal = $self->exit_signal_num;
+        my $signal = $self->exit_signal_number;
         $self->session->_set_error;
         $? = ($status << 8) | $signal;
         $rc = 1 if $? == 0;

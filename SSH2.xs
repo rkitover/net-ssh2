@@ -1652,6 +1652,7 @@ OUTPUT:
 
 #if LIBSSH2_VERSION_NUM >= 0x010208
 
+void
 net_ch__exit_signal(SSH2_CHANNEL* ch)
 PREINIT:
     char *exitsignal;
