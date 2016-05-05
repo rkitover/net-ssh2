@@ -175,6 +175,7 @@ ok($ssh2->callback(disconnect => sub { warn "SSH_MSG_DISCONNECT!\n"; }),
 $ssh2->blocking(1);  # creating channel may block
 my $sftp = $ssh2->sftp();
 isa_ok($sftp, 'Net::SSH2::SFTP');
+
 is($sftp->session, $ssh2, 'verify session');
 
 # (4) directories
@@ -228,18 +229,26 @@ is ($remote_data, $local_data);
 
 $chan = $ssh2->channel();
 $chan->ext_data('ignore');
-$chan->send_eof;
 ok($chan->exec("cat $remote_fn_quoted"), "exec cat $remote_fn_quoted");
+$chan->send_eof;
 my @remote_lines = <$chan>;
-is_deeply (\@remote_lines, \@local_lines, 'channel readline');
+is_deeply (\@remote_lines, \@local_lines, 'channel readline, list ctx');
 
 $chan = $ssh2->channel();
 $chan->ext_data('ignore');
-$chan->send_eof;
 ok($chan->exec("cat $remote_fn_quoted"), "exec cat $remote_fn_quoted");
+$chan->send_eof;
 my $remote_data = $chan->getc;
 ok (defined $remote_data, 'getc defined');
-is ($remote_data, substr($local_data, 0, length($remote_data)), 'getc value');
+is ($remote_data, substr($local_data, 0, length($remote_data)), 'channel getc value');
+
+$chan = $ssh2->channel();
+$chan->ext_data('ignore');
+ok($chan->exec("cat $remote_fn_quoted"), "exec cat $remote_fn_quoted");
+$chan->send_eof;
+@remote_lines = ();
+push @remote_lines, $_ while <$chan>;
+is_deeply (\@remote_lines, \@local_lines, 'channel readline, scalar ctx');
 
 # (3) rename
 my $fn_alt = "$fn.renamed";
@@ -272,17 +281,17 @@ my $fh = $sftp->open($remote_fn_alt);
 isa_ok($fh, 'Net::SSH2::File', 'opened file');
 my $line = '';
 my $count = read($fh, $line, 20000);
-ok(defined($count), 'read read via tie interface');
+ok(defined($count), 'file read via tie interface');
 $count = read($fh, $line, 40000, length($line));
-ok(defined($count),'read read via tie interface 2');
-is ($line, substr($local_data, 0, length($line)), 'validate read via tie interface 3');
+ok(defined($count),'file read via tie interface 2');
+is ($line, substr($local_data, 0, length($line)), 'validate file read via tie interface 3');
 $fh->seek(0);
 my @remote_lines = <$fh>;
-is_deeply(\@remote_lines, \@local_lines, 'read lines via tie interface');
+is_deeply(\@remote_lines, \@local_lines, 'read file lines via tie interface, list ctx');
 $fh->seek(0);
 @remote_lines = ();
 push @remote_lines, $_ while <$fh>;
-is_deeply(\@remote_lines, \@local_lines, 'read lines via tie interface');
+is_deeply(\@remote_lines, \@local_lines, 'read file lines via tie interface, scalar ctx');
 
 $fh->seek(0);
 my ($remote_data) = do { local $/; <$fh> };
@@ -290,7 +299,7 @@ is ($remote_data, $local_data, 'read lines with $/ undefined');
 
 my $mode = binmode $fh;
 ok($mode, 'binmode via tie interface');
-is(eof $fh, 0, 'eof via tie interface');
+is(eof($fh), 0, 'eof via tie interface');
 is(close $fh, undef, 'close via tie interface');
 undef $fh;
 my $outfile = $dir . '/write.out';
@@ -369,7 +378,7 @@ undef $fh;
 # (5) exercise Channel tie interface
 $chan = $ssh2->channel();
 isa_ok($chan, 'Net::SSH2::Channel');
-#is(eof $chan,0,'channel eof via tie interface');
+is(eof($chan), 0, 'channel eof via tie interface');
 $mode = binmode $chan;
 is($mode, 1, 'channel binmode via tie interface');
 $chan->shell;
