@@ -218,7 +218,11 @@ sub CLOSE {
     $rc;
 }
 
-*EOF = \&eof;
+sub EOF {
+    my $self = shift;
+    $self->eof;
+}
+
 *GETC = \&getc;
 
 1;
