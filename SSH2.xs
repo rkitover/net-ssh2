@@ -2332,6 +2332,22 @@ CODE:
 OUTPUT:
     RETVAL
 
+SV *
+net_fi_getc(SSH2_FILE* fi)
+PREINIT:
+    char buffer[2];
+    int count;
+CODE:
+    count = libssh2_sftp_read(fi->handle, buffer, 1);
+    if (count == 1) {
+        buffer[count] = '\0';
+        RETVAL = newSVpvn(buffer, count);
+    }
+    else
+        RETVAL = &PL_sv_undef;
+OUTPUT:
+    RETVAL
+
 SSH2_BYTES
 net_fi_write(SSH2_FILE* fi, SV* buffer)
 PREINIT:
