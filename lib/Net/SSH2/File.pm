@@ -5,6 +5,32 @@ use warnings;
 use Carp;
 
 # methods
+sub readline {
+    my ($self, $eol) = @_;
+    $eol = $/ unless @_ >= 2;
+    if (wantarray or not defined $eol) {
+        my $data = '';
+        my $buffer;
+        while (1) {
+            $self->read($buffer, 32768) or last;
+            $data .= $buffer;
+        }
+        defined $eol and return split /(?<=\Q$eol\E)/s, $data;
+        wantarray and not length $data and return ();
+        return $data;
+    }
+    else {
+        my $c;
+        my $data = '';
+        while (1) {
+            $c = $self->getc;
+            last unless defined $c;
+            $data .= $c;
+            last if $data =~ /\Q$eol\E\z/;
+        }
+        return (length $data ? $data : undef);
+    }
+}
 
 # tie interface
 
@@ -24,27 +50,9 @@ sub WRITE {
     $self->write(substr($buf, $offset, $len))
 }
 
-sub READLINE {
-    my $self = shift;
+sub READLINE { shift->readline($/) }
 
-    if (wantarray) {
-        my @lines;
-        my $line;
-        push @lines, $line while defined($line = $self->READLINE);
-        return @lines;
-    }
-    
-    my ($line, $eol, $c) = ('', $/);
-    $line .= $c while ( (not defined $eol or $line !~ /\Q$eol\E$/)
-                        and defined($c = $self->GETC) );
-    length($line) ? $line : undef
-}
-
-sub GETC {
-    my $self = shift;
-    my $buf;
-    $self->read($buf, 1) ? $buf : undef
-}
+*GETC = \&getc;
 
 sub READ {
     my ($self, undef, $len, $offset) = @_;
