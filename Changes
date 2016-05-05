@@ -1,7 +1,11 @@
 Revision history for Perl extension Net::SSH2.
 
-0.59_17
-
+0.59_17  2016-05-06
+        - Port Channel "readline" method to File class.
+        - Implement File getc in XS for improved performance.
+        - Add workaround for perl bug around EOF method of tied file
+          handles.
+        - Add more tests.
         - Several documentation improvements.
 
 0.59_16  2016-05-04
