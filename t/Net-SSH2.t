@@ -394,8 +394,10 @@ is($chan->error,-39, 'channel error');
     $count = printf $chan "exit\n";
     is($count, 5, 'channel printf via tie interface');
 }
-
-is(close $chan,1,'channel close via tie interface');
+{
+    local $?;
+    ok(close($chan) || $?, 'channel close via tie interface');
+}
 undef $chan;
 
 # (2) disconnect
