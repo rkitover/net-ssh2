@@ -22,6 +22,7 @@ my $password    = $ENV{TEST_NET_SSH2_PASSWORD};
 my $passphrase  = $ENV{TEST_NET_SSH2_PASSPHRASE};
 my $known_hosts = $ENV{TEST_NET_SSH2_KNOWN_HOSTS};
 my $policy      = $ENV{TEST_NET_SSH2_POLICY} || 'ask';
+my $timeout     = $ENV{TEST_NET_SSH2_TIMEOUT} || 30;
 
 $known_hosts ||= File::Spec->devnull;
 GetOptions("host|h=s" => \$host,
@@ -29,11 +30,15 @@ GetOptions("host|h=s" => \$host,
            "password|pwd|pw|w=s" => \$password,
            "passphrase|pp=s" => \$passphrase,
            "known_hosts|kh|k=s" => \$known_hosts,
-           "policy|o=s" => \$policy);
+           "policy|o=s" => \$policy,
+           "timeout|t=s" => \$timeout);
+
 
 $| = 1;
 sub slurp;
 sub quote;
+
+$timeout = ($timeout ? $timeout * 1000 : undef);
 
 # (1) use module
 BEGIN { use_ok('Net::SSH2', ':all') };
@@ -42,6 +47,7 @@ BEGIN { use_ok('Net::SSH2', ':all') };
 my $ssh2 = Net::SSH2->new();
 isa_ok($ssh2, 'Net::SSH2', 'new session');
 ok(!$ssh2->error(), 'error state clear');
+is($ssh2->timeout($timeout), $timeout, "set timeout to ${timeout}s");
 #$ssh2->trace(-1);
 
 ok($ssh2->banner('SSH TEST'), 'set banner');
@@ -358,6 +364,7 @@ is($ssh2->timeout, undef, "timeout is undef");
 is($ssh2->timeout(10), 10, "sets timeout to 10");
 is($ssh2->timeout(undef), undef, "sets timeout to undef");
 is($ssh2->timeout, undef, "timeout is undef 2");
+is($ssh2->timeout($timeout), $timeout, "finally, set timeout to ${timeout}s again");
 
 my $pk = $ssh2->public_key;
 SKIP: {

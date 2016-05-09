@@ -277,13 +277,22 @@ sub _print_stderr {
 
 sub _ask_user {
     my ($self, $prompt, $echo) = @_;
+    my $timeout = $self->timeout;
+    $timeout = ($timeout ? ($timeout + 999) / 1000 : undef);
     _load_term_readkey or return;
     $self->_print_stderr($prompt);
     Term::ReadKey::ReadMode('noecho') unless $echo;
-    my $reply = Term::ReadKey::ReadLine(0);
+    my $reply = Term::ReadKey::ReadLine($timeout);
     Term::ReadKey::ReadMode('normal') unless $echo;
-    $self->_print_stderr("\n") unless $echo;
-    chomp $reply;
+    $self->_print_stderr("\n")
+        unless $echo and defined $reply;
+    if (defined $reply) {
+        chomp $reply
+    }
+    else {
+        $self->_set_error(LIBSSH2_ERROR_SOCKET_TIMEOUT(),
+                          "Timeout waiting for user response!");
+    }
     return $reply;
 }
 
