@@ -181,7 +181,8 @@ sub PRINT {
 
 sub PRINTF {
     my $self = shift;
-    $self->write(sprintf @_)
+    my $template = shift;
+    $self->write(sprintf $template, @_);
 }
 
 sub WRITE {
