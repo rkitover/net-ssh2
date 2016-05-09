@@ -1,5 +1,12 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_18  2016-05-09
+        - Fix failing test caused by a remote SIGPIPE (bug report by
+          Ferenc Erki).
+        - Work-around libssh2_channel_wait_closed bug.
+        - Fix channel and file PRINTF methods.
+        - Improve tests.
+
 0.59_17  2016-05-06
         - Port Channel "readline" method to File class.
         - Implement File getc in XS for improved performance.
