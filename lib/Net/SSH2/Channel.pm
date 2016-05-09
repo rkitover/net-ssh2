@@ -139,7 +139,11 @@ sub readline {
 
 sub wait_closed {
     my $self = shift;
-    $self->wait_eof and $self->_wait_closed;
+    if ($self->wait_eof) {
+        $self->flush('all');
+        return $self->_wait_closed;
+    }
+    undef;
 }
 
 sub exit_status {
@@ -291,7 +295,10 @@ Close the channel (happens automatically on object destruction).
 
 =head2 wait_closed
 
-Wait for a remote close event. Must have already seen remote EOF.
+Wait for a remote close event.
+
+In order to avoid a bug in libssh2 this method discards any unread
+data queued in the channel.
 
 =head2 exit_status
 
