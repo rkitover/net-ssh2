@@ -312,7 +312,7 @@ $count = print $fh 'test ';
 undef $,;
 is($count,5,'print with separator via tie interface');
 $count = printf $fh 'test %d',1;
-is($count,1,'printf via tie interface');
+is($count, 6, 'printf via tie interface');
 undef $fh;
 $sftp->unlink($outfile);
 
@@ -384,14 +384,17 @@ is($mode, 1, 'channel binmode via tie interface');
 $chan->shell;
 $chan->subsystem('dummy');
 is($chan->error,-39, 'channel error');
-$, = ';';
-$count = print $chan "exit\n";
-is($count,5,'channel print with separator via tie interface');
-undef $,;
-$count = print $chan "exit\n";
-is($count,5,'channel print via tie interface');
-$count = printf $chan "exit\n";
-is($count,1,'channel printf via tie interface');
+{
+    local $, = ';';
+    $count = print $chan "echo hello\n";
+    is($count, 11, 'channel print with separator via tie interface');
+    undef $,;
+    $count = print $chan "echo bye\n";
+    is($count, 9, 'channel print via tie interface');
+    $count = printf $chan "exit\n";
+    is($count, 5, 'channel printf via tie interface');
+}
+
 is(close $chan,1,'channel close via tie interface');
 undef $chan;
 
