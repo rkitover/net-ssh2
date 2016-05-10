@@ -277,8 +277,11 @@ sub _print_stderr {
 
 sub _ask_user {
     my ($self, $prompt, $echo) = @_;
-    my $timeout = $self->timeout;
-    $timeout = ($timeout ? ($timeout + 999) / 1000 : undef);
+    my $timeout;
+    if (($self->version)[1] >= 0x10209) {
+        $timeout = $self->timeout || 0;
+        $timeout = ($timeout + 999) / 1000;
+    }
     _load_term_readkey or return;
     $self->_print_stderr($prompt);
     Term::ReadKey::ReadMode('noecho') unless $echo;
