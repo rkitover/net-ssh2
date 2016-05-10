@@ -47,7 +47,11 @@ BEGIN { use_ok('Net::SSH2', ':all') };
 my $ssh2 = Net::SSH2->new();
 isa_ok($ssh2, 'Net::SSH2', 'new session');
 ok(!$ssh2->error(), 'error state clear');
-is($ssh2->timeout($timeout), $timeout, "set timeout to ${timeout}s");
+SKIP: {
+    skip '- timeout not supported in libssh2 < 1.2.9', 1
+        if ($ssh2->version)[1] < 0x010209;
+    is($ssh2->timeout($timeout), $timeout, "set timeout to ${timeout}s");
+}
 #$ssh2->trace(-1);
 
 ok($ssh2->banner('SSH TEST'), 'set banner');
@@ -354,17 +358,21 @@ ok(!$line, 'no more lines');
 $ssh2->blocking(1);  # creating channel may block
 
 $chan = $ssh2->channel();
-ok($chan->exec('cat'), "exec 'cat'");
-is($ssh2->timeout(100), 100, "sets timeout");
-is($ssh2->timeout, 100, "timeout is 100");
-ok(!$chan->read(my $buf, 10), "read fails");
-is(($ssh2->error)[0], Net::SSH2::LIBSSH2_ERROR_TIMEOUT(), "error timeout");
-is($ssh2->timeout(0), undef, "sets timeout to 0");
-is($ssh2->timeout, undef, "timeout is undef");
-is($ssh2->timeout(10), 10, "sets timeout to 10");
-is($ssh2->timeout(undef), undef, "sets timeout to undef");
-is($ssh2->timeout, undef, "timeout is undef 2");
-is($ssh2->timeout($timeout), $timeout, "finally, set timeout to ${timeout}s again");
+SKIP: {
+    skip '- timeout not supported in libssh2 < 1.2.9', 11
+        if ($ssh2->version)[1] < 0x010209;
+    ok($chan->exec('cat'), "exec 'cat'");
+    is($ssh2->timeout(100), 100, "sets timeout");
+    is($ssh2->timeout, 100, "timeout is 100");
+    ok(!$chan->read(my $buf, 10), "read fails");
+    is(($ssh2->error)[0], Net::SSH2::LIBSSH2_ERROR_TIMEOUT(), "error timeout");
+    is($ssh2->timeout(0), undef, "sets timeout to 0");
+    is($ssh2->timeout, undef, "timeout is undef");
+    is($ssh2->timeout(10), 10, "sets timeout to 10");
+    is($ssh2->timeout(undef), undef, "sets timeout to undef");
+    is($ssh2->timeout, undef, "timeout is undef 2");
+    is($ssh2->timeout($timeout), $timeout, "finally, set timeout to ${timeout}s again");
+}
 
 my $pk = $ssh2->public_key;
 SKIP: {
