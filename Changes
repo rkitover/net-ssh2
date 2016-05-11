@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_20  2016-05-11
+        - Method timeout is not available for old libssh2 versions.
+
 0.59_19  2016-05-10
          - Honour timeout setting from _ask_user method.
 
