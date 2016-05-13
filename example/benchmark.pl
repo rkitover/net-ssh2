@@ -30,7 +30,7 @@ use Time::HiRes qw(time);
 use Net::SSH2;
 
 my $ssh2 = Net::SSH2->new(compress => 0);
-$ssh2->trace(-1);
+#$ssh2->trace(-1);
 $ssh2->connect($host)
     or $ssh2->die_with_error;
 
@@ -38,6 +38,8 @@ my $key_path = scalar(<~/.ssh/id_rsa>);
 $ssh2->auth(username => undef,
             publickey => "$key_path.pub", privatekey => $key_path)
     or $ssh2->die_with_error;
+
+$ssh2->auth_ok or die "auth failed";
 
 my %summary;
 $| = 1;
@@ -56,7 +58,7 @@ sub test {
     while (my $bytes = $c->read($buf, $read_size)) {
         $total += $bytes;
     }
-    $c->wait_close
+    $c->wait_closed
         or $ssh2->die_with_error;
     my $time1 = time;
 
@@ -67,13 +69,14 @@ sub test {
 }
 
 sub rsys {
-    my ($ssh2, $cmd) = shift;
+    my ($ssh2, $cmd) = @_;
     my $c = $ssh2->channel or $ssh2->die_with_error;
     $c->exec($cmd);
     $c->send_eof();
     close $c or warn "rsys failed $?";
 }
 
+sleep 1;
 for my $delay (@delays) {
     system "tc qdisc del dev $local_iface root netem delay 0ms 2>/dev/null";
     rsys($ssh2, "tc qdisc del dev $remote_iface root netem delay 0ms 2>/dev/null");
