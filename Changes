@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_21  2016-05-13
+        - Conversion of stream_id arguments have been moved to a
+          typemap.
+        - Channel 'flush' was not handling 'all' properly.
+
 0.59_20  2016-05-11
         - Method timeout is not available for old libssh2 versions.
 
