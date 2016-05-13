@@ -140,7 +140,10 @@ sub readline {
 sub wait_closed {
     my $self = shift;
     if ($self->wait_eof) {
-        $self->flush('all');
+        for ('all', 0, 1) {
+            my $bytes = $self->flush($_);
+            warn "$bytes flushed from channel $_";
+        }
         return $self->_wait_closed;
     }
     undef;

@@ -34,6 +34,8 @@ TYPEMAP
     SSH2_CHARP         T_SSH2_CHARP
     SSH2_CHARP_OR_NULL T_SSH2_CHARP_OR_NULL
 
+    SSH2_STREAM_ID     T_SSH2_STREAM_ID
+
 OUTPUT
 T_PV
     sv_setpv((SV*)$arg, $var);
@@ -164,3 +166,6 @@ T_SSH2_BYTES64
 
 T_SSH2_BYTESU64
     $var = SV2UTYPE($arg, SSH2_BYTESU64);
+
+T_SSH2_STREAM_ID
+    $var = sv2iv_constant_or_croak(\"CHANNEL_FLUSH\", $arg);

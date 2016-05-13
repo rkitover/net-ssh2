@@ -147,8 +147,6 @@ static const char *const sftp_error[] = {
 
 #define countof(x) (sizeof(x)/sizeof(*x))
 
-#define XLATEXT (SvTRUE(ext) ? SSH_EXTENDED_DATA_STDERR : 0)
-
 #define XLATATTR(name, field, flag) \
     else if (strEQ(key, name)) { \
         attrs.field = SvUV(ST(i + 1)); \
@@ -168,7 +166,7 @@ typedef IV SSH2_FLAG;         /* LIBSSH2_FLAG_ constants */
 typedef IV SSH2_CALLBACK;     /* LIBSSH2_CALLBACK_ constants */
 typedef IV SSH2_HOSTKEY_HASH; /* LIBSSH2_HOSTKEY_HASH_ constants */
 typedef IV SSH2_CHANNEL_EXTENDED_DATA; /* SSH2_CHANNEL_EXTENDED_DATA_ constants */
-
+typedef IV SSH2_STREAM_ID;    /* stream_id or LIBSSH2_CHANNEL_FLUSH macros */
 typedef char * SSH2_CHARP;         /* string that can not be NULL */
 typedef char * SSH2_CHARP_OR_NULL; /* string that can be NULL */
 
@@ -325,24 +323,33 @@ static int push_hv(SV** sp, HV* hv) {
     return keys * 2;
 }
 
+static SV *
+sv_upper(SV *sv) {
+    STRLEN len, i;
+    char *pv = SvPVbyte(sv, len);
+    for (i = 0; i < len; i++) {
+        if (isLOWER(pv[i])) {
+            sv = sv_2mortal(newSVpvn(pv, len));
+            pv = SvPVX(sv);
+            for (; i < len; i++)
+                pv[i] = toUPPER(pv[i]);
+            break;
+        }
+    }
+    return sv;
+}
+
 static IV
 sv2iv_constant_or_croak(const char *name, SV *sv) {
     if (SvIOK(sv) || looks_like_number(sv))
         return SvIV(sv);
     else {
         STRLEN len;
-        char *pv = SvPVbyte(sv, len);
+        char *pv;
         int type, i;
         IV value;
-        for (i = 0; i < len; i++) {
-            if (isLOWER(pv[i])) {
-                sv = sv_2mortal(newSVpvn(pv, len));
-                pv = SvPVX(sv);
-                for (; i < len; i++)
-                    pv[i] = toUPPER(pv[i]);
-                break;
-            }
-        }
+        sv = sv_upper(sv);
+        pv = SvPVbyte(sv, len);
         type = constant(aTHX_ pv, len, &value);
         if (type == PERL_constant_NOTFOUND) {
             sv = sv_2mortal(newSVpvf("LIBSSH2_%s_%s", name, pv));
@@ -1841,21 +1848,21 @@ OUTPUT:
     RETVAL
 
 SSH2_BYTES64
-net_ch_read(SSH2_CHANNEL* ch, SV* buffer, size_t size = 32768, SV *ext = &PL_sv_undef)
+net_ch_read(SSH2_CHANNEL* ch, SV* buffer, size_t size = 32768, SSH2_STREAM_ID ext = 0)
 PREINIT:
     char* pv_buffer;
     STRLEN len_buffer;
     int blocking, count = 0;
     size_t total = 0;
 CODE:
-    debug("%s::read(size = %d, ext = %d)\n", class, size, SvTRUE(ext));
+    debug("%s::read(size = %d, ext = %d)\n", class, size, ext);
     sv_force_normal(buffer);
     sv_setpvn_mg(buffer, "", 0);
     SvPVbyte_force(buffer, len_buffer);
     pv_buffer = sv_grow(buffer, size + 1);
     blocking = libssh2_session_get_blocking(ch->ss->session);
     while (size) {
-        count = libssh2_channel_read_ex(ch->channel, XLATEXT, pv_buffer, size);
+        count = libssh2_channel_read_ex(ch->channel, ext, pv_buffer, size);
         debug("- read %d bytes\n", count);
         if (count > 0) {
             total += count;
@@ -1885,13 +1892,13 @@ OUTPUT:
     RETVAL
 
 SV *
-net_ch_getc(SSH2_CHANNEL* ch, SV *ext = &PL_sv_undef)
+net_ch_getc(SSH2_CHANNEL* ch, SSH2_STREAM_ID ext = 0)
 PREINIT:
     char buffer[2];
     int count;
 CODE:
-    debug("%s::getc(ext = %d)\n", class, SvTRUE(ext));
-    count = libssh2_channel_read_ex(ch->channel, XLATEXT, buffer, 1);
+    debug("%s::getc(ext = %d)\n", class, ext);
+    count = libssh2_channel_read_ex(ch->channel, ext, buffer, 1);
     if (count >= 0) {
         buffer[count] = '\0';
         RETVAL = newSVpvn(buffer, count);
@@ -1904,7 +1911,7 @@ OUTPUT:
     RETVAL
 
 SSH2_BYTES
-net_ch_write(SSH2_CHANNEL* ch, SV* buffer, SV *ext = &PL_sv_undef)
+net_ch_write(SSH2_CHANNEL* ch, SV* buffer, SSH2_STREAM_ID ext = 0)
 PREINIT:
     const char* pv_buffer;
     STRLEN len_buffer, offset = 0;
@@ -1921,7 +1928,7 @@ CODE:
     */
     pv_buffer = SvPVbyte(buffer, len_buffer);
     while (offset < len_buffer) {
-        count = libssh2_channel_write_ex(ch->channel, XLATEXT,
+        count = libssh2_channel_write_ex(ch->channel, ext,
                                          pv_buffer + offset,
                                          len_buffer - offset);
         if (count >= 0)
@@ -2012,9 +2019,9 @@ CODE:
 #endif
 
 SSH2_BYTES
-net_ch_flush(SSH2_CHANNEL* ch, SV *ext = &PL_sv_undef)
+net_ch_flush(SSH2_CHANNEL* ch, SSH2_STREAM_ID ext = 0)
 CODE:
-    RETVAL = libssh2_channel_flush_ex(ch->channel, XLATEXT);
+    RETVAL = libssh2_channel_flush_ex(ch->channel, ext);
     save_eagain(ch->ss->session, RETVAL);
 OUTPUT:
     RETVAL
