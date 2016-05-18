@@ -1411,8 +1411,8 @@ Returns undef on error, or the number of active objects.
 Get the blocked direction after some method returns
 C<LIBSSH2_ERROR_EAGAIN>.
 
-Returns C<LIBSSH2_SOCKET_BLOCK_INBOUND> or
-C<LIBSSH2_SOCKET_BLOCK_OUTBOUND>.
+Returns C<LIBSSH2_SESSION_BLOCK_INBOUND> or/and
+C<LIBSSH2_SESSION_BLOCK_OUTBOUND>.
 
 =head2 debug ( state )
 
