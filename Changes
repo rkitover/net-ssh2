@@ -2,11 +2,12 @@ Revision history for Perl extension Net::SSH2.
 
 0.59_22  2016-05-18
         - Add support for some additional constants.
-        - Make remote login default to local one.
+        - Make remote login name default to be the same as the local
+          one.
         - Several documentation improvements.
 
 0.59_21  2016-05-13
-        - Conversion of stream_id arguments have been moved to a
+        - Conversion of stream_id arguments has been moved to a
           typemap.
         - Channel 'flush' was not handling 'all' properly.
 
