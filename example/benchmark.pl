@@ -73,6 +73,9 @@ sub rsys {
     my $c = $ssh2->channel or $ssh2->die_with_error;
     $c->exec($cmd);
     $c->send_eof();
+    while (my @o = $c->read2) {
+        print for @o;
+    }
     close $c or warn "rsys failed $?";
 }
 

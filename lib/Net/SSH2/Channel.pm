@@ -73,11 +73,13 @@ sub read2 {
                 }
             }
         }
-        if ($bytes or $self->eof) {
+        if ($bytes) {
             $ssh2->blocking($old_blocking);
             return (wantarray ? @out : $out[0])
         }
-        if ($fail) {
+        my $eof = $self->eof;
+        if ($fail or $eof) {
+            $ssh2->_set_error if $eof;
             $ssh2->blocking($old_blocking);
             return;
         }
