@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::SSH2.
 
+0.59_23  2016-05-19
+        - Fix handling of eof in Channel read2 method.
+        - Several documentation corrections.
+        - Add example/benchmark.pl to the distribution.
+
 0.59_22  2016-05-18
         - Add support for some additional constants.
         - Make remote login name default to be the same as the local
