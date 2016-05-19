@@ -34,3 +34,4 @@ README
 SSH2.xs
 t/Net-SSH2.t
 typemap
+example/benchmark.pl
