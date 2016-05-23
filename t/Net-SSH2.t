@@ -17,6 +17,7 @@ use Getopt::Long;
 
 # default testing items from %ENV to facilitate testing
 my $host        = $ENV{TEST_NET_SSH2_HOST};
+my $port        = $ENV{TEST_NET_SSH2_PORT};
 my $user        = $ENV{TEST_NET_SSH2_USER};
 my $password    = $ENV{TEST_NET_SSH2_PASSWORD};
 my $passphrase  = $ENV{TEST_NET_SSH2_PASSPHRASE};
@@ -26,6 +27,7 @@ my $timeout     = $ENV{TEST_NET_SSH2_TIMEOUT} || 30;
 
 $known_hosts ||= File::Spec->devnull;
 GetOptions("host|h=s" => \$host,
+           "port|p=s" => \$port,
            "user|u=s" => \$user,
            "password|pwd|pw|w=s" => \$password,
            "passphrase|pp=s" => \$passphrase,
@@ -97,8 +99,15 @@ EOP
         exit(0);
     }
 }
+($host, $port) = split /:/, $host
+    if (($host =~ tr/://) == 1);
 
-ok($ssh2->connect($host), "connect to $host");
+if (defined $port) {
+    ok($ssh2->connect($host, $port), "connect to $host port $port");
+}
+else {
+    ok($ssh2->connect($host), "connect to $host");
+}
 isa_ok($ssh2->sock, 'IO::Socket', '->sock isa IO::Socket');
 is($ssh2->hostname, $host, '->hostname');
 
