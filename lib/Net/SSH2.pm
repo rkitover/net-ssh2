@@ -96,8 +96,18 @@ sub connect {
 
     my ($hostname, $port);
     if (@_ == 2) {
-        $hostname = $_[0];
-        $port = getservbyname($_[1] || 'ssh', 'tcp') || 22;
+        ($hostname, $port) = @_;
+        if (not defined $port) {
+            $port = getservbyname('ssh', 'tcp') || 22;
+        }
+        elsif ($port =~ /\D/) {
+            $port = getservbyname($port, 'tcp');
+            unless (defined $port) {
+                $self->_set_error(LIBSSH2_ERROR_SOCKET_NONE(), "Unable to resolve TCP service name $_[1]");
+                goto error;
+            }
+        }
+
         my $timeout = $self->timeout;
         $sock = $socket_class->new( PeerHost => $hostname,
                                     PeerPort => $port,
