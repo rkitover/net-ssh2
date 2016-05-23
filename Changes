@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.60  2016-05-23
+        - Fix connecting to a custom port (bug report by Ferenc Erki).
+
 0.59_23  2016-05-19
         - Fix handling of eof in Channel read2 method.
         - Several documentation corrections.
