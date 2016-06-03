@@ -1,7 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
 0.61  2016-06-03
-        - auth method was skipping agent authentication always (bug
+        - "auth" method was skipping agent authentication always (bug
           report and patch by NIkolay A. Fetisov).
 
 0.60  2016-05-23
