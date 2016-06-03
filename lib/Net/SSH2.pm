@@ -157,7 +157,7 @@ sub connect {
 sub _auth_methods {
     return {
         'agent' => {
-            ssh => 'agent',
+            ssh => 'publickey',
             method => \&auth_agent,
             params => [qw(_fallback username)],
         },
