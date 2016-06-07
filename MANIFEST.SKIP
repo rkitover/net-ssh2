@@ -13,11 +13,11 @@
 \~\z
 ^pm_to_blib\z
 ^Makefile\z
-^const-c\.inc\z
-^const-xs\.inc\z
 ^\.travis.yml
 ^\.travis/
 ^\.gitignore
 ^t/pod-spell.t
 ^MYMETA\.
 ^00.*\.patch\z
+gen_constants\.pl\z
+pods.t\z

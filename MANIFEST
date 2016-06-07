@@ -1,9 +1,12 @@
 BUILDING.WIN32
 Changes
+const-c.inc
+const-xs.inc
+example/benchmark.pl
 example/read.pl
-example/scat.pl
 example/rt58911.pl
 example/rt80011.pl
+example/scat.pl
 inc/Devel/CheckLib.pm
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
@@ -15,16 +18,14 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Net/SSH2.pm
-lib/Net/SSH2/Constants.pm
 lib/Net/SSH2/Channel.pm
+lib/Net/SSH2/Constants.pm
 lib/Net/SSH2/Dir.pm
 lib/Net/SSH2/File.pm
 lib/Net/SSH2/KnownHosts.pm
 lib/Net/SSH2/Listener.pm
 lib/Net/SSH2/PublicKey.pm
 lib/Net/SSH2/SFTP.pm
-const-c.inc
-const-xs.inc
 Makefile.PL
 MANIFEST			This list of files
 MANIFEST.SKIP
@@ -34,4 +35,3 @@ README
 SSH2.xs
 t/Net-SSH2.t
 typemap
-example/benchmark.pl
