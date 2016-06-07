@@ -344,7 +344,7 @@ sv_upper(SV *sv) {
 
 static IV
 sv2iv_constant_or_croak(const char *name, SV *sv) {
-    if (SvIOK(sv) || looks_like_number(sv))
+    if (!SvOK(sv) || SvIOK(sv) || looks_like_number(sv))
         return SvIV(sv);
     else {
         STRLEN len;
