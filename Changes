@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.62  2016-06-07
+        - Code handling the conversion of arguments accepting both
+          integers and constant names was broken for undef.
+
 0.61  2016-06-03
         - "auth" method was skipping agent authentication always (bug
           report and patch by NIkolay A. Fetisov).
