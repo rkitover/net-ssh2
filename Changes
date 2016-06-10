@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.63
+        - Fix case in user message.
+        - Silence warning in perl 5.10.
+
 0.62  2016-06-07
         - Code handling the conversion of arguments accepting both
           integers and constant names was broken for undef.
