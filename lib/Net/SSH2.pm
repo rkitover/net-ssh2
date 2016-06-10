@@ -403,7 +403,7 @@ sub check_hostkey {
             if ($policy == LIBSSH2_HOSTKEY_POLICY_ASK()) {
                 my $fp = unpack 'H*', $self->hostkey_hash(LIBSSH2_HOSTKEY_HASH_SHA1());
                 my $yes = $self->_ask_user("The authenticity of host '$hostname' can't be established.\n" .
-                                           "key fingerprint is SHA1:$fp.\n" .
+                                           "Key fingerprint is SHA1:$fp.\n" .
                                            "Are you sure you want to continue connecting (yes/no)? ", 1);
                 unless ($yes =~ /^y(es)?$/i) {
                     $self->_set_error(LIBSSH2_ERROR_KNOWN_HOSTS(), 'Host key verification failed: user did not accept the key');
