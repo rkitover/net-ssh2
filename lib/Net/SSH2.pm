@@ -83,7 +83,7 @@ sub connect {
         }
     }
 
-    my %opts = splice @_, 2;
+    my %opts = (@_ > 2 ? splice(@_, 2) : ());
     if (%opts) {
         $connect_opts_warned++ or
             warnings::warnif($self, "Passing options to connect is deprecated");
