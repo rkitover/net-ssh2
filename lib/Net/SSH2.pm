@@ -136,9 +136,9 @@ sub connect {
 
     {
         local ($@, $SIG{__DIE__});
-        $port = eval { $sock->peerport }
+        $port = eval { $sock->peerport } || 22
             unless defined $port;
-        $hostname = eval { $sock->peername } || 22
+        $hostname = eval { $sock->peername }
             unless defined $hostname;
     }
 
