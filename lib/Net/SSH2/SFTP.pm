@@ -7,10 +7,10 @@ use Carp;
 sub die_with_error {
     my $self = shift;
     if (my ($code, $name) = $self->error) {
-        die join(": ", @_, "SFTP error $code $name");
+        croak join(": ", @_, "SFTP error $code $name");
     }
     else {
-        die join(": ", @_, "no SFTP error registered");
+        croak join(": ", @_, "no SFTP error registered");
     }
 }
 

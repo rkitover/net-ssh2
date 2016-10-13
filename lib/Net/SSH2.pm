@@ -1,6 +1,6 @@
 package Net::SSH2;
 
-our $VERSION = '0.62';
+our $VERSION = '0.63';
 
 use 5.006;
 use strict;
@@ -48,10 +48,10 @@ sub new {
 sub die_with_error {
     my $self = shift;
     if (my ($code, $name, $string) = $self->error) {
-        die join(": ", @_, "$string ($code $name)");
+        croak join(": ", @_, "$string ($code $name)");
     }
     else {
-        die join(": ", @_, "no libssh2 error registered");
+        croak join(": ", @_, "no libssh2 error registered");
     }
 }
 
