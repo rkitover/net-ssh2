@@ -1,6 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
-0.63
+0.63  2016-10-13
         - die_with_error errors pointed to that method instead of its
           caller.
         - Fix case in user message.
