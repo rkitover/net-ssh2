@@ -59,6 +59,9 @@ SKIP: {
 ok($ssh2->banner('SSH TEST'), 'set banner');
 is(LIBSSH2_ERROR_SOCKET_NONE(), -1, 'LIBSSH2_* constants');
 
+is(LIBSSH2_ERROR_NONE(), 0, "LIBSSH2_ERROR_NONE is zero");
+is(Net::SSH2::LIBSSH2_ERROR_NONE(), 0, "LIBSSH2_ERROR_NONE is zero bis");
+
 # (4) version
 my $version = $ssh2->version();
 my ($version2, $vernum, $banner) = $ssh2->version();
