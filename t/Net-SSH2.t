@@ -24,6 +24,7 @@ my $passphrase  = $ENV{TEST_NET_SSH2_PASSPHRASE};
 my $known_hosts = $ENV{TEST_NET_SSH2_KNOWN_HOSTS};
 my $policy      = $ENV{TEST_NET_SSH2_POLICY} || 'ask';
 my $timeout     = $ENV{TEST_NET_SSH2_TIMEOUT} || 30;
+my $trace       = $ENV{TEST_NET_SSH2_TRACE};
 
 $known_hosts ||= File::Spec->devnull;
 GetOptions("host|h=s" => \$host,
@@ -54,7 +55,11 @@ SKIP: {
         if ($ssh2->version)[1] < 0x010209;
     is($ssh2->timeout($timeout), $timeout, "set timeout to ${timeout}s");
 }
-#$ssh2->trace(-1);
+
+SKIP: {
+    skip 'trace dissabled', 1 unless $trace;
+    $ssh2->trace($trace);
+}
 
 ok($ssh2->banner('SSH TEST'), 'set banner');
 is(LIBSSH2_ERROR_SOCKET_NONE(), -1, 'LIBSSH2_* constants');
