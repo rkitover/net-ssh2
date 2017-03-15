@@ -147,9 +147,11 @@ sub connect {
 
  error:
     unless (defined wantarray) {
-        $connect_void_warned++ or
+        unless ($connect_void_warned++) {
+            local $!;
             warnings::warnif($self, "Calling connect in void context is deprecated");
-        croak "Net::SSH2: failed to connect to $_[0]:$_[1]: $!"
+        }
+        croak "Net::SSH2: failed to connect to ". join(':', grep defined, @_[0,1]) .": $!";
     }
     return;
 }
