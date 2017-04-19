@@ -1756,8 +1756,8 @@ OUTPUT:
 #if LIBSSH2_VERSION_MAJOR >= 1
 
 SSH2_NERROR
-net_ch_pty(SSH2_CHANNEL* ch, SV* terminal, SV* modes = NULL, \
-           int width = 0, int height = 0)
+net_ch__pty(SSH2_CHANNEL* ch, SV* terminal, SV* modes = NULL, \
+            int width = 0, int height = 0)
 PREINIT:
     const char* pv_terminal, * pv_modes = NULL;
     STRLEN len_terminal, len_modes = 0;

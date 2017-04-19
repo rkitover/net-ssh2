@@ -1,6 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
 0.64
+        - Channel "pty" method now accepts mode modifiers passed as a
+          hash.
         - in connect, warnif was clobbering $! (bug report and patch
           by ikegami).
         - t/Net-SSH2.t: add support for TEST_NET_SSH2_TRACE
