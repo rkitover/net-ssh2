@@ -258,6 +258,8 @@ EOF
     }
 }
 
+makemaker_append_once LIBS => '-lssh2', '-lz';
+
 if ($crypto_backend eq 'gcrypt') {
     makemaker_append_once(LDDLFLAGS => '-lgcrypt');
 }
@@ -282,8 +284,6 @@ makemaker_append_once(CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c99 -pedantic-errors 
     if $Module::Install::AUTHOR and $linux and $cc_gcc;
 
 resources repository => 'git://github.com/rkitover/net-ssh2.git';
-
-makemaker_append_once LIBS => '-lssh2', '-lz';
 
 my $gen = "util/gen_constants.pl";
 if (-f $gen) {
