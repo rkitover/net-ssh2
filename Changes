@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.65
+        - Warn when check_hostkey is called in void context.
+
 0.64  2017-06-14
         - Accept debug flag on the constructor.
         - Ensure the crypto libraries are positioned after libssh2 on

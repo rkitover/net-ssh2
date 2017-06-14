@@ -346,8 +346,13 @@ sub _local_home {
     return $home;
 }
 
+my $check_hostkey_void_ctx_warned;
 sub check_hostkey {
     my ($self, $policy, $path, $comment) = @_;
+
+    defined wantarray or $check_hostkey_void_ctx_warned++ or
+        warnings::warnif($self, "Calling check_hostkey in void context is useless");
+
     my $cb;
     if (not defined $policy) {
         $policy = LIBSSH2_HOSTKEY_POLICY_STRICT();
