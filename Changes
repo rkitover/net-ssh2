@@ -1,6 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
 0.65
+        - Fix perl 5.8 support
         - Warn when check_hostkey is called in void context.
 
 0.64  2017-06-14

@@ -196,7 +196,9 @@ sub pty {
         my $packed = '';
         while (my ($k, $v) = each %$modes) {
             unless ($k =~ /^\d+$/) {
-                $k = $pty_modes{uc $k} // croak "Invalid pty mode key '$k'";
+                my $k1 = $pty_modes{uc $k};
+                defined $k1 or croak "Invalid pty mode key '$k'";
+                $k = $k1;
             }
             next if $k == 0; # ignore the TTY_OP_END marker
             $k > 159 and croak "Invalid pty mode key '$k'";
