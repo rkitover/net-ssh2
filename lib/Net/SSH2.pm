@@ -34,7 +34,7 @@ sub new {
     my ($class, %opts) = @_;
     my $self = $class->_new;
 
-    for (qw(trace timeout)) {
+    for (qw(trace timeout debug)) {
         $self->$_($opts{$_}) if defined $opts{$_}
     }
     $self->flag(COMPRESS => $opts{compress})
@@ -790,6 +790,9 @@ Example:
 
 Note that tracing requires a version of libssh2 compiled with debugging support.
 
+=item debug
+
+Enable debugging. See L</debug>.
 
 =item compress
 
