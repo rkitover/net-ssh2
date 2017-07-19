@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.66  2017-07-19
+        - Warn about readline being called in non-blocking mode.
+
 0.65  2017-06-14
         - Improve Travis CI testing
         - Fix perl 5.8 support

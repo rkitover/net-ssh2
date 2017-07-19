@@ -101,11 +101,17 @@ sub read2 {
     }
 }
 
+my $readline_non_blocking_warned;
 sub readline {
     my ($self, $ext, $eol) = @_;
     return if $self->eof;
     $ext ||= 0;
     $eol = $/ unless @_ >= 3;
+
+    $self->blocking or $readline_non_blocking_warned++ or
+        warnings::warnif('Net::SSH2',
+                         "Calling Net::SSH2::Channel::readline in non-blocking mode is usually a programming error");
+
     if (wantarray or not defined $eol) {
         my $data = '';
         my $buffer;
