@@ -266,6 +266,15 @@ LIBSSH2_FREE_FUNC(local_free) {
 #define SV2TYPE(sv, type) ((type)((sizeof(IV) < sizeof(type)) ? SvNV(sv) : SvIV(sv)))
 #define SV2UTYPE(sv, type) ((type)((sizeof(IV) < sizeof(type)) ? SvNV(sv) : SvUV(sv)))
 
+static SV*
+sv_setref_pv_shared(SV *const rv, const char *const classname, void *const pv) {
+    SV *sv = sv_setref_pv(rv, classname, pv);
+    SV *inner = SvRV(sv);
+    SvREADONLY(inner);
+    SvSHARE(inner);
+    return sv;
+}
+
 static void
 wrap_tied_into(SV *to, const char *pkg, void *object) {
     GV* gv = (GV*)newSVrv(to, pkg);
@@ -273,12 +282,13 @@ wrap_tied_into(SV *to, const char *pkg, void *object) {
     SV* name_sv = sv_2mortal(newSVpvf("_GEN_%ld", (long)gensym_count++));
     STRLEN name_len;
     const char *name = SvPVbyte(name_sv, name_len);
-        
+    SV *inner = newSViv(PTR2IV(object));
+    SV *outer = newRV_noinc(inner);
+    SvSHARE(inner);
     SvUPGRADE((SV*)gv, SVt_PVGV);
     gv_init(gv, gv_stashpv(pkg, GV_ADD), name, name_len, 0);
     SvUPGRADE((SV*)io, SVt_PVIO);
-
-    GvSV(gv) = newSViv(PTR2IV(object));
+    GvSV(gv) = outer;
     GvIOp(gv) = io;
 #if PERL_VERSION > 6
     sv_magic((SV*)io, newRV((SV*)gv), PERL_MAGIC_tiedscalar, Nullch, 0);
@@ -302,9 +312,12 @@ unwrap_tied(SV *sv, const char *pkg, const char *method) {
     if (SvROK(sv) && sv_isa(sv, pkg)) {
         SV *gv = SvRV(sv);
         if (SvTYPE(gv) == SVt_PVGV) {
-            SV *inner = GvSV((GV*)gv);
-            if (inner && SvIOK(inner))
-                return SvIVX(inner);
+            SV *outer = GvSV((GV*)gv);
+            if (outer && SvROK(outer)) {
+                SV *inner = SvRV(outer);
+                if (inner && SvIOK(inner))
+                    return SvIVX(inner);
+            }
         }
     }
     croak("%s::%s: invalid object %s", pkg, method, SvPV_nolen(sv));
@@ -971,7 +984,7 @@ OUTPUT:
 void
 net_ss_DESTROY(SSH2* ss)
 CODE:
-    debug("%s::DESTROY object 0x%x\n", class, ss);
+debug("%s::DESTROY object 0x%x\n", class, ss);
     libssh2_session_free(ss->session);
     if (ss->socket)
         SvREFCNT_dec(ss->socket);
@@ -1632,7 +1645,8 @@ PROTOTYPES: DISABLE
 void
 net_ch_DESTROY(SSH2_CHANNEL* ch)
 CODE:
-    debug("%s::DESTROY\n", class);
+    debug("%s::DESTROY object 0x%x (session object 0x%x)\n",
+          class, ch, SvIV(ch->sv_ss));
     libssh2_channel_free(ch->channel);
     SvREFCNT_dec(ch->sv_ss);
     Safefree(ch);

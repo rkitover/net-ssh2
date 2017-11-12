@@ -12,6 +12,16 @@ use strict;
 use Fcntl qw(O_CREAT O_EXCL O_WRONLY);
 use File::Spec;
 use Getopt::Long;
+use Config;
+
+SKIP: {
+    skip "ithreads not available on this perl", 1 unless $Config{useithreads};
+    # threads and threads::shared should be loaded before any
+    # Net::SSH2 objects are created.
+    require threads;
+    require threads::shared;
+    ok(1, "thread modules loaded");
+}
 
 #########################
 
@@ -47,6 +57,7 @@ BEGIN { use_ok('Net::SSH2', ':all') };
 
 # (4) basics: create an object, check status
 my $ssh2 = Net::SSH2->new();
+$ssh2->debug(1);
 isa_ok($ssh2, 'Net::SSH2', 'new session');
 ok(!$ssh2->error(), 'error state clear');
 SKIP: {
@@ -410,7 +421,7 @@ $mode = binmode $chan;
 is($mode, 1, 'channel binmode via tie interface');
 $chan->shell;
 $chan->subsystem('dummy');
-is($chan->error,-39, 'channel error');
+is($chan->error, -39, 'channel error');
 {
     local $, = ';';
     $count = print $chan "echo hello\n";
@@ -425,10 +436,39 @@ is($chan->error,-39, 'channel error');
     local $?;
     ok(close($chan) || $?, 'channel close via tie interface');
 }
+
+$chan = $ssh2->channel();
+use Devel::Peek;
+Dump $chan;
+Dump tied $chan;
 undef $chan;
 
-# (2) disconnect
+# now, lets see what happens if we create a thread...
+
+SKIP: {
+    skip "ithreads not available on this perl", 1 unless $Config{useithreads};
+
+    # just let see what happens if we create a thread and do some simple stuff...
+    my $thr = threads->create(sub {
+                                  return 'hello';
+                                  my $chan = $ssh2->channel();
+                                  use Devel::Peek;
+                                  Dump $chan;
+                                  $chan->ext_data('ignore');
+                                  $chan->send_eof;
+                                  $chan->exec('echo hello');
+                                  chomp(my $remote_data = <$chan>);
+                                  return $remote_data;
+                              });
+
+    my $remote_data = $thr->join;
+    is($remote_data, 'hello', "can use SSH object in thread");
+}
+
 ok($ssh2->disconnect('leaving'), 'sent disconnect message');
+
+undef $ssh2; # this used to crash perl
+ok(1, "SSH2 objects are being properly shared by threads");
 
 done_testing;
 exit(0);
@@ -457,4 +497,6 @@ sub quote {
 }
 
 # vim:filetype=perl
+
+
 

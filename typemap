@@ -68,13 +68,13 @@ T_SSH2_CHARP_OR_NULL
     $arg = ($var ? newSVpv($var, 0) : &PL_sv_undef);
 
 O_SESSION
-    sv_setref_pv($arg, "Net::SSH2", (void *)$var);
+    sv_setref_pv_shared($arg, "Net::SSH2", (void *)$var);
 
 O_CHANNEL
     wrap_tied_into($arg, "Net::SSH2::Channel", (void *)$var);
 
 O_LISTENER
-    sv_setref_pv($arg, "Net::SSH2::Listener", (void *)$var);
+    sv_setref_pv_shared($arg, "Net::SSH2::Listener", (void *)$var);
 
 O_SFTP
     sv_setref_pv($arg, "Net::SSH2::SFTP", (void *)$var);
@@ -83,13 +83,13 @@ O_FILE
     wrap_tied_into($arg, "Net::SSH2::File", (void *)$var);
 
 O_DIR
-    sv_setref_pv($arg, "Net::SSH2::Dir", (void *)$var);
+    sv_setref_pv_shared($arg, "Net::SSH2::Dir", (void *)$var);
 
 O_PUBLICKEY
-    sv_setref_pv($arg, "Net::SSH2::PublicKey", (void *)$var);
+    sv_setref_pv_shared($arg, "Net::SSH2::PublicKey", (void *)$var);
 
 O_KNOWNHOSTS
-    sv_setref_pv($arg, "Net::SSH2::KnownHosts", (void *)$var);
+    sv_setref_pv_shared($arg, "Net::SSH2::KnownHosts", (void *)$var);
 
 INPUT
 T_PV
