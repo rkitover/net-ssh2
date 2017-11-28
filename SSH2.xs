@@ -2259,23 +2259,22 @@ OUTPUT:
 SV *
 net_sf_readlink(SSH2_SFTP* sf, SV* path)
 PREINIT:
-    SV* link;
     const char* pv_path;
     char* pv_link;
     STRLEN len_path;
     int count;
 CODE:
     pv_path = SvPVbyte(path, len_path);
-    link = newSV(MAXPATHLEN + 1);
-    pv_link = SvPVX(link);
+    RETVAL = newSV(MAXPATHLEN + 1);
+    pv_link = SvPVX(RETVAL);
     count = libssh2_sftp_symlink_ex(sf->sftp,
                                     pv_path, len_path,
                                     pv_link, MAXPATHLEN,
                                     LIBSSH2_SFTP_READLINK);
     if (count >= 0) {
-        SvPOK_on(link);
+        SvPOK_on(RETVAL);
         pv_link[count] = '\0';
-        SvCUR_set(link, count);
+        SvCUR_set(RETVAL, count);
     }
 OUTPUT:
     RETVAL
@@ -2283,23 +2282,22 @@ OUTPUT:
 SV *
 net_sf_realpath(SSH2_SFTP* sf, SV* path)
 PREINIT:
-    SV* real;
     const char* pv_path;
     char* pv_real;
     STRLEN len_path;
     int count;
 CODE:
     pv_path = SvPVbyte(path, len_path);
-    real = newSV(MAXPATHLEN + 1);
-    pv_real = SvPVX(real);
+    RETVAL = newSV(MAXPATHLEN + 1);
+    pv_real = SvPVX(RETVAL);
     count = libssh2_sftp_symlink_ex(sf->sftp,
                                     pv_path, len_path,
                                     pv_real, MAXPATHLEN,
                                     LIBSSH2_SFTP_REALPATH);
     if (count >= 0) {
-        SvPOK_on(real);
+        SvPOK_on(RETVAL);
         pv_real[count] = '\0';
-        SvCUR_set(real, count);
+        SvCUR_set(RETVAL, count);
     }
 OUTPUT:
     RETVAL
