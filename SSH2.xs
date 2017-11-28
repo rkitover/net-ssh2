@@ -2048,8 +2048,9 @@ CODE:
 SSH2_CHANNEL*
 net_ls_accept(SSH2_LISTENER* ls)
 PREINIT:
-    SSH2* ss = 0;
+    SSH2* ss;
 CODE:
+    ss = ls->ss;
     NEW_CHANNEL(libssh2_channel_forward_accept(ls->listener));
 OUTPUT:
     RETVAL
