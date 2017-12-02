@@ -1,5 +1,11 @@
 Revision history for Perl extension Net::SSH2.
 
+0.67  2017-12-02
+        - Fix Net::SSH2::Listener "accept" method (patch by
+          Marc-Philip Werner).
+        - Fix Net::SSH2::SFTP "readlink" and "realpath" methods (patch
+          by Marc-Philip Werner).
+
 0.66  2017-07-19
         - Warn about readline being called in non-blocking mode.
 
