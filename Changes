@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+0.68  2017-12-13
+        - Fix build when using perl 5.26 which doesn't have "." in
+          @INC anymore (patch by Marc-Philip Werner).
+
 0.67  2017-12-02
         - Fix Net::SSH2::Listener "accept" method (patch by
           Marc-Philip Werner).
