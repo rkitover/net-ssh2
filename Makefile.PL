@@ -1,3 +1,4 @@
+use lib ".";
 use inc::Module::Install 0.91;
 use Cwd;
 use Config;
