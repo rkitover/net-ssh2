@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+0.69  2018-2-24
+	- Fix META.yml generation (bug report by Slaven Rezic).
+
 0.68  2017-12-13
         - Fix build when using perl 5.26 which doesn't have "." in
           @INC anymore (patch by Marc-Philip Werner).

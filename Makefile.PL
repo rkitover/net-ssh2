@@ -1,5 +1,9 @@
-use lib ".";
-use inc::Module::Install 0.91;
+
+BEGIN {
+    unshift @INC, '.' unless -d ".git";
+}
+
+use inc::Module::Install 1.17;
 use Cwd;
 use Config;
 use File::Glob qw(bsd_glob);
