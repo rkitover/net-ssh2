@@ -2204,7 +2204,7 @@ PREINIT:
     LIBSSH2_SFTP_ATTRIBUTES attrs;
 PPCODE:
     pv_path = SvPVbyte(path, len_path);
-    error = !libssh2_sftp_stat_ex(sf->sftp, (char*)pv_path, len_path,
+    error = libssh2_sftp_stat_ex(sf->sftp, (char*)pv_path, len_path,
                                   (follow ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT),
                                   &attrs);
     if (error < 0)
