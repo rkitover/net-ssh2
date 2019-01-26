@@ -508,8 +508,9 @@ limitation in libssh2.
 
 =head2 flush ( [ ext ] )
 
-Flushes the channel; if C<ext> is present and set, flushes extended
-data channel. Returns number of bytes flushed, C<undef> on error.
+Discards the received but still unread data on the channel; if C<ext>
+is present and set, discards data on the extended channel. Returns
+number of bytes discarded, C<undef> on error.
 
 =head2 exit_signal
 
