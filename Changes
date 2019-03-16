@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::SSH2.
 
+0.70
+	- Documentation improvements.
+	- SFTP stat was not reporting errors correctly (bug report and
+          patch by Thomas Lochmatter).
+
 0.69  2018-2-24
 	- Fix META.yml generation (bug report by Slaven Rezic).
 
