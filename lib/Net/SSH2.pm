@@ -1188,6 +1188,8 @@ When libssh2 is compiled using OpenSSL as the crypto backend, passing
 this method C<undef> as the public key argument is acceptable (OpenSSL
 is able to extract the public key from the private one).
 
+See also L<Supported key formats>.
+
 =head2 auth_publickey_frommemory ( username, publickey_blob, privatekey_blob [, passphrase ] )
 
 Authenticate using the given public/private key and an optional
@@ -1444,8 +1446,8 @@ Pass 1 to enable, 0 to disable. Debug output is sent to C<STDERR>.
 
 Enable or disable blocking.
 
-A good number of the methods in Net::SSH2/libssh2 can not work in
-non-blocking mode. Some of them may just forcibly enable blocking
+A good number of the methods in C<Net::SSH2>/C<libssh2> can not work
+in non-blocking mode. Some of them may just forcibly enable blocking
 during its execution. A few may even corrupt the SSH session or crash
 the program.
 
@@ -1453,6 +1455,55 @@ The ones that can be safely called are C<read> and, with some
 caveats, C<write>. See L<Net::SSH2::Channel/write>.
 
 I<Don't hesitate to report any bug you found in that area!>
+
+=head1 INTEROPERABILITY AND OTHER KNOWN ISSUES
+
+=head2 Protocol versions
+
+The underlaying C<libssh2> library does support version 2 of the SSH
+protocol exclusively (hopefully, version 1 usage is almost extinct).
+
+The SFTP client implements version 3 of the SFTP protocol.
+
+=head2 Key formats
+
+Private and public keys can be generated and stored using different
+formats and cyphers. Which ones are accepted by C<Net::SSH2> depends
+on the libssh2 version being used and of the underlying crypto backend
+(OpenSSL C<libssl> or C<libgcrypt>) it was
+configured to use at build time.
+
+An increassingly common problem is that OpenSSH since version 7.8
+(released 2018-8-24) generates keys by default using the format
+RFC4716 which is not supported by C<libssl>, the default crypto
+backend.
+
+Keys can be converted inplace to the old PEM format using
+L<ssh-keygen(1)> as follows:
+
+  $ ssh-keygen -p -m PEM -N "" -f ~/.ssh/id_rsa
+
+On Windows, PuTTYgen (which is part of the PuTTY distribution) can be
+used to convert keys.
+
+Another common issue is that in the last years OpenSSH has
+incorporated several new cyphers that are not supported by any version
+of C<libssh2> yet (though the incomming 1.8.1 may aliviate the
+situation). Currently the best option from an interoperability
+standpoint is probably to stick to RSA key usage.
+
+=head2 Security
+
+Nowadays C<libssh2> development is not thrilling; new versions (even
+minor ones) are being released just every two or three years. On the
+other hand security issues are found and reported far more
+frequently. That means that C<Net::SSH2>/C<libssh2> could be an easy
+attack vector.
+
+So, Net::SSH2 must be used with care only in trusted environments.
+
+More specifically, using it to connect to untrusted third party
+computers over the Internet may be a very bad idea!
 
 =head1 SEE ALSO
 
