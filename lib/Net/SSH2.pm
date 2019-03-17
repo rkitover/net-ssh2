@@ -1470,13 +1470,13 @@ The SFTP client implements version 3 of the SFTP protocol.
 Private and public keys can be generated and stored using different
 formats and cyphers. Which ones are accepted by C<Net::SSH2> depends
 on the libssh2 version being used and of the underlying crypto backend
-(OpenSSL C<libssl> or C<libgcrypt>) it was
-configured to use at build time.
+it was configured to use at build time (OpenSSL C<libssl> or
+C<libgcrypt>).
 
 An increassingly common problem is that OpenSSH since version 7.8
 (released 2018-8-24) generates keys by default using the format
-RFC4716 which is not supported by C<libssl>, the default crypto
-backend.
+RFC4716 which is not supported by the default crypto backend
+(C<libssl>).
 
 Keys can be converted inplace to the old PEM format using
 L<ssh-keygen(1)> as follows:
@@ -1500,10 +1500,9 @@ other hand security issues are found and reported far more
 frequently. That means that C<Net::SSH2>/C<libssh2> could be an easy
 attack vector.
 
-So, Net::SSH2 must be used with care only in trusted environments.
-
-More specifically, using it to connect to untrusted third party
-computers over the Internet may be a very bad idea!
+So, Net::SSH2 should be used only in trusted environments. More
+specifically, using it to connect to untrusted third party computers
+over the Internet is probably a very bad idea!
 
 =head1 SEE ALSO
 
