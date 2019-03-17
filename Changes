@@ -1,6 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
-0.70
+0.70  2019-3-17
 	- Documentation improvements.
 	- SFTP stat was not reporting errors correctly (bug report and
           patch by Thomas Lochmatter).

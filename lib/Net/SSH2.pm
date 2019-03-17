@@ -1,6 +1,6 @@
 package Net::SSH2;
 
-our $VERSION = '0.69';
+our $VERSION = '0.70';
 
 use 5.006;
 use strict;
@@ -1527,7 +1527,7 @@ Copyright (C) 2005 - 2010 by David B. Robins (dbrobins@cpan.org).
 
 Copyright (C) 2010 - 2016 by Rafael Kitover (rkitover@cpan.org).
 
-Copyright (C) 2011 - 2018 by Salvador FandiE<ntilde>o (salva@cpan.org).
+Copyright (C) 2011 - 2019 by Salvador FandiE<ntilde>o (salva@cpan.org).
 
 All rights reserved.
 

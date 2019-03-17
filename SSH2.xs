@@ -1,7 +1,7 @@
 /*
  * SSH2.xs - C functions for Net::SSH2
  *
- * D. Robins, 20051022
+ * Authors: D. Robins, Rafael Kitover, Salvador Fandiño
  */
 
 #include "EXTERN.h"
