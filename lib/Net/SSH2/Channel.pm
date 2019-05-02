@@ -89,7 +89,6 @@ sub read2 {
                 $ssh2->_set_error(Net::SSH2::LIBSSH2_ERROR_TIMEOUT(), "Time out waiting for data");
                 return;
             }
-            return if $deadline and time > $deadline;
             my $sock = $ssh2->sock;
             my $fn = fileno($sock);
             my ($rbm, $wbm) = ('', '');
