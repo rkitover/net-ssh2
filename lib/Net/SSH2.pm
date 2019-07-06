@@ -1488,7 +1488,7 @@ used to convert keys.
 
 Another common issue is that in the last years OpenSSH has
 incorporated several new cyphers that are not supported by any version
-of C<libssh2> yet (though the incomming 1.8.1 may aliviate the
+of C<libssh2> yet (though the incoming 1.8.1 may aliviate the
 situation). Currently the best option from an interoperability
 standpoint is probably to stick to RSA key usage.
 
