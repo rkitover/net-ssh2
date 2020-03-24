@@ -119,17 +119,18 @@ push @search_paths,
 push @search_paths, $ENV{HOME}, "$ENV{HOME}/libssh2" if defined $ENV{HOME};
 
 # mac homebrew support
-if ($^O eq 'darwin' && -x '/usr/local/bin/brew') {
-    system("/usr/local/bin/brew info libssh2 | grep '^Not installed' >/dev/null");
-    if ($? >> 8 == 0) {
-        system("/usr/local/bin/brew -v install libssh2");
-    }
-    system("/usr/local/bin/brew info openssl | grep '^Not installed' >/dev/null");
-    if ($? >> 8 == 0) {
-        system("/usr/local/bin/brew -v install openssl");
+if ($^O eq 'darwin' && (qx`command -v brew`)[0]) {
+    if(system("brew info libssh2 | grep '^Not installed' 2>&1 >/dev/null") >> 8 == 0) {
+        system("brew -v install libssh2");
     }
 
-    push @search_paths, '/usr/local/Cellar/openssl/*';
+    if(system("brew info openssl | grep '^Not installed' 2>&1 >/dev/null") >> 8 == 0) {
+        system("brew -v install openssl");
+    }
+
+    for(qw/openssl libssh2/) {
+        push @search_paths, map { chomp; $_ } (qx`brew --prefix $_`)[0];
+    }
 }
 
 @search_paths = map { /\*/
@@ -308,11 +309,19 @@ sub makemaker_append_once {
 }
 
 sub capture {
+    # Ignore not found errors.
+    open(my $olderr, '>&STDERR') or die "can't dup STDERR: $!";
+    close STDERR;
+
+    my $out = '';
+
     if (open my $fh, '-|', @_) {
-        my $out  = do { local $/, <$fh> };
+        $out = do { local $/, <$fh> };
         close $fh;
-        return $out;
     }
-    ''
+
+    open(STDERR, '>&', $olderr) or die "can't dup STDERR: $!";
+
+    return $out;
 }
 
