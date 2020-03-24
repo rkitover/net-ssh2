@@ -21,3 +21,8 @@ lib/Net/SSH2/Constants.pm
 *.gcov
 *.gcda
 *.gcno
+
+# vim
+*.sw?
+*.un~
+
