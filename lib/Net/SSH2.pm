@@ -669,18 +669,34 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
 
   my $ssh2 = Net::SSH2->new();
 
-  $ssh2->connect('example.com') or $ssh2->die_with_error;
+  $ssh2->connect('example.com')
+    or $ssh2->die_with_error;
 
-  $ssh->check_hostkey('ask') or $ssh2->die_with_error;
+  $ssh->check_hostkey('ask')
+    or $ssh2->die_with_error;
 
-  if ($ssh2->auth_keyboard('fizban')) {
-      my $chan = $ssh2->channel();
-      $chan->exec('program');
+  $ssh->auth_publickey($ENV{USER}, "$ENV{HOME}/.ssh/id_rsa.pub", "$ENV{HOME}/.ssh/id_rsa")
+    or $ssh->die_with_error;
 
-      my $sftp = $ssh2->sftp();
-      my $fh = $sftp->open('/etc/passwd') or $sftp->die_with_error;
-      print $_ while <$fh>;
-  }
+  my $chan = $ssh2->channel()
+    or $ssh2->die_with_error;
+
+  $chan->exec('ls')
+    or $ssh2->die_with_error;
+
+  print while <$chan>;
+
+  print "EXIT CODE: ", $chan->exit_status, "\n";
+
+  $chan->close;
+
+  my $sftp = $ssh2->sftp()
+    or $ssh2->die_with_error;;
+
+  my $fh = $sftp->open('/etc/passwd')
+    or $sftp->die_with_error;
+
+  print while <$fh>;
 
 =head1 DESCRIPTION
 
