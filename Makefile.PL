@@ -290,6 +290,18 @@ if (-f $gen) {
 
 WriteAll;
 
+# Generate README.pod
+if ($Module::Install::AUTHOR and -d '.git') {
+    require Pod::Simple::JustPod;
+    my $parser = Pod::Simple::JustPod->new;
+    $parser->output_string(\my $out_str);
+    $parser->parse_file('lib/Net/SSH2.pm');
+
+    open my $out_fh, '>README.pod' or die "Can't open README.pod for writing: $!";
+    print $out_fh $out_str;
+    close $out_fh;
+}
+
 my %appended;
 sub makemaker_append_once {
     my $key = shift;

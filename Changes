@@ -1,5 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
+0.71  2020-04-10
 	- Fix building on Windows.
 	- Fix installation on macOS with Homebrew.
 	- Rewrite synopsis to be more relevant to usual use-cases.

@@ -30,7 +30,7 @@ MANIFEST			This list of files
 MANIFEST.SKIP
 META.yml
 ppport.h
-README
+README.pod
 SSH2.xs
 t/Net-SSH2.t
 typemap
