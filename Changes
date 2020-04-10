@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SSH2.
 
+	- Fix building on Windows.
+	- Fix installation on macOS with Homebrew.
+	- Rewrite synopsis to be more relevant to usual use-cases.
+
 0.70  2019-3-17
 	- Documentation improvements.
 	- SFTP stat was not reporting errors correctly (bug report and

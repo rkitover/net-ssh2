@@ -14,7 +14,7 @@ use warnings;
 my $win32   = ($^O eq 'MSWin32');
 my $darwin  = ($^O eq 'darwin');
 my $solaris = ($^O eq 'solaris');
-my $linux   = !($win32 || $darwin || $solaris ); # yea, more than linux are going to end here!
+my $linux   = ($^O eq 'linux');
 
 my $cc_gcc   = $Config{cc} =~ /gcc/;
 my $cc_wincl = $win32 && $Config{cc} =~ /cl/;
@@ -45,9 +45,6 @@ Makefile.PL, e.g.:
 
     perl Makefile.PL gcrypt
 
-If you want to build on Windows, see the file BUILDING.WIN32 in the
-distribution.
-
 EOF
 
 my $crypto_backend;
@@ -63,6 +60,9 @@ perl_version '5.006000';
 auto_provides;
 makemaker_append_once CCFLAGS   => $Config{ccflags};
 makemaker_append_once LDDLFLAGS => $Config{lddlflags};
+
+# On MSYS2 there are issues finding system DLL import libs.
+makemaker_append_once LIBS => ':nosearch' if $win32;
 
 my %arg2mmappend = ( inc => 'INC',
                      lib => 'LIBS',
@@ -238,29 +238,27 @@ EOF
     }
     $crypto_backend ||= 'openssl';
 
-    unless ($win32) {
-        findlib(lib => 'z',
-                header => 'zlib.h',
+    findlib(lib => 'z',
+            header => 'zlib.h',
+            search_paths => \@search_paths,
+            run_checks_as_author => 1);
+
+    if ($crypto_backend eq 'gcrypt') {
+        findlib(lib => 'gcrypt',
+                header => 'gcrypt.h',
+                search_paths => \@search_paths,
+                run_checks_as_author => 1);
+    }
+    else {
+        findlib(lib => 'ssl',
+                header => 'openssl/ssl.h',
                 search_paths => \@search_paths,
                 run_checks_as_author => 1);
 
-        if ($crypto_backend eq 'gcrypt') {
-            findlib(lib => 'gcrypt',
-                    header => 'gcrypt.h',
-                    search_paths => \@search_paths,
-                    run_checks_as_author => 1);
-        }
-        else {
-            findlib(lib => 'ssl',
-                    header => 'openssl/ssl.h',
-                    search_paths => \@search_paths,
-                    run_checks_as_author => 1);
-
-            findlib(lib => 'crypto',
-                    header => 'openssl/crypto.h',
-                    search_paths => \@search_paths,
-                    run_checks_as_author => 1);
-        }
+        findlib(lib => 'crypto',
+                header => 'openssl/crypto.h',
+                search_paths => \@search_paths,
+                run_checks_as_author => 1);
     }
 }
 
@@ -270,18 +268,11 @@ if ($crypto_backend eq 'gcrypt') {
     makemaker_append_once(LDDLFLAGS => '-lgcrypt');
 }
 else {
-    if ($cc_wincl) {
-        makemaker_append_once(LIBS => "-l$_") for qw(ssleay32 libeay32); # Win32 + MSVC compiler
-    }
-    if ($cc_gcc && $win32) {
-        makemaker_append_once(LIBS => "-l$_") for qw(ssl32 eay32); # Win32 + GCC compiler (mingw)
-    }
-    else {
-        makemaker_append_once(LIBS => "-l$_") for qw(ssl crypto);
-    }
+    makemaker_append_once(LIBS => "-l$_") for qw(ssl crypto);
 }
 
 makemaker_append_once(DEFINE => '-DLIBSSH2_WIN32') if $win32;
+
 makemaker_append_once(DEFINE => '-DUSE_GCRYPT')    if $crypto_backend eq 'gcrypt';
 
 makemaker_append_once(CCFLAGS => '-Wno-deprecated-declarations') if $^O eq 'darwin';
