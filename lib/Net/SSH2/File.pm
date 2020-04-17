@@ -125,6 +125,25 @@ An excerpt from C<libssh2_sftp_write> manual page follows:
   means we  cannot use a  simple serial approach  if we want  to reach
   high performance even on high latency connections. And we want that.
 
+This is an example of simple file uploading
+
+    use constant BUF_SIZE => 128*1024;
+    
+    my $sftp = $ssh2->sftp;
+    open my $fh, '<', '/tmp/doc.txt';
+    my $sf = $sftp->open('doc.txt', O_CREAT|O_WRONLY|O_TRUNC);
+    
+    my $buf;
+    while (sysread($fh, $buf, BUF_SIZE)) {
+        while (length $buf) {
+            my $rc = $sf->write($buf);
+            if ($rc < 0) {
+                die "write error";
+            }
+            # remove transferred data from the buffer
+            substr($buf, 0, $rc) = '';
+        }
+    }
 
 =head2 stat
 
