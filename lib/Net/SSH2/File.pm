@@ -137,10 +137,10 @@ This is an example of simple file uploading
     while (sysread($fh, $buf, BUF_SIZE)) {
         while (length $buf) {
             my $rc = $sf->write($buf);
-            if ($rc < 0) {
-                die "write error";
+            if (!defined($rc)) {
+                $sftp->die_with_error('write error');
             }
-            # remove transferred data from the buffer
+            # Remove transferred data from the buffer.
             substr($buf, 0, $rc) = '';
         }
     }
