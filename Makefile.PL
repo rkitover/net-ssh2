@@ -282,6 +282,8 @@ makemaker_append_once(CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c99 -pedantic-errors 
 
 resources repository => 'git://github.com/rkitover/net-ssh2.git';
 
+resources bugtracker => 'https://github.com/rkitover/net-ssh2/issues';
+
 my $gen = "util/gen_constants.pl";
 if (-f $gen) {
     system $^X, $gen
