@@ -1,13 +1,19 @@
 Revision history for Perl extension Net::SSH2.
 
+0.72  2020-12-22
+        - Add support for some new error codes in latest libssh2
+          versions.
+        - Improve error reporting on "auth" method.
+        - Fix crypto backend selection at build time.
+
 0.71  2020-04-10
-	- Fix building on Windows.
-	- Fix installation on macOS with Homebrew.
-	- Rewrite synopsis to be more relevant to usual use-cases.
+        - Fix building on Windows.
+        - Fix installation on macOS with Homebrew.
+        - Rewrite synopsis to be more relevant to usual use-cases.
 
 0.70  2019-3-17
-	- Documentation improvements.
-	- SFTP stat was not reporting errors correctly (bug report and
+        - Documentation improvements.
+        - SFTP stat was not reporting errors correctly (bug report and
           patch by Thomas Lochmatter).
 
 0.69  2018-2-24
