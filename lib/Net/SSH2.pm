@@ -279,6 +279,9 @@ sub auth {
     }
 
     return 'none' if  $self->auth_ok;
+
+    $self->_set_error(LIBSSH2_ERROR_AUTHENTICATION_FAILED(),
+                     "All authentication methods failed");
     return;  # failure
 }
 
