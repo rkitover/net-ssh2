@@ -89,7 +89,7 @@ static const char *const xs_libssh2_error[] = {
     "PASSWORD_EXPIRED",
     "FILE",
     "METHOD_NONE",
-    "PUBLICKEY_UNRECOGNIZED",
+    "AUTHENTICATION_FAILED",
     "PUBLICKEY_UNVERIFIED",
     "CHANNEL_OUTOFORDER",
     "CHANNEL_FAILURE",
@@ -118,6 +118,8 @@ static const char *const xs_libssh2_error[] = {
     "ENCRYPT",
     "BAD_SOCKET",
     "KNOWN_HOSTS",
+    "CHANNEL_WINDOW_FULL",
+    "KEYFILE_AUTH_FAILED",
 };
 
 /* SSH_FX_* values; from 0 continuing positive */
