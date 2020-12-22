@@ -243,8 +243,7 @@ sub auth {
     # is given
     $p{fallback} = 1 unless defined $p{password} or defined $p{passphrase};
 
-    TYPE: for(my $i = 0; $i < @rank; $i++) {
-        my $type = $rank[$i];
+    TYPE: for my $type (@rank) {
         my $data = $self->_auth_methods->{$type};
         unless ($data) {
             carp "unknown authentication method '$type'";
