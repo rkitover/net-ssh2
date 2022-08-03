@@ -26,3 +26,4 @@ lib/Net/SSH2/Constants.pm
 *.sw?
 *.un~
 
+*.tar.gz
