@@ -275,7 +275,7 @@ makemaker_append_once(DEFINE => '-DUSE_GCRYPT')    if $crypto_backend eq 'gcrypt
 
 makemaker_append_once(CCFLAGS => '-Wno-deprecated-declarations') if $^O eq 'darwin';
 
-makemaker_append_once(CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c99 -pedantic-errors -Wno-long-long')
+makemaker_append_once(CCFLAGS => '-DPERL_GCC_PEDANTIC -std=c11 -pedantic-errors -Wno-long-long')
     if $Module::Install::AUTHOR and $linux and $cc_gcc;
 
 resources repository => 'git://github.com/rkitover/net-ssh2.git';

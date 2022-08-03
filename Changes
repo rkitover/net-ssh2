@@ -1,5 +1,7 @@
 Revision history for Perl extension Net::SSH2.
 
+	- Switch to -std=c11 because Perl uses thread_local now #58
+
 0.72  2020-12-22
         - Add support for some new error codes in latest libssh2
           versions.
