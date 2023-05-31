@@ -34,10 +34,10 @@ OpenSUSE: sudo zypper in libssh2-1 libssh2-devel
 You can pass your libssh2 lib and include dirs (and extra link args) on the
 command line. E.g.:
 
-    perl Makefile.PL lib=$HOME/libssh2/lib inc=$HOME/libssh2/include \
+    perl Makefile.PL libs=$HOME/libssh2/lib inc=$HOME/libssh2/include \
         ldargs="-lz"
 
-These can also be set through the LIBSSH2_LIB/LIBSSH2_INCLUDE/LIBSSH2_LDARGS
+These can also be set through the LIBSSH2_LIBS/LIBSSH2_INC/LIBSSH2_LDDLFLAGS
 environment variables.
 
 To build with libgcrypt instead of OpenSSL, use the crypto_backend
@@ -65,16 +65,17 @@ makemaker_append_once LDDLFLAGS => $Config{lddlflags};
 makemaker_append_once LIBS => ':nosearch' if $win32;
 
 my %arg2mmappend = ( inc => 'INC',
-                     lib => 'LIBS',
+                     libs => 'LIBS',
                      ldargs => 'LDDLFLAGS' );
 my %arg2prefix = (inc => '-I',
-                  lib => '-L');
+                  libs => '-L');
 
 my $arg_keys = join('|', map quotemeta, keys %arg2mmappend);
-my $do_not_check_libs_keys = 'lib|inc';
+my $arg_values = join('|', map quotemeta, values %arg2mmappend);
+my $do_not_check_libs_keys = 'LIBS|INC';
 
 for (keys %ENV) {
-    if (/^LIBSSH2_($arg_keys)$/) {
+    if (/^LIBSSH2_($arg_values)$/) {
         my $value = $ENV{$_};
         my $prefix = $arg2prefix{lc $1} || '';
         $value = File::Spec->rel2abs($value) if $prefix;
@@ -270,6 +271,7 @@ else {
 }
 
 makemaker_append_once(DEFINE => '-DLIBSSH2_WIN32') if $win32;
+makemaker_append_once(LIBS => '-lCrypt32') if $win32;
 
 makemaker_append_once(DEFINE => '-DUSE_GCRYPT')    if $crypto_backend eq 'gcrypt';
 
