@@ -1,5 +1,6 @@
 Revision history for Perl extension Net::SSH2.
 
+0.74  2024-09-02
 	- Add a cast to fix an error on some compilations.
 	- Update README.pod.
 
