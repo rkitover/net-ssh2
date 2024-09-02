@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::SSH2.
 
+	- Add a cast to fix an error on some compilations.
+	- Update README.pod.
+
 0.73  2022-08-03
 	- Switch to -std=c11 because Perl uses thread_local now #58
 

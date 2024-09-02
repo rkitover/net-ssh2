@@ -13,11 +13,11 @@ Net::SSH2 - Support for the SSH 2 protocol via libssh2.
   $ssh2->connect('example.com')
     or $ssh2->die_with_error;
 
-  $ssh->check_hostkey('ask')
+  $ssh2->check_hostkey('ask')
     or $ssh2->die_with_error;
 
-  $ssh->auth_publickey($ENV{USER}, "$ENV{HOME}/.ssh/id_rsa.pub", "$ENV{HOME}/.ssh/id_rsa")
-    or $ssh->die_with_error;
+  $ssh2->auth_publickey($ENV{USER}, "$ENV{HOME}/.ssh/id_rsa.pub", "$ENV{HOME}/.ssh/id_rsa")
+    or $ssh2->die_with_error;
 
   my $chan = $ssh2->channel()
     or $ssh2->die_with_error;
