@@ -4,6 +4,10 @@ Revision history for Perl extension Net::SSH2.
         - Add more constants from libssh2.h
         - Handle hostkey hashes of type SHA256
         - Some deprecation warnings can not be silenced anymore.
+        - Documentation fixes
+        - net_ss_auth_publickey_frommemory is only available when
+        - libssh2 is compiled with OpenSSL backend (#gh55 reported by
+          Sergiy Zuban).
 
 0.74  2024-09-02
 	- Add a cast to fix an error on some compilations.
