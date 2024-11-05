@@ -1295,7 +1295,7 @@ CODE:
 OUTPUT:
     RETVAL
 
-#if LIBSSH2_VERSION_NUM >= 0x010600
+#if (LIBSSH2_VERSION_NUM >= 0x010600) && defined(HAVE_OPENSSL)
 
 SSH2_NERROR
 net_ss_auth_publickey_frommemory(SSH2* ss, SV* username, SV* publickey, \
