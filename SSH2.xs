@@ -275,7 +275,7 @@ wrap_tied_into(SV *to, const char *pkg, void *object) {
     SV* name_sv = sv_2mortal(newSVpvf("_GEN_%ld", (long)gensym_count++));
     STRLEN name_len;
     const char *name = SvPVbyte(name_sv, name_len);
-        
+
     SvUPGRADE((SV*)gv, SVt_PVGV);
     gv_init(gv, gv_stashpv(pkg, GV_ADD), name, name_len, 0);
     SvUPGRADE((SV*)io, SVt_PVIO);
@@ -390,7 +390,7 @@ hv_from_attrs(LIBSSH2_SFTP_ATTRIBUTES* attrs) {
 
 /* return attributes from function, as flat hash or hashref */
 #define XSRETURN_STAT_ATTRS(name) XSRETURN(return_stat_attrs(sp, &attrs, name))
-    
+
 static int return_stat_attrs(SV** sp, LIBSSH2_SFTP_ATTRIBUTES* attrs,
  SV* name) {
     HV* hv_attrs = hv_from_attrs(attrs);
@@ -1146,13 +1146,17 @@ void
 net_ss_hostkey_hash(SSH2* ss, SSH2_HOSTKEY_HASH type)
 PREINIT:
     const char* hash;
-    static STRLEN rglen[] = { 16/*MD5*/, 20/*SHA1*/ };
+    static STRLEN rglen[] = { 16/*MD5*/, 20/*SHA1*/, 32/*SHA256*/, };
 PPCODE:
     if (type < 1 || type > countof(rglen)) {
         croak("%s::hostkey: unknown hostkey hash: %d",
               class, (int)type);
     }
     if ((hash = (const char*)libssh2_hostkey_hash(ss->session, type))) {
+        if ((type < 1) || (type > countof(rglen))) {
+            libssh2_session_set_last_error(ss->session, LIBSSH2_ERROR_INVAL, "Unknown hash type");
+            XSRETURN_EMPTY;
+        }
         PUSHs(sv_2mortal(newSVpvn(hash, rglen[type-1])));
         XSRETURN(1);
     }
