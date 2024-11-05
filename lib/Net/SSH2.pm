@@ -68,13 +68,19 @@ sub connect {
     my $self = shift;
     defined $_[0] or croak "Net::SSH2::connect: hostname argument is undefined";
 
+    unless (defined wantarray or $connect_void_warned++) {
+        local $!;
+        warnings::warnif($self, "Calling connect in void context is deprecated");
+    }
+
     # try to connect, or get a file descriptor
     my ($fd, $sock);
     if (@_ == 1) {
         $sock = shift;
         if ($sock =~ /^\d{1,10}$/) {
             $connect_fd_warned++ or
-                warnings::warnif($self, "Passing a file descriptor number to connect is deprecated");
+                # warnings::warnif($self, "Passing a file descriptor number to connect is deprecated");
+                Carp::carp "Passing a file descriptor number to connect is deprecated";
             $fd = $sock;
         } elsif(ref $sock) {
             # handled below
@@ -86,7 +92,7 @@ sub connect {
     my %opts = (@_ > 2 ? splice(@_, 2) : ());
     if (%opts) {
         $connect_opts_warned++ or
-            warnings::warnif($self, "Passing options to connect is deprecated");
+            Carp::carp($self, "Passing options to connect is deprecated");
         $self->timeout(1000 * $opts{Timeout}) if $opts{Timeout};
         if ($opts{Compress} and
             ($self->version)[1] >= 0x10500) {
@@ -146,13 +152,8 @@ sub connect {
     return $self->_startup($fd, $sock, $hostname, $port);
 
  error:
-    unless (defined wantarray) {
-        unless ($connect_void_warned++) {
-            local $!;
-            warnings::warnif($self, "Calling connect in void context is deprecated");
-        }
-        croak "Net::SSH2: failed to connect to ". join(':', grep defined, @_[0,1]) .": $!";
-    }
+    defined wantarray
+        or croak "Net::SSH2: failed to connect to ". join(':', grep defined, @_[0,1]) .": $!";
     return;
 }
 
@@ -260,8 +261,8 @@ sub auth {
 
             if ($p eq 'passphrase' and not exists $p{$p} and defined $p{password}) {
                 $p = 'password';
-                $password_when_you_mean_passphrase_warned++
-                    or carp "Using the key 'password' to refer to a passphrase is deprecated. Use 'passphrase' instead";
+                $password_when_you_mean_passphrase_warned++ or
+                    Carp::carp($self, "Using the key 'password' to refer to a passphrase is deprecated. Use 'passphrase' instead");
             }
 
             if ($pseudo) {
@@ -310,7 +311,7 @@ sub _ask_user {
         $timeout = $self->timeout || 0;
         $timeout = ($timeout + 999) / 1000;
     }
-    _load_term_readkey or return;
+    _load_term_readkey() or return;
     $self->_print_stderr($prompt);
     Term::ReadKey::ReadMode('noecho') unless $echo;
     my $reply = Term::ReadKey::ReadLine($timeout);
@@ -329,7 +330,7 @@ sub _ask_user {
 
 sub auth_password_interact {
     my ($self, $username, $cb) = @_;
-    _load_term_readkey or return;
+    _load_term_readkey() or return;
     my $rc;
     for (0..2) {
         my $password = $self->_ask_user("${username}'s password? ", 0);
@@ -605,7 +606,7 @@ sub poll {
 
 sub _cb_kbdint_response_default {
     my ($self, $user, $name, $instr, @prompt) = @_;
-    _load_term_readkey or return;
+    _load_term_readkey() or return;
 
     my $prompt = "[user $user] ";
     $prompt .= "$name\n" if $name;
