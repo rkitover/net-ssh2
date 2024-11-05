@@ -1207,7 +1207,7 @@ When libssh2 is compiled using OpenSSL as the crypto backend, passing
 this method C<undef> as the public key argument is acceptable (OpenSSL
 is able to extract the public key from the private one).
 
-See also L<Supported key formats>.
+See also L<Key formats>.
 
 =head2 auth_publickey_frommemory ( username, publickey_blob, privatekey_blob [, passphrase ] )
 
